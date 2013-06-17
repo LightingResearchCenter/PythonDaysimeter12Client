@@ -10,20 +10,17 @@ import time
 import math
 from Tkinter import Tk
 from tkFileDialog import askopenfilename
-from tkFileDialog import askdirectory
+import geterrlog
 
 CALIBRATION_FILENAME = '//root/projects/Daysimeter and dimesimeter reference files/data/Day12 RGB Values.txt'
 LOCAL_CALIB_FILENAME = 'Day12 RGB Values.txt'
 LOG_FILENAME = 'log_info.txt'
 DATA_FILENAME = 'data_log.txt'
 
-def readraw():
-    #Create error log file named error.log, asking the user where
-    #they would like it to be saved.
-    Tk().withdraw()
-    dirname = askdirectory(title='Please select a directory to store an error log')
-    LOG_FILENAME = dirname + '/error.log'
-    logging.basicConfig(filename=LOG_FILENAME,level=logging.DEBUG)
+def readRaw():
+    #Create error log file named error.log on the desktop
+    ERRLOG_FILENAME = geterrlog()
+    logging.basicConfig(filename=ERRLOG_FILENAME,level=logging.DEBUG)
     
     #Open header file for reading
     try:
@@ -86,6 +83,7 @@ def readraw():
             logging.error('Could not open calibration file locally')
             #If we cannot find the file locally, we ask the user to 
             #tell the program where to find it
+            Tk().withdraw()
             USER_DEF_FILENAME = askopenfilename(title='Please selected a properly formatted Calibration file.')
             try:
                 calibration_fp = open(USER_DEF_FILENAME,"r")
@@ -213,4 +211,4 @@ def readraw():
     blue = [x*calibInfo[3] for x in blue]
     
      
-if __name__ == '__main__':readraw()
+if __name__ == '__main__':readRaw()
