@@ -8,13 +8,10 @@ import struct
 import logging
 import time
 import math
-from Tkinter import Tk
-from tkFileDialog import askopenfilename
-import getErrLog
-import adjActiveFlag
+from PythonDaysimeter12Client.src import getErrLog
+from PythonDaysimeter12Client.src import adjActiveFlag
+from PythonDaysimeter12Client.src import getCalibInfo
 
-CALIBRATION_FILENAME = '//root/projects/Daysimeter and dimesimeter reference files/data/Day12 RGB Values.txt'
-LOCAL_CALIB_FILENAME = 'Day12 RGB Values.txt'
 LOG_FILENAME = 'log_info.txt'
 DATA_FILENAME = 'data_log.txt'
 ADJ_ACTIVE_FLAG = 0
@@ -42,88 +39,15 @@ def readRaw():
         
     #Find the daysimeter device ID
     daysimeterID = int(info[1])
-    
-    #calibData gives the source of the calibration information
-    #0 = not set, 1 = device header, 2 = server, 3 = local
-    calibData = 0   
-    
+
     #Check and see if calibration information exists on header file.
     #len(info) is 17 on devices not storing calibInfo, and 23 for
     #those that do store calibInfo
     if len(info) == 23:
-        calibData = 1
         calibInfo = [daysimeterID, info[7], info[8], info[9]]
-    #Else check and see if we can find the calibration information
-    #on the LRC server
     else:
-        #Open calibration file and get data
-        try:
-            calibration_fp = open(CALIBRATION_FILENAME,"r")
-        #Catch IO exception, add to log and continue
-        except IOError:
-            logging.error('Could not open calibration file from server')
-            pass
-        else:
-            #Read each line of the calibration file and put it 
-            #into a list called calibInfo.
-            calibInfo = calibration_fp.readlines()
-            calibData = 2
-        #Close the calibration file
-        finally:
-            calibration_fp.close()
-            
-        #Create a list of the calibration info
-        calibInfo = [float(x) for x in calibInfo[daysimeterID].split('\t') if x.strip()]
-    
-    #If nowhere else, calibration data should be local
-    if calibData == 0:
-        #Open calibration file and get data
-        try:
-            calibration_fp = open(LOCAL_CALIB_FILENAME,"r")
-        #Catch IO exception, add to log and quit
-        except IOError:
-            logging.error('Could not open calibration file locally')
-            #If we cannot find the file locally, we ask the user to 
-            #tell the program where to find it
-            Tk().withdraw()
-            USER_DEF_FILENAME = askopenfilename(title='Please selected a properly formatted Calibration file.')
-            try:
-                calibration_fp = open(USER_DEF_FILENAME,"r")
-            #Catch IO exception, add to log and quit
-            except IOError:
-                logging.error('Could not open user defined calibration file')
-                sys.exit(1)
-            else:
-                #Read each line of the calibration file and put it 
-                #into a list called calibInfo.
-                calibInfo = calibration_fp.readlines()
-                calibData = 3
-            #Close the calibration file
-            finally:
-                calibration_fp.close()
-                
-            #Create a list of the calibration info
-            calibInfo = [float(x) for x in calibInfo[daysimeterID].split('\t') if x.strip()]
-            pass
-        else:
-            #Read each line of the calibrations file and put it 
-            #into a list called calibInfo.
-            calibInfo = calibration_fp.readlines()
-            calibData = 3
-        #Close the calibration file
-        finally:
-            calibration_fp.close()
-            
-        #Create a list of the calibration info
-        calibInfo = [float(x) for x in calibInfo[daysimeterID].split('\t') if x.strip()]
-    
-    #The default values for calibration are 1, 2, and 3. Although it
-    #is possible that a device actually might have those calibration
-    #constants, it is assumed that there is no calibration info.
-    if calibInfo[1] == 1.0 and calibInfo[2] == 2.0 and calibInfo[3] == 3.0:
-        logging.warning('There is no calibration info for device')
-        sys.exit(1)
-    
+        calibInfo = getCalibInfo(daysimeterID)
+        
     #Open binary data file for reading
     try:
         datafile_fp = open(DATA_FILENAME,"rb")
