@@ -19,5 +19,4 @@ def adjActiveFlag(red, green, blue, activity):
     #Pack adjusted values into a single list & return
     return [red, green, blue, activity]
 
-
 if __name__ == '__main__':adjActiveFlag([],[],[],[])

@@ -14,7 +14,8 @@ from PythonDaysimeter12Client.src import getCalibInfo
 
 LOG_FILENAME = 'log_info.txt'
 DATA_FILENAME = 'data_log.txt'
-ADJ_ACTIVE_FLAG = 0
+ADJ_ACTIVE_FLAG = False
+OLD_FLAG = False
 
 def readRaw():
     #Create error log file named error.log on the desktop
@@ -36,15 +37,21 @@ def readRaw():
     #Close the logfile
     finally:
         logfile_fp.close()
-        
+    
+    #If we are using an old format, set flag to True
+    if len(info) > 17:
+        OLD_FLAG = True
+    
     #Find the daysimeter device ID
-    daysimeterID = int(info[1])
+    if OLD_FLAG:
+        daysimeterID = int(info[1])
+    else:
+        daysimeterID = int(info[2])
 
-    #Check and see if calibration information exists on header file.
-    #len(info) is 17 on devices not storing calibInfo, and 23 for
-    #those that do store calibInfo
-    if len(info) == 23:
-        calibInfo = [daysimeterID, info[7], info[8], info[9]]
+    #Get calibration info
+    if not OLD_FLAG:
+        calibConst = = [float(str(x).strip('\n')) for x in info[8].split('\t')]
+        calibInfo = [daysimeterID, calibConst[0], calibConst[1], calibConst[2]]
     else:
         calibInfo = getCalibInfo(daysimeterID)
         
@@ -68,11 +75,17 @@ def readRaw():
     
     #Converts a time string into a float representing seconds
     #since epoch (UNIX)
-    structTime = time.strptime(info[2], "%m-%d-%y %H:%M")
+    if not OLD_FLAG:
+        structTime = time.strptime(info[3], "%m-%d-%y %H:%M")
+    else:
+        structTime = time.strptime(info[2], "%m-%d-%y %H:%M")
     epochTime = time.mktime(structTime)
     #logInterval is interval that the Daysimeter took measurements at.
     #Since python uses seconds since epoch, cast as int
-    logInterval = int(info[3])
+    if not OLD_FLAG:
+        logInterval = int(info[4])
+    else:
+        logInterval = int(info[3])
     
     #Determine the number of of logged entries
     numEntires = math.floor(len(data)/4)
