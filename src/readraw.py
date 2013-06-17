@@ -10,16 +10,18 @@ import time
 import math
 from Tkinter import Tk
 from tkFileDialog import askopenfilename
-import geterrlog
+import getErrLog
+import adjActiveFlag
 
 CALIBRATION_FILENAME = '//root/projects/Daysimeter and dimesimeter reference files/data/Day12 RGB Values.txt'
 LOCAL_CALIB_FILENAME = 'Day12 RGB Values.txt'
 LOG_FILENAME = 'log_info.txt'
 DATA_FILENAME = 'data_log.txt'
+ADJ_ACTIVE_FLAG = 0
 
 def readRaw():
     #Create error log file named error.log on the desktop
-    ERRLOG_FILENAME = geterrlog()
+    ERRLOG_FILENAME = getErrLog()
     logging.basicConfig(filename=ERRLOG_FILENAME,level=logging.DEBUG)
     
     #Open header file for reading
@@ -187,6 +189,7 @@ def readRaw():
             del green[x]
             del blue [x]
             del activity[x]
+            continue
         x+=1
     
     #Create list for time called times (because time is

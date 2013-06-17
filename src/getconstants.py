@@ -9,11 +9,11 @@ LOCAL_CONST_FILENAME = 'Day12 Cal Values.txt'
 
 import sys
 import logging
-import geterrlog
+import getErrLog
 
 def getConstants ():
     #Create error log file named error.log on the desktop
-    ERRLOG_FILENAME = geterrlog()
+    ERRLOG_FILENAME = getErrLog()
     logging.basicConfig(filename=ERRLOG_FILENAME,level=logging.DEBUG)
     
     if True:
@@ -94,9 +94,7 @@ def getConstants ():
     vLamda = [float(x) for x in vLamda]
     CLA = [float(x) for x in CLA]
     
-    #Pack constants into a single list
-    constants = [sconeMacula, vLamdaMacula, melanopsin, vPrime, vLamda, CLA]
-    
-    return constants
+    #Pack constants into a single list & return
+    return [sconeMacula, vLamdaMacula, melanopsin, vPrime, vLamda, CLA]
     
 if __name__ == '__main__':getConstants()
