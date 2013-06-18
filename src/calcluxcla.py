@@ -4,11 +4,31 @@
 #INPUT: Red, Green, Blue, daysimeterID
 #OUTPUT: lux, CLA
 
+import sys
+import logging
 import getConstants
+import getErrLog
 
-def calcLuxCLA(red, green, blue):
-    #Constants is a list of lists, with hardware specific constants
-    constants = getConstants()    
+#calcLuxCLA either takes 3 or 4 arguments. Usage: red, green, blue, [constants]
+def calcLuxCLA(*args):
+    ERRLOG_FILENAME = getErrLog()
+    logging.basicConfig(filename=ERRLOG_FILENAME,level=logging.DEBUG)
+    
+    if len(args) == 3:
+        red = args[0]
+        green = args[1]
+        blue = args[2]
+        #Constants is a list of lists, with hardware specific constants
+        constants = getConstants()
+    elif len(args) == 4:
+        red = args[0]
+        green = args[1]
+        blue = args[2]
+        constants = args[3]
+    else:
+        logging.warning('Invalid usage of calcLuxCLA')
+        sys.exit(1)
+    
     loopMax = numEntries = len(constants[0])
     
     #Create lux list and allocate space
@@ -40,7 +60,7 @@ def calcLuxCLA(red, green, blue):
             CLA[x] = melanopsin[x]
         
         CLA[x] *= constants[5][3]
-        
+        CLA = [0 if x < 0 else x for x in CLA]
     #Pack lux and CLA into a single list & return
     return [lux, CLA]
     
