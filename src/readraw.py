@@ -8,9 +8,9 @@ import struct
 import logging
 import time
 import math
-from PythonDaysimeter12Client.src import getErrLog
-from PythonDaysimeter12Client.src import adjActiveFlag
-from PythonDaysimeter12Client.src import getCalibInfo
+import getErrLog
+import adjActiveFlag
+import getCalibInfo
 
 LOG_FILENAME = 'log_info.txt'
 DATA_FILENAME = 'data_log.txt'
@@ -50,7 +50,7 @@ def readRaw():
 
     #Get calibration info
     if not OLD_FLAG:
-        calibConst = = [float(str(x).strip('\n')) for x in info[8].split('\t')]
+        calibConst = [float(str(x).strip('\n')) for x in info[8].split('\t')]
         calibInfo = [daysimeterID, calibConst[0], calibConst[1], calibConst[2]]
     else:
         calibInfo = getCalibInfo(daysimeterID)
@@ -115,20 +115,40 @@ def readRaw():
         green[x] = struct.unpack('>H',data[x*8+2:x*8+4])
         blue[x] = struct.unpack('>H',data[x*8+4:x*8+6])
         activity[x] = struct.unpack('>H',data[x*8+6:x*8+8])
+        
+    #Create array to keep track of resets; resets[x] = y means
+    #there have been y resets before point x.
+    resets = [-1] * len(red)
     
     #Remove reamining -1s (reset entires) from raw R,G,B,A
     #Note: calling len(red) 100,000 times runs this portion
     #of the code in a fraction of a second.
-    x = 0
+    x = y = 0
     while x < len(red):
         if red[x] == -1:
             del red[x]
             del green[x]
             del blue [x]
             del activity[x]
+            y+=1
             continue
+        resets[x] = y
         x+=1
     
+    #If there were resets, R,G,B,A are now shorter than resets,
+    #so we shall resize it.
+    resets = resets [:len(red)]
+    
+    #If we are using the firmware version where the LSB of
+    #activity is actually a monitor for RGB values rolling over
+    #we need to adjust the values accordingly.
+    if ADJ_ACTIVE_FLAG:
+        adjustedRGB = adjActiveFlag(red,green,blue,activity)
+        #Unpack adjusted values
+        red = adjustedRGB[0]
+        green = adjustedRGB[1]
+        blue = adjustedRGB[2]
+
     #Create list for time called times (because time is
     #a python module)
     times = [-1] * len(red)
