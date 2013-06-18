@@ -3,6 +3,7 @@
 #Creation Date: 13.06.2013
 #INPUT: log_file, data_file
 #OUTPUT: Data to be pased to a CDF processing script
+
 import sys
 import struct
 import logging
@@ -11,6 +12,10 @@ import math
 import getErrLog
 import adjActiveFlag
 import getCalibInfo
+import processConstants
+import calcLuxCLA
+import lowpassFilter
+import calcCS
 
 LOG_FILENAME = 'log_info.txt'
 DATA_FILENAME = 'data_log.txt'
@@ -170,5 +175,26 @@ def readRaw():
     green = [x*calibInfo[2] for x in green]
     blue = [x*calibInfo[3] for x in blue]
     
-     
+    #If new fireware, find constants in the header, process them, and
+    #calculate lux and CLA
+    if not OLD_FLAG:
+        constants = processConstants(info[13],info[12],info[11],info[10],info[9],info[14])
+        temp = calcLuxCLA(red,green,blue,constants)
+    #Else, search for a constants file, process constants, and calculate
+    #lux and CLA
+    else:
+        temp = calcLuxCLA(red,green,blue)
+    #Unpack lux and CLA
+    lux = temp[0]
+    CLA = temp[1]
+    #Delete temp
+    del(temp)
+    
+    #Apply a zero phase shift filter to CLA and activity
+    CLA = lowpassFilter(CLA,logInterval)
+    activity = lowpassFilter(activity,logInterval)
+    #Calculate CS
+    CS = calcCS(CLA)
+    
+    return [time, red, green, blue, lux, CLA, CS, activity]
 if __name__ == '__main__':readRaw()
