@@ -9,13 +9,13 @@ import struct
 import logging
 import time
 import math
-import getErrLog
-import adjActiveFlag
-import getCalibInfo
-import processConstants
-import calcLuxCLA
-import lowpassFilter
-import calcCS
+from geterrlog import getErrLog
+from adjactiveflag import adjActiveFlag
+from getcalibinfo import getCalibInfo
+from processconstants import processConstants
+from calcluxcla import calcLuxCLA
+from lowpassfilter import lowpassFilter
+from calccs import calcCS
 
 LOG_FILENAME = 'log_info.txt'
 DATA_FILENAME = 'data_log.txt'
@@ -196,5 +196,6 @@ def readRaw():
     #Calculate CS
     CS = calcCS(CLA)
     
-    return [time, red, green, blue, lux, CLA, CS, activity]
+    return [time, red, green, blue, lux, CLA, CS, activity, resets]
+    
 if __name__ == '__main__':readRaw()

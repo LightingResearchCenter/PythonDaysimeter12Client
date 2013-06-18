@@ -8,7 +8,7 @@ import logging
 import sys
 from Tkinter import Tk
 from tkFileDialog import askopenfilename
-import getErrLog
+from geterrlong import getErrLog
 
 CALIBRATION_FILENAME = '//root/projects/Daysimeter and dimesimeter reference files/data/Day12 RGB Values.txt'
 LOCAL_CALIB_FILENAME = 'Day12 RGB Values.txt'

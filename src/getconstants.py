@@ -9,7 +9,7 @@ LOCAL_CONST_FILENAME = 'Day12 Cal Values.txt'
 
 import sys
 import logging
-import getErrLog
+from geterrlog import getErrLog
 
 def getConstants ():
     #Create error log file named error.log on the desktop

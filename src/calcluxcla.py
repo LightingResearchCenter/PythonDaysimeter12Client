@@ -6,8 +6,8 @@
 
 import sys
 import logging
-import getConstants
-import getErrLog
+from getconstants import getConstants
+from geterrlog import getErrLog
 
 #calcLuxCLA either takes 3 or 4 arguments. Usage: red, green, blue, [constants]
 def calcLuxCLA(*args):
