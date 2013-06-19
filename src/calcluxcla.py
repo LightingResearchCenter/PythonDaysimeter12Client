@@ -4,13 +4,13 @@
 #INPUT: Red, Green, Blue, daysimeterID
 #OUTPUT: lux, CLA
 
-import sys
-import logging
-from getconstants import getConstants
-from geterrlog import getErrLog
-
 #calcLuxCLA either takes 3 or 4 arguments. Usage: red, green, blue, [constants]
-def calcLuxCLA(*args):
+def calcLuxCLA(*args): 
+    import sys
+    import logging
+    from getconstants import getConstants
+    from geterrlog import getErrLog
+
     ERRLOG_FILENAME = getErrLog()
     logging.basicConfig(filename=ERRLOG_FILENAME,level=logging.DEBUG)
     
@@ -55,7 +55,7 @@ def calcLuxCLA(*args):
         
         if sconeMacula[x] > vLamdaMacula[x] * constants[5][2]:
             #Some super fancy math. I wish I knew what was going on here...
-            CLA[x] = melanopsin[x] + constants[5][0] * (sconeMacula[x] - vLamdaMacula[x] * constants[5][2]) - constants[5][1]*683*(1 - 2.71^(-(vPrime[x]/(683*6.5))));
+            CLA[x] = melanopsin[x] + constants[5][0] * (sconeMacula[x] - vLamdaMacula[x] * constants[5][2]) - constants[5][1]*683*(1 - 2.71**(-(vPrime[x]/(683*6.5))));
         else:
             CLA[x] = melanopsin[x]
             

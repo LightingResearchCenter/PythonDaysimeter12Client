@@ -4,15 +4,15 @@
 #INPUT: 
 #OUTPUT: daysimeter drive ID
 
-import sys
-import os
-from win32api import GetLogicalDriveStrings
-import constants
-
-LOG_FILENAME = constants.LOG_FILENAME
-DATA_FILENAME = constants.DATA_FILENAME
-
 def findDaysimeter():
+    import sys
+    import os
+    from win32api import GetLogicalDriveStrings
+    import constants
+    
+    LOG_FILENAME = constants.LOG_FILENAME
+    DATA_FILENAME = constants.DATA_FILENAME
+    
     #If Windows
     if sys.platform == 'win32':
         drives = GetLogicalDriveStrings()

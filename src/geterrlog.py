@@ -4,11 +4,10 @@
 #INPUT: 
 #OUTPUT: Location of error log
 
-import os
-import pwd
-import getpass
-
 def getErrLog():
+    import os
+    import pwd
+    import getpass
     #If windows, place on desktop
     if os.name == 'nt':
         return 'C:/Users/' + getpass.getuser() + '/Desktop/error.log'

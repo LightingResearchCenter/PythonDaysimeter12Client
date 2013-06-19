@@ -4,14 +4,17 @@
 #INPUT:
 #OUTPUT: Constants to calculate CLA and lux
 
-CONSTANTS_FILENAME = '//root/projects/Daysimeter and dimesimeter reference files/data/Day12 Cal Values.txt'
-LOCAL_CONST_FILENAME = 'Day12 Cal Values.txt'
+def getConstants ():  
+    import sys
+    import logging
+    from geterrlog import getErrLog
+    import constants
+    
+    CONSTANTS_FILENAME = constants.CONSTANTS_FILENAME
+    LOCAL_CONST_FILENAME = constants.LOCAL_CONST_FILENAME
+    
+    
 
-import sys
-import logging
-from geterrlog import getErrLog
-
-def getConstants ():
     #Create error log file named error.log on the desktop
     ERRLOG_FILENAME = getErrLog()
     logging.basicConfig(filename=ERRLOG_FILENAME,level=logging.DEBUG)

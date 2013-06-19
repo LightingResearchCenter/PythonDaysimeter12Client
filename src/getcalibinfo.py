@@ -4,17 +4,17 @@
 #INPUT: daysimeterID
 #OUTPUT: A list of calibration info called calibInfo
 
-import logging
-import sys
-from Tkinter import Tk
-from tkFileDialog import askopenfilename
-from geterrlog import getErrLog
-import constants
-
-CALIBRATION_FILENAME = constants.CALIBRATION_FILENAME
-LOCAL_CALIB_FILENAME = constants.LOCAL_CALIB_FILENAME
-
 def getCalibInfo(daysimeterID):
+    import logging
+    import sys
+    from Tkinter import Tk
+    from tkFileDialog import askopenfilename
+    from geterrlog import getErrLog
+    import constants
+    
+    CALIBRATION_FILENAME = constants.CALIBRATION_FILENAME
+    LOCAL_CALIB_FILENAME = constants.LOCAL_CALIB_FILENAME
+
     
     #Create error log file named error.log on the desktop
     ERRLOG_FILENAME = getErrLog()
@@ -92,7 +92,7 @@ def getCalibInfo(daysimeterID):
     #constants, it is assumed that there is no calibration info in such a case.
     if calibInfo[1] == 1.0 and calibInfo[2] == 2.0 and calibInfo[3] == 3.0:
         logging.warning('There is no calibration info for device')
-        sys.exit(1)
+#        sys.exit(1)
         
     return calibInfo
     

@@ -4,27 +4,27 @@
 #INPUT: log_file, data_file
 #OUTPUT: Data to be pased to a CDF processing script
 
-import sys
-import struct
-import logging
-import time
-import math
-from geterrlog import getErrLog
-from adjactiveflag import adjActiveFlag
-from getcalibinfo import getCalibInfo
-from processconstants import processConstants
-from calcluxcla import calcLuxCLA
-from lowpassfilter import lowpassFilter
-from calccs import calcCS
-from finddaysimeter import findDaysimeter
-import constants
-
-LOG_FILENAME = constants.LOG_FILENAME
-DATA_FILENAME = constants.DATA_FILENAME
-ADJ_ACTIVE_FLAG = constants.ADJ_ACTIVE_FLAG
-OLD_FLAG = constants.OLD_FLAG
-
 def readRaw():
+    import sys
+    import struct
+    import logging
+    import time
+    import math
+    from geterrlog import getErrLog
+    from adjactiveflag import adjActiveFlag
+    from getcalibinfo import getCalibInfo
+    from processconstants import processConstants
+    from calcluxcla import calcLuxCLA
+    from lowpassfilter import lowpassFilter
+    from calccs import calcCS
+    from finddaysimeter import findDaysimeter
+    import constants
+    
+    LOG_FILENAME = constants.LOG_FILENAME
+    DATA_FILENAME = constants.DATA_FILENAME
+    ADJ_ACTIVE_FLAG = constants.ADJ_ACTIVE_FLAG
+    OLD_FLAG = constants.OLD_FLAG
+    
     #Create error log file named error.log on the desktop
     ERRLOG_FILENAME = getErrLog()
     logging.basicConfig(filename=ERRLOG_FILENAME,level=logging.DEBUG)
@@ -48,7 +48,7 @@ def readRaw():
     
     #If we are using an old format, set flag to True
     if len(info) > 17:
-        OLD_FLAG = True
+        OLD_FLAG = False
     
     #Find the daysimeter device ID
     if OLD_FLAG:
@@ -58,7 +58,7 @@ def readRaw():
     
     #Get calibration info
     if not OLD_FLAG:
-        calibConst = [float(str(x).strip('\n')) for x in info[8].split('\t')]
+        calibConst = [float(x) for x in info[8].strip('\n').split('\t')]
         calibInfo = [daysimeterID, calibConst[0], calibConst[1], calibConst[2]]
     else:
         calibInfo = getCalibInfo(daysimeterID)
@@ -84,9 +84,9 @@ def readRaw():
     #Converts a time string into a float representing seconds
     #since epoch (UNIX)
     if not OLD_FLAG:
-        structTime = time.strptime(info[3], "%m-%d-%y %H:%M")
+        structTime = time.strptime(info[3], "%m-%d-%y %H:%M\n")
     else:
-        structTime = time.strptime(info[2], "%m-%d-%y %H:%M")
+        structTime = time.strptime(info[2], "%m-%d-%y %H:%M\n")
     epochTime = time.mktime(structTime)
     #logInterval is interval that the Daysimeter took measurements at.
     #Since python uses seconds since epoch, cast as int
@@ -95,34 +95,39 @@ def readRaw():
     else:
         logInterval = int(info[3])
     
-    #Determine the number of of logged entries
-    numEntires = math.floor(len(data)/4)
+    #Determine the number of of logged entries. Why divded by 8?
+    #I'm glad you asked! There are 4 things that are logged, and
+    #each item takes up 2 bytes. So, we take the total number of
+    #bytes (len(data)) and dived by 2*4. It makes so much sense!
+    #I will admit, I only figure that out during debugging...
+    numEntries = int(math.floor(len(data)/8))
     #Create lists for raw Red, Green, Blue, and Activity
-    red = [-1] * numEntires
-    green = [-1] * numEntires
-    blue = [-1] * numEntires
-    activity = [-1] * numEntires
+    red = [-1] * numEntries
+    green = [-1] * numEntries
+    blue = [-1] * numEntries
+    activity = [-1] * numEntries
     #Iteratively seperate data into raw R,G,B,A
     #struct.unpack unpacks binary data given a format.
     #>H is an unsigned short (16 bit unsigned integer) in big
     #endian notation.
-    for x in range(0,numEntires):
+    for x in range(0,numEntries):
         #If value is 65278 the daysimeter reset, skip and leave
         #the value at -1
-        if struct.unpack('>H',data[x*8:x*8+2]) == 65278:
+        logging.warning('in loop for the ' + str(x) + ' time.')
+        if struct.unpack('>H',data[x*8:x*8+2])[0] == 65278:
             continue
         #If value is 65535 there are no more entires to be
         #read. Remove 'empty' entries and break
-        elif struct.unpack('>H',data[x*8:x*8+2]) == 65535:
+        elif struct.unpack('>H',data[x*8:x*8+2])[0] == 65535:
             del red[x:]
             del green[x:]
             del blue[x:]
             del activity[x:]
             break
-        red[x] = struct.unpack('>H',data[x*8:x*8+2])
-        green[x] = struct.unpack('>H',data[x*8+2:x*8+4])
-        blue[x] = struct.unpack('>H',data[x*8+4:x*8+6])
-        activity[x] = struct.unpack('>H',data[x*8+6:x*8+8])
+        red[x] = struct.unpack('>H',data[x*8:x*8+2])[0]
+        green[x] = struct.unpack('>H',data[x*8+2:x*8+4])[0]
+        blue[x] = struct.unpack('>H',data[x*8+4:x*8+6])[0]
+        activity[x] = struct.unpack('>H',data[x*8+6:x*8+8])[0]
         
     #Create array to keep track of resets; resets[x] = y means
     #there have been y resets before point x.
