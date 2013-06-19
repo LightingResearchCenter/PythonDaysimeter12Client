@@ -76,11 +76,11 @@ def readRaw():
     #Close the datafile
     finally:
         datafile_fp.close()
-    
+
 #####It is assumed that time is formatted correctly, if not this
     #part of the code will not work. Time format is as follows:
     #mm-dd-yy HH:MM
-    
+
     #Converts a time string into a float representing seconds
     #since epoch (UNIX)
     if not OLD_FLAG:
@@ -113,7 +113,6 @@ def readRaw():
     for x in range(0,numEntries):
         #If value is 65278 the daysimeter reset, skip and leave
         #the value at -1
-        logging.warning('in loop for the ' + str(x) + ' time.')
         if struct.unpack('>H',data[x*8:x*8+2])[0] == 65278:
             continue
         #If value is 65535 there are no more entires to be
@@ -201,12 +200,11 @@ def readRaw():
     #Unpack lux and CLA
     lux = temp[0]
     CLA = temp[1]
-    #Delete temp
+
     del(temp)
-    
     #Apply a zero phase shift filter to CLA and activity
-    CLA = lowpassFilter(CLA,logInterval)
-    activity = lowpassFilter(activity,logInterval)
+#    CLA = lowpassFilter(CLA,logInterval)
+#    activity = lowpassFilter(activity,logInterval)
     #Calculate CS
     CS = calcCS(CLA)
     
