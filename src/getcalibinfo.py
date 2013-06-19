@@ -8,7 +8,7 @@ import logging
 import sys
 from Tkinter import Tk
 from tkFileDialog import askopenfilename
-from geterrlong import getErrLog
+from geterrlog import getErrLog
 import constants
 
 CALIBRATION_FILENAME = constants.CALIBRATION_FILENAME
@@ -41,7 +41,7 @@ def getCalibInfo(daysimeterID):
     #Close the calibration file
     finally:
         calibration_fp.close()
-            
+        
     #Create a list of the calibration info
     calibInfo = [float(x) for x in calibInfo[daysimeterID].split('\t') if x.strip()]
     
@@ -86,14 +86,14 @@ def getCalibInfo(daysimeterID):
             
         #Create a list of the calibration info
         calibInfo = [float(x) for x in calibInfo[daysimeterID].split('\t') if x.strip()]
-    
+        
     #The default values for calibration are 1, 2, and 3. Although it
     #is possible that a device actually might have those calibration
     #constants, it is assumed that there is no calibration info in such a case.
     if calibInfo[1] == 1.0 and calibInfo[2] == 2.0 and calibInfo[3] == 3.0:
         logging.warning('There is no calibration info for device')
         sys.exit(1)
-    
+        
     return calibInfo
     
 if __name__ == '__main__':getCalibInfo(-1)

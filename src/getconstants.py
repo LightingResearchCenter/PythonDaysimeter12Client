@@ -42,7 +42,7 @@ def getConstants ():
         #Close the file
         finally:
             constants_fp.close()
-    
+            
     else:
         #Open constants file and get data
         try:
@@ -69,7 +69,7 @@ def getConstants ():
         #Close the file
         finally:
             constants_fp.close()
-    
+            
     #Process data by eliminating tabs, newlines, and leading/trailing
     #spaces. Then, it deletes the first element of each list (the name)
     #and converts the reaming elements to floats.

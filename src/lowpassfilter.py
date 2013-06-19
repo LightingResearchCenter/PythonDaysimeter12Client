@@ -17,6 +17,7 @@ def lowpassFilter(data, sSampleRate):
     magicNum = MINUTES * 60 * hSampleRate
     b = [1] * magicNum
     b = [x/magicNum for x in b]
+    
     return filtfilt(b,1,data)
     
 if __name__ == '__main__':lowpassFilter([],-1)

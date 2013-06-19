@@ -55,7 +55,7 @@ def readRaw():
         daysimeterID = int(info[1])
     else:
         daysimeterID = int(info[2])
-
+    
     #Get calibration info
     if not OLD_FLAG:
         calibConst = [float(str(x).strip('\n')) for x in info[8].split('\t')]
@@ -162,14 +162,14 @@ def readRaw():
         red = adjustedRGB[0]
         green = adjustedRGB[1]
         blue = adjustedRGB[2]
-
+        
     #Create list for time called times (because time is
     #a python module)
     times = [-1] * len(red)
     #Iteratively 'generate' timestamps and place into times
     for x in range(0,len(times)):
         times[x] = epochTime + logInterval*x
-    
+        
     #Activity is captured on the daysimeter as a mean squared
     #value (i.e. activity = x^2 + y^2 + z^2) and is measured in
     #counts. To get the number of g's, calculate the root mean
@@ -178,7 +178,7 @@ def readRaw():
     #souce code." Basically, there is some bit shifting to maximize
     #storage space in the EEPROM, and we 'un-shift' it.
     activity = [math.sqrt(x)*.0039*4 for x in activity]
-
+    
     #Apply calibration constants to raw data
     red = [x*calibInfo[1] for x in red]
     green = [x*calibInfo[2] for x in green]
@@ -206,5 +206,5 @@ def readRaw():
     CS = calcCS(CLA)
     
     return [time, red, green, blue, lux, CLA, CS, activity, resets]
-    
+
 if __name__ == '__main__':readRaw()

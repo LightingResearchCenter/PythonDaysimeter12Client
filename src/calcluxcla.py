@@ -28,7 +28,7 @@ def calcLuxCLA(*args):
     else:
         logging.warning('Invalid usage of calcLuxCLA')
         sys.exit(1)
-    
+        
     loopMax = numEntries = len(constants[0])
     
     #Create lux list and allocate space
@@ -36,7 +36,7 @@ def calcLuxCLA(*args):
     #Calculate and fill lux
     for x in range(0,loopMax):
         lux[x] = constants[4][0]*red[x] + constants[4][1]*green[x] + constants[4][2]*blue[x]
-    
+        
     #Create lists and allocate space for each list
     sconeMacula = [-1] * numEntries
     vLamdaMacula =  [-1] * numEntries
@@ -58,7 +58,7 @@ def calcLuxCLA(*args):
             CLA[x] = melanopsin[x] + constants[5][0] * (sconeMacula[x] - vLamdaMacula[x] * constants[5][2]) - constants[5][1]*683*(1 - 2.71^(-(vPrime[x]/(683*6.5))));
         else:
             CLA[x] = melanopsin[x]
-        
+            
         CLA[x] *= constants[5][3]
         CLA = [0 if x < 0 else x for x in CLA]
     #Pack lux and CLA into a single list & return

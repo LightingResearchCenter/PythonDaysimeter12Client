@@ -14,7 +14,7 @@ def processConstants(sconeMacula, vLamdaMacula, melanopsin, vPrime, vLamda, CLA)
     vPrime = [x.strip('\n') for x in vPrime.split('\t') if x.strip()]
     vLamda = [x.strip('\n') for x in vLamda.split('\t') if x.strip()]
     CLA = [x.strip('\n') for x in CLA.split('\t') if x.strip()]
-  
+    
     sconeMacula = [float(x) for x in sconeMacula]
     vLamdaMacula = [float(x) for x in vLamdaMacula]
     melanopsin = [float(x) for x in melanopsin]
