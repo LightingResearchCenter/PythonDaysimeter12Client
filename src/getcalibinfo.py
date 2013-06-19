@@ -9,9 +9,10 @@ import sys
 from Tkinter import Tk
 from tkFileDialog import askopenfilename
 from geterrlong import getErrLog
+import constants
 
-CALIBRATION_FILENAME = '//root/projects/Daysimeter and dimesimeter reference files/data/Day12 RGB Values.txt'
-LOCAL_CALIB_FILENAME = 'Day12 RGB Values.txt'
+CALIBRATION_FILENAME = constants.CALIBRATION_FILENAME
+LOCAL_CALIB_FILENAME = constants.LOCAL_CALIB_FILENAME
 
 def getCalibInfo(daysimeterID):
     

@@ -5,8 +5,9 @@
 #OUTPUT: filtered data
 
 from scipy.signal import filtfilt
+import constants
 
-MINUTES = 5
+MINUTES = constants.MINUTES
 
 #sSampleRate is the sample rate, in seconds. It should be the log
 #interval of the daysimeter device

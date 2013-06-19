@@ -16,20 +16,23 @@ from processconstants import processConstants
 from calcluxcla import calcLuxCLA
 from lowpassfilter import lowpassFilter
 from calccs import calcCS
+from finddaysimeter import findDaysimeter
+import constants
 
-LOG_FILENAME = 'log_info.txt'
-DATA_FILENAME = 'data_log.txt'
-ADJ_ACTIVE_FLAG = False
-OLD_FLAG = False
+LOG_FILENAME = constants.LOG_FILENAME
+DATA_FILENAME = constants.DATA_FILENAME
+ADJ_ACTIVE_FLAG = constants.ADJ_ACTIVE_FLAG
+OLD_FLAG = constants.OLD_FLAG
 
 def readRaw():
     #Create error log file named error.log on the desktop
     ERRLOG_FILENAME = getErrLog()
     logging.basicConfig(filename=ERRLOG_FILENAME,level=logging.DEBUG)
     
+    PATH = findDaysimeter()
     #Open header file for reading
     try:
-        logfile_fp = open(LOG_FILENAME,"r")
+        logfile_fp = open(PATH + LOG_FILENAME,"r")
     #Catch IO exception (if present), add to log and quit
     except IOError:
         logging.error('Could not open logfile')
@@ -62,7 +65,7 @@ def readRaw():
         
     #Open binary data file for reading
     try:
-        datafile_fp = open(DATA_FILENAME,"rb")
+        datafile_fp = open(PATH + DATA_FILENAME,"rb")
     #Catch IO exception (if present), add to log and quit
     except IOError:
         logging.error('Could not open datafile')
@@ -74,7 +77,7 @@ def readRaw():
     finally:
         datafile_fp.close()
     
-#####It is assumed that time if formatted correctly, if not this
+#####It is assumed that time is formatted correctly, if not this
     #part of the code will not work. Time format is as follows:
     #mm-dd-yy HH:MM
     
@@ -142,7 +145,13 @@ def readRaw():
     
     #If there were resets, R,G,B,A are now shorter than resets,
     #so we shall resize it.
-    resets = resets [:len(red)]
+    del resets[len(red):]
+    
+#####As of right now this is based upon daysimeter ID, however
+    #it would be a better idea to use firmware version once that
+    #is all figured out.
+    if (daysimeterID >= 54 and daysimeterID <= 69) or daysimeterID >= 83:
+        ADJ_ACTIVE_FLAG = True
     
     #If we are using the firmware version where the LSB of
     #activity is actually a monitor for RGB values rolling over
