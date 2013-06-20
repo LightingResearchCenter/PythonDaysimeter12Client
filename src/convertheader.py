@@ -4,7 +4,7 @@
 #INPUT: 
 #OUTPUT:
 
-def convertHeaderNew():
+def convertHeaderF1():
     import sys
     import logging
     from geterrlog import getErrLog
@@ -69,3 +69,49 @@ def convertHeaderNew():
     #Close the logfile
     finally:
         logfile_fp.close()
+
+def convertHeaderF0():
+    import sys
+    import logging
+    from geterrlog import getErrLog
+    from finddaysimeter import findDaysimeter
+    import constants
+
+    LOG_FILENAME = constants.LOG_FILENAME
+    BATTERY_STRING = constants.BATTERY_STRING
+    
+    #Create error log file named error.log on the desktop
+    ERRLOG_FILENAME = getErrLog()
+    if ERRLOG_FILENAME == '':
+        sys.exit(1)
+    logging.basicConfig(filename=ERRLOG_FILENAME,level=logging.DEBUG)
+    
+    PATH = findDaysimeter()
+    #Open header file for reading and editing
+    try:
+        logfile_fp = open(PATH + LOG_FILENAME,'r')
+    #Catch IO exception (if present), add to log and quit
+    except IOError:
+        logging.error('Could not open logfile')
+        sys.exit(1)
+    else:
+        #Read each line of the header and put it into a list
+        #called info.
+        info = logfile_fp.readlines()
+        #Remove binary garbage and whitesapce, if applicable, and format
+        #strings in array.
+        info = [x.strip('\n \xff') + '\n' for x in info]
+        magicNum = info.index(BATTERY_STRING)
+        difference = len(info) - magicNum - 1
+        del info[magicNum+1:]
+        del info[magicNum-6]
+        del info[magicNum-difference-10:magicNum-10]
+        del info[1]
+        logfile_fp.close()
+        logfile_fp = open(PATH + LOG_FILENAME, 'w')
+        for x in info:
+            logfile_fp.write(x)
+    #Close the logfile
+    finally:
+        logfile_fp.close()
+    
