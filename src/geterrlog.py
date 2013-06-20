@@ -6,15 +6,21 @@
 
 def getErrLog():
     import os
+    import sys
     import pwd
     import getpass
-    #If windows, place on desktop
-    if os.name == 'nt':
+    #If Windows, place on desktop
+    if sys.platform == 'win32':
         return 'C:/Users/' + getpass.getuser() + '/Desktop/error.log'
-    #Else if UNIX, place of desktop
-    elif os.name == 'posix':
+    #Else if Mac OSX, place on desktop
+    elif sys.platform == 'darwin':
         return '/Users/' + pwd.getpwuid(os.getuid())[0] + '/Desktop/error.log'
-    #Else, place nowhere
+    #Else if Linux, place on desktop
+    elif sys.platform.startswith('linux'):
+        return '/home/' + pwd.getpwuid(os.getuid())[0] + '/Desktop/error.log'
+    #Else, well hopfully you are running Linux, Mac, or Windows
+    #Because without the error log, I have no place to write an
+    #error that you're using an incompatiple system.
     else:
         return ''
         
