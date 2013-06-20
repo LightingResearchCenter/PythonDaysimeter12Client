@@ -24,6 +24,7 @@ def readRaw():
     DATA_FILENAME = constants.DATA_FILENAME
     ADJ_ACTIVE_FLAG = constants.ADJ_ACTIVE_FLAG
     OLD_FLAG = constants.OLD_FLAG
+    ADJ_ACTIVE_FIRM = constants.ADJ_ACTIVE_FIRM
     
     #Create error log file named error.log on the desktop
     ERRLOG_FILENAME = getErrLog()
@@ -34,7 +35,7 @@ def readRaw():
     PATH = findDaysimeter()
     #Open header file for reading
     try:
-        logfile_fp = open(PATH + LOG_FILENAME,"r")
+        logfile_fp = open(PATH + LOG_FILENAME,'r')
     #Catch IO exception (if present), add to log and quit
     except IOError:
         logging.error('Could not open logfile')
@@ -43,7 +44,7 @@ def readRaw():
         #Read each line of the header and put it into a list
         #called info.
         #info[0] is status, info[1] is device ID, et cetera
-        info = logfile_fp.readlines()
+        info = [x.strip('\n') for x in logfile_fp.readlines()]        
     #Close the logfile
     finally:
         logfile_fp.close()
@@ -86,9 +87,9 @@ def readRaw():
     #Converts a time string into a float representing seconds
     #since epoch (UNIX)
     if not OLD_FLAG:
-        structTime = time.strptime(info[3], "%m-%d-%y %H:%M\n")
+        structTime = time.strptime(info[3], "%m-%d-%y %H:%M")
     else:
-        structTime = time.strptime(info[2], "%m-%d-%y %H:%M\n")
+        structTime = time.strptime(info[2], "%m-%d-%y %H:%M")
     epochTime = time.mktime(structTime)
     #logInterval is interval that the Daysimeter took measurements at.
     #Since python uses seconds since epoch, cast as int
@@ -153,10 +154,14 @@ def readRaw():
     #so we shall resize it.
     del resets[len(red):]
     
-#####As of right now this is based upon daysimeter ID, however
-    #it would be a better idea to use firmware version once that
-    #is all figured out.
-    if (daysimeterID >= 54 and daysimeterID <= 69) or daysimeterID >= 83:
+    #As of right now this uses either daysimeterID (bad) or
+    #firmware version (good). Once all daysimeters use a F1.x 
+    #header or above, this code can be reduced to just the 
+    #elif statement (as an if, of course)
+    if OLD_FLAG:    
+        if (daysimeterID >= 54 and daysimeterID <= 69) or daysimeterID >= 83:
+            ADJ_ACTIVE_FLAG = True
+    elif float(info[1]) in ADJ_ACTIVE_FIRM:
         ADJ_ACTIVE_FLAG = True
     
     #If we are using the firmware version where the LSB of

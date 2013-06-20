@@ -40,4 +40,10 @@ OLD_FLAG = True
 #but have firmware version 0.2 (old header,activity LSB used as
 #rollover flag) 
 FIRM12 = {54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69}
+#BATTERY_STRING is string in the motes section pertaining to voltage.
+#It is important that all future headers match the string, because
+#it is used to make convertHeaderF0 work one any properly extended header.
 BATTERY_STRING = 'Battery voltage (mV/10)\n'
+#ADJ_ACTIVE_FIRM is the set of firmware versions as floats which use
+#the LSB of activity as a rollover flag.
+ADJ_ACTIVE_FIRM = {1.2}
