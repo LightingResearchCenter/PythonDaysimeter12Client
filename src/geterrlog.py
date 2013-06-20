@@ -23,5 +23,3 @@ def getErrLog():
     #error that you're using an incompatiple system.
     else:
         return ''
-        
-if __name__ == '__main__':getErrLog()

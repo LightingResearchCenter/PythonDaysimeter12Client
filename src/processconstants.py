@@ -24,5 +24,3 @@ def processConstants(sconeMacula, vLamdaMacula, melanopsin, vPrime, vLamda, CLA)
     
     #Pack constants into a single list & return
     return [sconeMacula, vLamdaMacula, melanopsin, vPrime, vLamda, CLA]
-    
-if __name__ == '__main__':processConstants([],[],[],[],[],[])

@@ -99,5 +99,3 @@ def getConstants ():
     
     #Pack constants into a single list & return
     return [sconeMacula, vLamdaMacula, melanopsin, vPrime, vLamda, CLA]
-    
-if __name__ == '__main__':getConstants()

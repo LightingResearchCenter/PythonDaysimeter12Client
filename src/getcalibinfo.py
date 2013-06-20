@@ -95,5 +95,3 @@ def getCalibInfo(daysimeterID):
 #        sys.exit(1)
         
     return calibInfo
-    
-if __name__ == '__main__':getCalibInfo(-1)

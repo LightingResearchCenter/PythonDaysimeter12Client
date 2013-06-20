@@ -60,8 +60,6 @@ def calcLuxCLA(*args):
             CLA[x] = melanopsin[x]
             
         CLA[x] *= constants[5][3]
-        #CLA = [0 if x < 0 else x for x in CLA]
+        CLA = [0 if x < 0 else x for x in CLA]
     #Pack lux and CLA into a single list & return
     return [lux, CLA]
-    
-if __name__ == '__main__':calcLuxCLA([],[],[])
