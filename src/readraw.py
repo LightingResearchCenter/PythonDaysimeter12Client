@@ -27,6 +27,8 @@ def readRaw():
     
     #Create error log file named error.log on the desktop
     ERRLOG_FILENAME = getErrLog()
+    if ERRLOG_FILENAME == '':
+        sys.exit(1)
     logging.basicConfig(filename=ERRLOG_FILENAME,level=logging.DEBUG)
     
     PATH = findDaysimeter()
@@ -208,6 +210,6 @@ def readRaw():
     #Calculate CS
     CS = calcCS(CLA)
     
-    return [time, red, green, blue, lux, CLA, CS, activity, resets]
+    return (time, red, green, blue, lux, CLA, CS, activity, resets)
 
 if __name__ == '__main__':readRaw()
