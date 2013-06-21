@@ -11,7 +11,6 @@ from PyQt4.QtGui import *
 import numpy as np
 import datetime as dt
 import daysimData as dd
-import functools as ft
 
 qt_app = QApplication(sys.argv) 
  
@@ -27,10 +26,11 @@ class LayoutExample(QMainWindow):
         formLayout.addWidget(QLabel('hi', self))
         
         self.data = dd.DaysimeterData()
+        self.plot = self.data.get_plot()
         self.buttonBox = QGroupBox('Graph Options')
         self.createButtons()
         
-        layout.addWidget(self.data)
+        layout.addWidget(self.plot)
         layout.addWidget(self.buttonBox)
         self.mainWidget.setLayout(layout)        
         
@@ -69,23 +69,26 @@ class LayoutExample(QMainWindow):
         #self.claButton.toggled.connect(ft.partial(self.data.graphCla, self.claButton))
         #self.csButton.toggled.connect(self.data.graphCs)
         #self.activityButton.toggled.connect(self.data.graphActivity)
-        self.buttonGroup.buttonClicked.connect(self.plot)
+        self.buttonGroup.buttonClicked.connect(self.make_plot)
         
         
-    def plot(self):
-        self.data.plot(self.buttonGroup)
-        self.data.draw()
+    def make_plot(self):
+        self.data.make_plot(self.buttonGroup)
+        self.plot.draw()
         
     def openFile(self):
         #fileName = str(QFileDialog.getOpenFileName(self))
         fileName = "C:\Users\pentla\Documents\GitHub\PythonDaysimeter12Client\gui\TestFile0.txt"
-        daysimValues = np.genfromtxt(fileName, dtype = ('S11', 'S8', 'f8', 'f8', 'f8', 'f8'), names = True)
+        daysimValues = np.genfromtxt(fileName, dtype=('S11', 'S8', 'f8', 'f8', 'f8', 'f8'), names = True)
+
+        #print daysimValues
 
         daysimValues['Date'] = np.core.defchararray.add(daysimValues['Date'], ' ')
         dateTimeStr = np.core.defchararray.add(daysimValues['Date'], daysimValues['Time'])
-        
-        timestamps = [dt.datetime.strptime(dateTimeStr[x], "%m/%d/%Y %H:%M:%S") for x in range(len(dateTimeStr)) ]        
-        self.data.setValues(timestamps, daysimValues['Lux'], daysimValues['CLA'], daysimValues['CS'], daysimValues['Activity'])
+        timestamps = [dt.datetime.strptime(dateTimeStr[x], "%m/%d/%Y %H:%M:%S") for x in range(len(dateTimeStr))]
+        np.delete(daysimValues, (daysimValues['Date'], daysimValues['Time']))
+        print daysimValues
+        self.data.setValues(timestamps, daysimValues)
         
     
     def run(self):
@@ -94,3 +97,4 @@ class LayoutExample(QMainWindow):
 
 app = LayoutExample()
 app.run()
+a=2
