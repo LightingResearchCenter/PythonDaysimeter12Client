@@ -12,22 +12,20 @@ def makeCDF():
     from getlocaloffset import getLocalOffsetS
     
     FILENAME = constants.CDF_FILENAME
-    MODEL = constants.DEVICE_MODEL
-    VERSION = constants.DEVICE_VERSION
     data = readRaw()
     
     with pycdf.CDF(FILENAME,'') as cdf_fp:
         #Set global attributes
         cdf_fp.attrs['creationDate'] = datetime.now()
-        cdf_fp.attrs['deviceModel'] = MODEL
-        cdf_fp.attrs['deviceSN'] = VERSION + str(data[0][1])
-        cdf_fp.attrs['redCalibration'] = data[0][0][0]
-        cdf_fp.attrs['greenCalibration'] = data[0][0][1]
-        cdf_fp.attrs['blueCalibration'] = data[0][0][2]
+        cdf_fp.attrs['deviceModel'] = data[0][0]
+        cdf_fp.attrs['deviceSN'] = data[0][1]
+        cdf_fp.attrs['redCalibration'] = data[0][2][0]
+        cdf_fp.attrs['greenCalibration'] = data[0][2][1]
+        cdf_fp.attrs['blueCalibration'] = data[0][2][2]
 #########The following global attributes either do not exist yet, or
 #########have no available source to pull the information from
-#        cdf_fp.attrs['uvCalibration'] = data[1][0][3]
-#        cdf_fp.attrs['illuminanceCalibration'] = data[1][0][4]
+#        cdf_fp.attrs['uvCalibration'] = 
+#        cdf_fp.attrs['illuminanceCalibration'] =
 #        cdf_fp.attrs['subjectID'] =
 #        cdf_fp.attrs['subjectSex'] =
 #        cdf_fp.attrs['subjectDateOfBirth'] =
