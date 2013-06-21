@@ -51,9 +51,9 @@ def convertHeaderF1():
         #FIRM12 is a set of daysimeter IDs below 83 (the official change
         #over) that use the LSB of activity as a rollover flag for RGB. 
         if int(info[1]) in FIRM12 or int(info[1]) >= 83:
-            logfile_fp.write('1.2\n')
+            logfile_fp.write('1.2\ndaysimeter12\n')
         else:
-            logfile_fp.write('1.1\n')
+            logfile_fp.write('1.1\ndaysimeter12\n')
         #Shifts information down because firmware version is now on line 1
         for x in range(2,8):
             logfile_fp.write(info[x-1])
@@ -69,7 +69,7 @@ def convertHeaderF1():
         for x in range(7,len(info)):
             if x == 11:
                 #Writes firmware version on the appropriate line
-                logfile_fp.write('Firmware Version Number (0.1 old, 1.x future e.g. 1.0) 1.1 = New Header, LSB of Activity is NOT a flag. 1.2 = New Header, LSB is a flag.\n')
+                logfile_fp.write('Firmware Version Number (0.1 old, 1.x future e.g. 1.0) 1.1 = New Header, LSB of Activity is NOT a flag. 1.2 = New Header, LSB is a flag.\nDevice Model\n')
             if x == len(info) - 1:
                 logfile_fp.write(BATTERY_STRING)
                 continue
@@ -120,10 +120,12 @@ def convertHeaderF0():
         #Remove everything after the battery string (in notes)
         del info[magicNum+1:]
         #Remove the inserted firmware version (in notes)
+        del info[magicNum-7]
         del info[magicNum-6]
         #Remove everything after the battery string (in values)
-        del info[magicNum-difference-10:magicNum-10]
+        del info[magicNum-difference-11:magicNum-11]
         #Remove the interted firmware versoin (in notes)
+        del info[2]
         del info[1]
         #Close the file so we can open it again
         logfile_fp.close()
