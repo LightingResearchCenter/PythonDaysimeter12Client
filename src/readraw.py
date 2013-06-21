@@ -10,6 +10,8 @@ def readRaw():
     import logging
     import time
     import math
+    from datetime import datetime
+    from datetime import timedelta
     from geterrlog import getErrLog
     from adjactiveflag import adjActiveFlag
     from getcalibinfo import getCalibInfo
@@ -18,6 +20,7 @@ def readRaw():
     from lowpassfilter import lowpassFilter
     from calccs import calcCS
     from finddaysimeter import findDaysimeter
+    from datetimetodatenum import dt2dn
     import constants
     
     LOG_FILENAME = constants.LOG_FILENAME
@@ -90,7 +93,7 @@ def readRaw():
         structTime = time.strptime(info[3], "%m-%d-%y %H:%M")
     else:
         structTime = time.strptime(info[2], "%m-%d-%y %H:%M")
-    epochTime = time.mktime(structTime)
+    epochTime = datetime.fromtimestamp(time.mktime(structTime))
     #logInterval is interval that the Daysimeter took measurements at.
     #Since python uses seconds since epoch, cast as int
     if not OLD_FLAG:
@@ -157,7 +160,7 @@ def readRaw():
     #As of right now this uses either daysimeterID (bad) or
     #firmware version (good). Once all daysimeters use a F1.x 
     #header or above, this code can be reduced to just the 
-    #elif statement (as an if, of course)
+    #elif statement (as an if, of course )
     if OLD_FLAG:    
         if (daysimeterID >= 54 and daysimeterID <= 69) or daysimeterID >= 83:
             ADJ_ACTIVE_FLAG = True
@@ -177,10 +180,12 @@ def readRaw():
     #Create list for time called times (because time is
     #a python module)
     times = [-1] * len(red)
+    matTimes = [-1] * len(red)
     #Iteratively 'generate' timestamps and place into times
     for x in range(0,len(times)):
-        times[x] = epochTime + logInterval*x
-        
+        times[x] = epochTime + timedelta(seconds=logInterval*x)
+        matTimes[x] = dt2dn(times[x])
+    
     #Activity is captured on the daysimeter as a mean squared
     #value (i.e. activity = x^2 + y^2 + z^2) and is measured in
     #counts. To get the number of g's, calculate the root mean
@@ -215,6 +220,8 @@ def readRaw():
     #Calculate CS
     CS = calcCS(CLA)
     
-    return (time, red, green, blue, lux, CLA, CS, activity, resets)
+    #Return a tuple of lists of mixed lists. The first list in the tuple is
+    #global attributes, and the second is variable data
+    return ([calibInfo,daysimeterID],[times, matTimes, red, green, blue, lux, CLA, CS, activity, resets])
 
 if __name__ == '__main__':readRaw()
