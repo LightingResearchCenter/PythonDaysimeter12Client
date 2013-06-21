@@ -47,3 +47,10 @@ BATTERY_STRING = 'Battery voltage (mV)\n'
 #ADJ_ACTIVE_FIRM is the set of firmware versions as floats which use
 #the LSB of activity as a rollover flag.
 ADJ_ACTIVE_FIRM = {1.2}
+#CDF_FILENAME is the name of the CDF file created by makecdf.py
+CDF_FILENAME = 'output.cdf'
+#DEVICE_MODEL is value to be stored in global attribute deviceModel
+DEVICE_MODEL = 'daysimeter12'
+#DEVICE_VERSION is related to DEVICE_MODEL and is basically just
+#here so concatenation of deviceSN is more dynamic.
+DEVICE_VERSION = '12'
