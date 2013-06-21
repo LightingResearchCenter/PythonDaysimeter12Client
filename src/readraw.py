@@ -10,6 +10,8 @@ def readRaw():
     import logging
     import time
     import math
+    from Tkinter import Tk
+    from tkMessageBox import askyesno
     from datetime import datetime
     from datetime import timedelta
     from geterrlog import getErrLog
@@ -21,6 +23,7 @@ def readRaw():
     from calccs import calcCS
     from finddaysimeter import findDaysimeter
     from datetimetodatenum import dt2dn
+    from convertheader import convertHeaderF1
     import constants
     
     LOG_FILENAME = constants.LOG_FILENAME
@@ -59,8 +62,12 @@ def readRaw():
     #Find the daysimeter device ID
     if OLD_FLAG:
         daysimeterID = int(info[1])
+        deviceModel = constants.DEVICE_MODEL
+        deviceSN = constants.DEVICE_VERSION + info[1]
     else:
-        daysimeterID = int(info[2])
+        daysimeterID = int(info[3])
+        deviceModel = info[2]
+        deviceSN = info[2].lstrip('abcdefghijklmnopqrstuvwxyz') + info[3]
     
     #Get calibration info
     if not OLD_FLAG:
@@ -220,8 +227,13 @@ def readRaw():
     #Calculate CS
     CS = calcCS(CLA)
     
+    if OLD_FLAG:
+        Tk().withdraw()
+        if askyesno(None,'Your ' + deviceModel + '\'s header file is out of date.\nWould you like to update it now?'):
+            convertHeaderF1()
+    
     #Return a tuple of lists of mixed lists. The first list in the tuple is
     #global attributes, and the second is variable data
-    return ([calibInfo,daysimeterID],[times, matTimes, red, green, blue, lux, CLA, CS, activity, resets])
+    return ([deviceModel, deviceSN, calibInfo],[times, matTimes, red, green, blue, lux, CLA, CS, activity, resets])
 
 if __name__ == '__main__':readRaw()
