@@ -10,6 +10,10 @@ def readRaw():
     import logging
     import time
     import math
+    from Tkinter import Tk
+    from tkMessageBox import askyesno
+    from datetime import datetime
+    from datetime import timedelta
     from geterrlog import getErrLog
     from adjactiveflag import adjActiveFlag
     from getcalibinfo import getCalibInfo
@@ -18,12 +22,15 @@ def readRaw():
     from lowpassfilter import lowpassFilter
     from calccs import calcCS
     from finddaysimeter import findDaysimeter
+    from datetimetodatenum import dt2dn
+    from convertheader import convertHeaderF1
     import constants
     
     LOG_FILENAME = constants.LOG_FILENAME
     DATA_FILENAME = constants.DATA_FILENAME
     ADJ_ACTIVE_FLAG = constants.ADJ_ACTIVE_FLAG
     OLD_FLAG = constants.OLD_FLAG
+    ADJ_ACTIVE_FIRM = constants.ADJ_ACTIVE_FIRM
     
     #Create error log file named error.log on the desktop
     ERRLOG_FILENAME = getErrLog()
@@ -34,7 +41,7 @@ def readRaw():
     PATH = findDaysimeter()
     #Open header file for reading
     try:
-        logfile_fp = open(PATH + LOG_FILENAME,"r")
+        logfile_fp = open(PATH + LOG_FILENAME,'r')
     #Catch IO exception (if present), add to log and quit
     except IOError:
         logging.error('Could not open logfile')
@@ -43,7 +50,7 @@ def readRaw():
         #Read each line of the header and put it into a list
         #called info.
         #info[0] is status, info[1] is device ID, et cetera
-        info = logfile_fp.readlines()
+        info = [x.strip('\n') for x in logfile_fp.readlines()]        
     #Close the logfile
     finally:
         logfile_fp.close()
@@ -55,8 +62,12 @@ def readRaw():
     #Find the daysimeter device ID
     if OLD_FLAG:
         daysimeterID = int(info[1])
+        deviceModel = constants.DEVICE_MODEL
+        deviceSN = constants.DEVICE_VERSION + info[1]
     else:
-        daysimeterID = int(info[2])
+        daysimeterID = int(info[3])
+        deviceModel = info[2]
+        deviceSN = info[2].lstrip('abcdefghijklmnopqrstuvwxyz') + info[3]
     
     #Get calibration info
     if not OLD_FLAG:
@@ -86,10 +97,10 @@ def readRaw():
     #Converts a time string into a float representing seconds
     #since epoch (UNIX)
     if not OLD_FLAG:
-        structTime = time.strptime(info[3], "%m-%d-%y %H:%M\n")
+        structTime = time.strptime(info[3], "%m-%d-%y %H:%M")
     else:
-        structTime = time.strptime(info[2], "%m-%d-%y %H:%M\n")
-    epochTime = time.mktime(structTime)
+        structTime = time.strptime(info[2], "%m-%d-%y %H:%M")
+    epochTime = datetime.fromtimestamp(time.mktime(structTime))
     #logInterval is interval that the Daysimeter took measurements at.
     #Since python uses seconds since epoch, cast as int
     if not OLD_FLAG:
@@ -153,10 +164,14 @@ def readRaw():
     #so we shall resize it.
     del resets[len(red):]
     
-#####As of right now this is based upon daysimeter ID, however
-    #it would be a better idea to use firmware version once that
-    #is all figured out.
-    if (daysimeterID >= 54 and daysimeterID <= 69) or daysimeterID >= 83:
+    #As of right now this uses either daysimeterID (bad) or
+    #firmware version (good). Once all daysimeters use a F1.x 
+    #header or above, this code can be reduced to just the 
+    #elif statement (as an if, of course )
+    if OLD_FLAG:    
+        if (daysimeterID >= 54 and daysimeterID <= 69) or daysimeterID >= 83:
+            ADJ_ACTIVE_FLAG = True
+    elif float(info[1]) in ADJ_ACTIVE_FIRM:
         ADJ_ACTIVE_FLAG = True
     
     #If we are using the firmware version where the LSB of
@@ -172,10 +187,12 @@ def readRaw():
     #Create list for time called times (because time is
     #a python module)
     times = [-1] * len(red)
+    matTimes = [-1] * len(red)
     #Iteratively 'generate' timestamps and place into times
     for x in range(0,len(times)):
-        times[x] = epochTime + logInterval*x
-        
+        times[x] = epochTime + timedelta(seconds=logInterval*x)
+        matTimes[x] = dt2dn(times[x])
+    
     #Activity is captured on the daysimeter as a mean squared
     #value (i.e. activity = x^2 + y^2 + z^2) and is measured in
     #counts. To get the number of g's, calculate the root mean
@@ -210,6 +227,13 @@ def readRaw():
     #Calculate CS
     CS = calcCS(CLA)
     
-    return (time, red, green, blue, lux, CLA, CS, activity, resets)
+    if OLD_FLAG:
+        Tk().withdraw()
+        if askyesno(None,'Your ' + deviceModel + '\'s header file is out of date.\nWould you like to update it now?'):
+            convertHeaderF1()
+    
+    #Return a tuple of lists of mixed lists. The first list in the tuple is
+    #global attributes, and the second is variable data
+    return ([deviceModel, deviceSN, calibInfo],[times, matTimes, red, green, blue, lux, CLA, CS, activity, resets])
 
 if __name__ == '__main__':readRaw()

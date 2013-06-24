@@ -40,4 +40,17 @@ OLD_FLAG = True
 #but have firmware version 0.2 (old header,activity LSB used as
 #rollover flag) 
 FIRM12 = {54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69}
-BATTERY_STRING = 'Battery voltage (mV/10)\n'
+#BATTERY_STRING is string in the motes section pertaining to voltage.
+#It is important that all future headers match the string, because
+#it is used to make convertHeaderF0 work one any properly extended header.
+BATTERY_STRING = 'Battery voltage (mV)\n'
+#ADJ_ACTIVE_FIRM is the set of firmware versions as floats which use
+#the LSB of activity as a rollover flag.
+ADJ_ACTIVE_FIRM = {1.2}
+#CDF_FILENAME is the name of the CDF file created by makecdf.py
+CDF_FILENAME = 'output.cdf'
+#DEVICE_MODEL is value to be stored in global attribute deviceModel
+DEVICE_MODEL = 'daysimeter12'
+#DEVICE_VERSION is related to DEVICE_MODEL and is basically just
+#here so concatenation of deviceSN is more dynamic.
+DEVICE_VERSION = '12'
