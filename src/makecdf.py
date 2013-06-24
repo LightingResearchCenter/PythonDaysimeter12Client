@@ -6,12 +6,12 @@
 
 def makeCDF():
     from spacepy import pycdf
-    import constants
+    from savenamecdf import savenameCDF
     from readraw import readRaw
     from datetime import datetime
     from getlocaloffset import getLocalOffsetS
     
-    FILENAME = constants.CDF_FILENAME
+    FILENAME = savenameCDF()
     data = readRaw()
     
     with pycdf.CDF(FILENAME,'') as cdf_fp:
