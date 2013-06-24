@@ -10,6 +10,9 @@ def makeCDF():
     from readraw import readRaw
     from datetime import datetime
     from getlocaloffset import getLocalOffsetS
+    from setdownloadflag import setDownloadFlag
+    from Tkinter import Tk
+    from tkMessageBox import showerror
     
     FILENAME = savenameCDF()
     data = readRaw()
@@ -176,5 +179,10 @@ def makeCDF():
 #        cdf_fp['event'].attrs['description'] = 'Event marker'
 #        cdf_fp['event'].attrs['unitPrefix'] = ''
 #        cdf_fp['event'].attrs['baseUnit'] = ''
-#       cdf_fp['event'].attrs['unitType'] = ''
+#        cdf_fp['event'].attrs['unitType'] = ''
 #        cdf_fp['event'].attrs['otherAttributes'] = 'event code definition'
+        
+    #Set download flag to true (0)
+    setDownloadFlag()
+    Tk().withdraw()
+    showerror('Success!','Download Complete.')
