@@ -71,7 +71,7 @@ def readRaw():
     
     #Get calibration info
     if not OLD_FLAG:
-        calibConst = [float(x) for x in info[8].strip('\n').split('\t')]
+        calibConst = [float(x) for x in info[9].strip('\n').split('\t')]
         calibInfo = [daysimeterID, calibConst[0], calibConst[1], calibConst[2]]
     else:
         calibInfo = getCalibInfo(daysimeterID)
@@ -97,14 +97,14 @@ def readRaw():
     #Converts a time string into a float representing seconds
     #since epoch (UNIX)
     if not OLD_FLAG:
-        structTime = time.strptime(info[3], "%m-%d-%y %H:%M")
+        structTime = time.strptime(info[4], "%m-%d-%y %H:%M")
     else:
         structTime = time.strptime(info[2], "%m-%d-%y %H:%M")
     epochTime = datetime.fromtimestamp(time.mktime(structTime))
     #logInterval is interval that the Daysimeter took measurements at.
     #Since python uses seconds since epoch, cast as int
     if not OLD_FLAG:
-        logInterval = int(info[4])
+        logInterval = int(info[5])
     else:
         logInterval = int(info[3])
     
@@ -210,7 +210,7 @@ def readRaw():
     #If new fireware, find constants in the header, process them, and
     #calculate lux and CLA
     if not OLD_FLAG:
-        constants = processConstants(info[13],info[12],info[11],info[10],info[9],info[14])
+        constants = processConstants(info[14],info[13],info[12],info[11],info[10],info[15])
         temp = calcLuxCLA(red,green,blue,constants)
     #Else, search for a constants file, process constants, and calculate
     #lux and CLA
