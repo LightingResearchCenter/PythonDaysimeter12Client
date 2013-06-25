@@ -9,18 +9,14 @@
 
 def lowpassFilter(data, sSampleRate):   
     from scipy.signal import filtfilt
+    from numpy import ones
     import constants
-    import math
+    from math import floor
     
     MINUTES = constants.MINUTES
-#####THIS FUNCTION IS NOT WORKING PROPERLY YET
-#####I'VE BEEN TRYING TO FIGURE IT OUT BUT THE CODE I'M BASING IT OFF
-#####WAS VERY POORLY COMMENTED
-    
+  
     #hSampleRate is the sample rate in hertz
-    hSampleRate = 1/sSampleRate
-    magicNum = int(math.floor(MINUTES * 60 * hSampleRate))
-    b = [1] * magicNum
-    b = [x/magicNum for x in b]
-    temp = filtfilt(b,[1],data,padlen=0)
-    return [float(x) for x in temp]
+    hSampleRate = 1.0/sSampleRate
+    window_size = int(floor(MINUTES * 60 * hSampleRate))
+    b = ones(window_size)/window_size
+    return filtfilt(b, [1], data, padlen=0)
