@@ -13,8 +13,16 @@ def makeCDF():
     from setdownloadflag import setDownloadFlag
     from Tkinter import Tk
     from tkMessageBox import showerror
+    from accesssubjectinfo import readSubjectInfo
+    import time
+    import os
     
     FILENAME = savenameCDF()
+    if not os.path.exists(os.getcwd() + '/usr/data/subject info.txt'):
+        return
+    sub_info = readSubjectInfo()
+    structTime = time.strptime(sub_info[2], '%d %B %Y')
+    sub_info[2] = datetime.fromtimestamp(time.mktime(structTime))
     data = readRaw()
     
     with pycdf.CDF(FILENAME,'') as cdf_fp:
@@ -29,10 +37,10 @@ def makeCDF():
 #########have no available source to pull the information from
 #        cdf_fp.attrs['uvCalibration'] = 
 #        cdf_fp.attrs['illuminanceCalibration'] =
-#        cdf_fp.attrs['subjectID'] =
-#        cdf_fp.attrs['subjectSex'] =
-#        cdf_fp.attrs['subjectDateOfBirth'] =
-#        cdf_fp.attrs['subjectMass'] =
+        cdf_fp.attrs['subjectID'] = sub_info[0]
+        cdf_fp.attrs['subjectSex'] = sub_info[1]
+        cdf_fp.attrs['subjectDateOfBirth'] = sub_info[2]
+        cdf_fp.attrs['subjectMass'] = sub_info[3]
         
         #Set variables
         cdf_fp['time'] = data[1][0]

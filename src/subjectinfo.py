@@ -9,13 +9,14 @@ OUTPUT:
 import sys
 from PyQt4.QtGui import QPushButton, QHBoxLayout, QLineEdit, QWidget, \
                         QFormLayout, QApplication, QMainWindow, QComboBox
+from accesssubjectinfo import writeSubjectInfo
 
 class subjectInfo(QWidget):
     
     def __init__(self,parent=None):
         super(subjectInfo, self).__init__(parent)
         QMainWindow.__init__(self)
-        self.setWindowTitle('Subject Information')
+        self.setWindowTitle('Enter Subject Information')
         #self.resize(600,400)
         
         self.subjectID = QLineEdit()
@@ -76,11 +77,14 @@ class subjectInfo(QWidget):
         self.cancel.pressed.connect(self.close)
         
     def submitInfo(self):
-        SUB_ID = str(self.subjectIDBox.text())
-        SUB_SEX = str(self.subjectSexBox.text())
-        SUB_DOB = str(self.subjectDateOfBirthBox.text())
-        SUB_MASS = str(self.subjectMassBox.text())
-        self.close
+        SUB_ID = str(self.subjectID.text())
+        SUB_SEX = str(self.subjectSex.currentText())
+        SUB_DOB = str(self.dayDOB.currentText()) + ' ' + \
+            str(self.monthDOB.currentText()) + ' ' + \
+            str(self.yearDOB.currentText())
+        SUB_MASS = str(self.subjectMass.text())
+        writeSubjectInfo(SUB_ID, SUB_SEX, SUB_DOB, SUB_MASS)
+        self.close()
         
     def enableSubmit(self):
         if  not self.subjectID.text() == '' and \
