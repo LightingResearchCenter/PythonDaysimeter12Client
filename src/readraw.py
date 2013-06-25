@@ -222,8 +222,8 @@ def readRaw():
 
     del(temp)
     #Apply a zero phase shift filter to CLA and activity
-#    CLA = lowpassFilter(CLA,logInterval)
-#    activity = lowpassFilter(activity,logInterval)
+    CLA = lowpassFilter(CLA,logInterval)
+    activity = lowpassFilter(activity,logInterval)
     #Calculate CS
     CS = calcCS(CLA)
     
