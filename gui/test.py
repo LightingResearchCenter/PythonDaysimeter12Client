@@ -6,95 +6,87 @@ Created on Wed Jun 12 15:34:13 2013
 """
 
 import sys
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+import PyQt4.QtGui as qt
 import numpy as np
 import datetime as dt
-import daysimData as dd
+import daysimdata as dd
 
-qt_app = QApplication(sys.argv) 
+QT_APP = qt.QApplication(sys.argv) 
  
-class LayoutExample(QMainWindow):
+class LayoutExample(qt.QMainWindow):
     def __init__(self):
-        QMainWindow.__init__(self)
+        qt.QMainWindow.__init__(self)
         self.setWindowTitle('Daysimeter Download Client')
         self.setMinimumSize(600, 400)
-        self.mainWidget = QWidget(self)
+        self.main_widget = qt.QWidget(self)
         
-        layout = QVBoxLayout()
-        formLayout = QFormLayout()
-        formLayout.addWidget(QLabel('hi', self))
+        layout = qt.QVBoxLayout()
+        form_layout = qt.QFormLayout()
+        form_layout.addWidget(qt.QLabel('hi', self))
         
         self.data = dd.DaysimeterData()
         self.plot = self.data.get_plot()
-        self.buttonBox = QGroupBox('Graph Options')
-        self.createButtons()
+        self.button_box = qt.QGroupBox('Graph Options')
         
         layout.addWidget(self.plot)
-        layout.addWidget(self.buttonBox)
-        self.mainWidget.setLayout(layout)        
+        layout.addWidget(self.button_box)
+        self.main_widget.setLayout(layout)        
         
-        self.setCentralWidget(self.mainWidget)
+        self.setCentralWidget(self.main_widget)
         
-        self.createActions()
-        self.createMenus()
+        self.create_actions()
+        self.create_menus()
         
-    def createMenus(self):
-        fileMenu = self.menuBar().addMenu("&File")
-        fileMenu.addAction(self.openAct)
+    def create_menus(self):
+        file_menu = self.menuBar().addMenu("&File")
+        file_menu.addAction(self.open_act)
         
-    def createActions(self):
-        self.openAct = QAction("&Open...", self)
-        self.openAct.setStatusTip = "Open a processed daysimeter file",
-        self.openAct.triggered.connect(self.openFile)
+    def create_actions(self):
+        self.open_act = qt.QAction("&Open...", self)
+        self.open_act.setStatusTip = "Open a processed daysimeter file",
+        self.open_act.triggered.connect(self.open_file)
         
-    def createButtons(self):
-        self.buttonGroup = QButtonGroup()
-        self.luxButton = QRadioButton("Lux", self.buttonBox)
-        self.claButton = QRadioButton("CLA", self.buttonBox)
-        self.csButton = QRadioButton("CS", self.buttonBox)
-        self.activityButton = QRadioButton("Activity", self.buttonBox)
-        
-        self.buttonGroup.addButton(self.luxButton, 0)
-        self.buttonGroup.addButton(self.claButton, 1)
-        self.buttonGroup.addButton(self.csButton, 2)
-        self.buttonGroup.addButton(self.activityButton, 3)
-        
-        vbox = QVBoxLayout()        
-        for i in self.buttonGroup.buttons():
-            vbox.addWidget(i)
-        self.buttonBox.setLayout(vbox)
-        
-        #self.luxButton.toggled.connect(ft.partial(self.data.graphLux, self.luxButton))
-        #self.claButton.toggled.connect(ft.partial(self.data.graphCla, self.claButton))
-        #self.csButton.toggled.connect(self.data.graphCs)
-        #self.activityButton.toggled.connect(self.data.graphActivity)
-        self.buttonGroup.buttonClicked.connect(self.make_plot)
-        
+    def make_buttons(self, names):
+        self.button_group = qt.QButtonGroup()
+        self.button_group.setExclusive(False)
+        vbox = qt.QVBoxLayout()
+        button_dict = {}
+        for name in names:
+            button_dict[name] = qt.QRadioButton(name, self.button_box)
+            self.button_group.addButton(button_dict[name])
+            vbox.addWidget(button_dict[name])
+        self.button_box.setLayout(vbox)
+        self.button_group.buttonClicked.connect(self.make_plot)
         
     def make_plot(self):
-        self.data.make_plot(self.buttonGroup)
+        self.data.show_plots(self.button_group)
         self.plot.draw()
         
-    def openFile(self):
-        #fileName = str(QFileDialog.getOpenFileName(self))
-        fileName = "C:\Users\pentla\Documents\GitHub\PythonDaysimeter12Client\gui\TestFile0.txt"
-        daysimValues = np.genfromtxt(fileName, dtype=('S11', 'S8', 'f8', 'f8', 'f8', 'f8'), names = True)
+    def open_file(self):
+        file_name = str(qt.QFileDialog.getOpenFileName(self))
+        #file_name = "C:\Users\pentla\Documents\GitHub\PythonDaysimeter12Client\gui\TestFile0.txt"
+        daysim_values = np.genfromtxt(file_name, 
+                                     dtype=['S11', 'S8', 'f8', 'f8', 'f8', 'f8'],
+                                     names=True)
 
-        #print daysimValues
-
-        daysimValues['Date'] = np.core.defchararray.add(daysimValues['Date'], ' ')
-        dateTimeStr = np.core.defchararray.add(daysimValues['Date'], daysimValues['Time'])
-        timestamps = [dt.datetime.strptime(dateTimeStr[x], "%m/%d/%Y %H:%M:%S") for x in range(len(dateTimeStr))]
-        np.delete(daysimValues, (daysimValues['Date'], daysimValues['Time']))
-        print daysimValues
-        self.data.setValues(timestamps, daysimValues)
+        daysim_values['Date'] = np.core.defchararray.add(daysim_values['Date'], 
+                                                        ' ')
+        datetime_str = np.core.defchararray.add(daysim_values['Date'],
+                                               daysim_values['Time'])
+        timestamps = [dt.datetime.strptime(datetime_str[x], "%m/%d/%Y %H:%M:%S")
+                      for x in range(len(datetime_str))]
+        daysim_values = self.remove_datetime_fields(daysim_values)
+        self.data.set_values(timestamps, daysim_values)
+        self.make_buttons(self.data.get_data_names())
         
+    def remove_datetime_fields(self, data_array):
+        names = list(data_array.dtype.names)
+        new_names = names[2:]
+        return data_array[new_names]
     
     def run(self):
         self.show()
-        sys.exit(qt_app.exec_())
+        sys.exit(QT_APP.exec_())
 
-app = LayoutExample()
-app.run()
-a=2
+APP = LayoutExample()
+APP.run()
