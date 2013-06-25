@@ -22,5 +22,5 @@ def lowpassFilter(data, sSampleRate):
     magicNum = int(math.floor(MINUTES * 60 * hSampleRate))
     b = [1] * magicNum
     b = [x/magicNum for x in b]
-    temp = filtfilt(b,[1,1],data,padlen=0)
+    temp = filtfilt(b,[1],data,padlen=0)
     return [float(x) for x in temp]
