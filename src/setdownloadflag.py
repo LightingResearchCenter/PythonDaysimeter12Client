@@ -1,18 +1,21 @@
-#setdownloadflag
-#Author: Jed Kundl
-#Creation Date: 24.06.2013
-#INPUT: 
-#OUTPUT: 
+"""
+set_download_flag
+Author: Jed Kundl
+Creation Date: 24.06.2013
+INPUT: 
+OUTPUT: 
+"""
 
-def setDownloadFlag():
-    import constants
-    from finddaysimeter import findDaysimeter
-    
-    PATH = findDaysimeter()
-    LOG_FILENAME = constants.LOG_FILENAME
+import constants
+from finddaysimeter import find_daysimeter
+
+def set_download_flag():
+    """ PURPOSE: Sets download flag to true (0) once download is compelte. """
+    path = find_daysimeter()
+    log_filename = constants.LOG_FILENAME
     
     try:
-        logfile_fp = open(PATH + LOG_FILENAME,'r+')
+        logfile_fp = open(path + log_filename,'r+')
     #This function will only ever be called if the logfile was previously
     #opened. So I chose to not bother with error handling here because
     #it's unnecessary.

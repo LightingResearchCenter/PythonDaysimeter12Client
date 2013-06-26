@@ -1,26 +1,36 @@
-#ProcessConstants
-#Author: Jed Kundl
-#Creation Date: 17.06.2013
-#INPUT: sconeMacula, vLamdaMacula, melanopsin, vPrime, vLamda, CLA
-#OUTPUT: Constants to calculate CLA and lux
+"""
+process_constants
+Author: Jed Kundl
+Creation Date: 17.06.2013
+INPUT: scone_macula, v_lamda_macula, melanopsin, v_prime, v_lamda, cla
+OUTPUT: Constants to calculate cla and lux
+"""
 
-def processConstants(sconeMacula, vLamdaMacula, melanopsin, vPrime, vLamda, CLA):
-    #Process data by eliminating tabs, newlines, and leading/trailing
-    #spaces. Then, it deletes the first element of each list (the name)
-    #and converts the reaming elements to floats.
-    sconeMacula = [x.strip('\n') for x in sconeMacula.split('\t') if x.strip()]
-    vLamdaMacula = [x.strip('\n') for x in vLamdaMacula.split('\t') if x.strip()]
-    melanopsin = [x.strip('\n') for x in melanopsin.split('\t') if x.strip()]
-    vPrime = [x.strip('\n') for x in vPrime.split('\t') if x.strip()]
-    vLamda = [x.strip('\n') for x in vLamda.split('\t') if x.strip()]
-    CLA = [x.strip('\n') for x in CLA.split('\t') if x.strip()]
+def process_constants(scone_macula, v_lamda_macula, melanopsin, \
+v_prime, v_lamda, cla):
+    """
+    Process data by eliminating tabs, newlines, and leading/trailing
+    spaces. Then, it deletes the first element of each list (the name)
+    and converts the reaming elements to floats.
+    """
+    scone_macula = \
+    [x.strip('\n') for x in scone_macula.split('\t') if x.strip()]
+    v_lamda_macula = \
+    [x.strip('\n') for x in v_lamda_macula.split('\t') if x.strip()]
+    melanopsin = \
+    [x.strip('\n') for x in melanopsin.split('\t') if x.strip()]
+    v_prime = \
+    [x.strip('\n') for x in v_prime.split('\t') if x.strip()]
+    v_lamda = \
+    [x.strip('\n') for x in v_lamda.split('\t') if x.strip()]
+    cla = [x.strip('\n') for x in cla.split('\t') if x.strip()]
     
-    sconeMacula = [float(x) for x in sconeMacula]
-    vLamdaMacula = [float(x) for x in vLamdaMacula]
+    scone_macula = [float(x) for x in scone_macula]
+    v_lamda_macula = [float(x) for x in v_lamda_macula]
     melanopsin = [float(x) for x in melanopsin]
-    vPrime = [float(x) for x in vPrime]
-    vLamda = [float(x) for x in vLamda]
-    CLA = [float(x) for x in CLA]
+    v_prime = [float(x) for x in v_prime]
+    v_lamda = [float(x) for x in v_lamda]
+    cla = [float(x) for x in cla]
     
     #Pack constants into a single list & return
-    return [sconeMacula, vLamdaMacula, melanopsin, vPrime, vLamda, CLA]
+    return [scone_macula, v_lamda_macula, melanopsin, v_prime, v_lamda, cla]

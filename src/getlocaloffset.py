@@ -1,41 +1,34 @@
-#GetLocalOffset
-#Author: Jed Kundl
-#Creation Date: 21.06.2013
-#INPUT: 
-#OUTPUT: Local UTC offset
+"""
+get_local_offset
+Author: Jed Kundl
+Creation Date: 21.06.2013
+INPUT: 
+OUTPUT: Local UTC offset
+"""
 
-#Local offset in seconds
-def getLocalOffsetS():
-    import dateutil.tz
-    import datetime
-    
-    localTimeZone = dateutil.tz.tzlocal()
-    localOffset = localTimeZone.utcoffset(datetime.datetime.now())
-    return localOffset.days * 86400 + localOffset.seconds
+import dateutil.tz
+import datetime
 
-#Local offset in minutes  
-def getLocalOffsetM():
-    import dateutil.tz
-    import datetime
-    
-    localTimeZone = dateutil.tz.tzlocal()
-    localOffset = localTimeZone.utcoffset(datetime.datetime.now())
-    return (localOffset.days * 86400 + localOffset.seconds)/60
+def get_local_offset_s():
+    """ PURPOSE: Get local offset in seconds. """
+    local_time_zone = dateutil.tz.tzlocal()
+    local_offset = local_time_zone.utcoffset(datetime.datetime.now())
+    return local_offset.days * 86400 + local_offset.seconds
 
-#Local offset in hours    
-def getLocalOffsetH():
-    import dateutil.tz
-    import datetime
+def get_local_offset_m():
+    """ Get local offset in minutes. """
+    local_time_zone = dateutil.tz.tzlocal()
+    local_offset = local_time_zone.utcoffset(datetime.datetime.now())
+    return (local_offset.days * 86400 + local_offset.seconds)/60
     
-    localTimeZone = dateutil.tz.tzlocal()
-    localOffset = localTimeZone.utcoffset(datetime.datetime.now())
-    return (localOffset.days * 86400 + localOffset.seconds)/3600
-
-#Loval offset in days    
-def getLocalOffsetD():
-    import dateutil.tz
-    import datetime
+def get_local_offset_h():
+    """ Get local offset in hours. """    
+    local_time_zone = dateutil.tz.tzlocal()
+    local_offset = local_time_zone.utcoffset(datetime.datetime.now())
+    return (local_offset.days * 86400 + local_offset.seconds)/3600
     
-    localTimeZone = dateutil.tz.tzlocal()
-    localOffset = localTimeZone.utcoffset(datetime.datetime.now())
-    return localOffset.days + localOffset.seconds/86400
+def get_local_offset_d():
+    """ Get loval offset in days. """    
+    local_time_zone = dateutil.tz.tzlocal()
+    local_offset = local_time_zone.utcoffset(datetime.datetime.now())
+    return local_offset.days + local_offset.seconds/86400

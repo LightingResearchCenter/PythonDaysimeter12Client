@@ -1,31 +1,34 @@
-#MakeCDF
-#Author: Jed Kundl
-#Creation Date: 19.06.2013
-#INPUT: 
-#OUTPUT: CDF File
+"""
+make_cdf
+Author: Jed Kundl
+Creation Date: 19.06.2013
+INPUT: 
+OUTPUT: CDF File
+"""
 
-def makeCDF():
-    from spacepy import pycdf
-    from savenamecdf import savenameCDF
-    from readraw import readRaw
-    from datetime import datetime
-    from getlocaloffset import getLocalOffsetS
-    from setdownloadflag import setDownloadFlag
-    from Tkinter import Tk
-    from tkMessageBox import showerror
-    from accesssubjectinfo import readSubjectInfo
-    import time
-    import os
-    
-    FILENAME = savenameCDF()
+from spacepy import pycdf
+from savenamecdf import savename_cdf
+from readraw import read_raw
+from datetime import datetime
+from getlocaloffset import get_local_offset_s
+from setdownloadflag import set_download_flag
+from Tkinter import Tk
+from tkMessageBox import showerror
+from accesssubjectinfo import read_subject_info
+import time
+import os
+
+def make_cdf():
+    """ PURPOSE: Makes a CDF file from data. """
+    filename = savename_cdf()
     if not os.path.exists(os.getcwd() + '/usr/data/subject info.txt'):
         return
-    sub_info = readSubjectInfo()
-    structTime = time.strptime(sub_info[2], '%d %B %Y')
-    sub_info[2] = datetime.fromtimestamp(time.mktime(structTime))
-    data = readRaw()
+    sub_info = read_subject_info()
+    struct_time = time.strptime(sub_info[2], '%d %B %Y')
+    sub_info[2] = datetime.fromtimestamp(time.mktime(struct_time))
+    data = read_raw()
     
-    with pycdf.CDF(FILENAME,'') as cdf_fp:
+    with pycdf.CDF(filename,'') as cdf_fp:
         #Set global attributes
         cdf_fp.attrs['creationDate'] = datetime.now()
         cdf_fp.attrs['deviceModel'] = data[0][0]
@@ -44,9 +47,10 @@ def makeCDF():
         
         #Set variables
         cdf_fp['time'] = data[1][0]
-        cdf_fp.new('matTime',type=pycdf.const.CDF_REAL8)
+        cdf_fp.new('matTime', type=pycdf.const.CDF_REAL8)
         cdf_fp['matTime'] = data[1][1]
-        cdf_fp.new('timeOffset',getLocalOffsetS(),pycdf.const.CDF_INT4,False)
+        cdf_fp.new('timeOffset', get_local_offset_s(), \
+        pycdf.const.CDF_INT4, False)
         cdf_fp['red'] = data[1][2]
         cdf_fp['green'] = data[1][3]
         cdf_fp['blue'] = data[1][4]
@@ -65,14 +69,16 @@ def makeCDF():
 #        cdf_fp['event'] =
         
         #Set variable attributes for time
-        cdf_fp['time'].attrs['description'] = 'UTC in CDF Epoch format, milliseconds since 1-Jan-0000'
+        cdf_fp['time'].attrs['description'] = 'UTC in CDF Epoch format, \
+        milliseconds since 1-Jan-0000'
         cdf_fp['time'].attrs['unitPrefix'] = 'm'
         cdf_fp['time'].attrs['baseUnit'] = 's'
         cdf_fp['time'].attrs['unitType'] = 'baseSI'
         cdf_fp['time'].attrs['otherAttributes'] = ''
         
         #Set variable attributes for matTime
-        cdf_fp['matTime'].attrs['description'] = 'UTC in MATLAB serial date format, days since 1-Jan-0000'
+        cdf_fp['matTime'].attrs['description'] = 'UTC in MATLAB serial date \
+        format, days since 1-Jan-0000'
         cdf_fp['matTime'].attrs['unitPrefix'] = ''
         cdf_fp['matTime'].attrs['baseUnit'] = 'days'
         cdf_fp['matTime'].attrs['unitType'] = 'nonSI'
@@ -128,28 +134,32 @@ def makeCDF():
         cdf_fp['CS'].attrs['otherAttributes'] = 'model'
         
         #Set variable attributes for activity
-        cdf_fp['activity'].attrs['description'] = 'Activity index in g-force (acceleration in m/2^2 over standard gravity 9.80665 m/s^2)'
+        cdf_fp['activity'].attrs['description'] = 'Activity index in g-force \
+        (acceleration in m/2^2 over standard gravity 9.80665 m/s^2)'
         cdf_fp['activity'].attrs['unitPrefix'] = ''
         cdf_fp['activity'].attrs['baseUnit'] = 'g_n'
         cdf_fp['activity'].attrs['unitType'] = 'nonSI'
         cdf_fp['activity'].attrs['otherAttributes'] = 'method'
         
         #Set variable attributes for xAcceleration
-#        cdf_fp['xAcceleration'].attrs['description'] = 'Acceleration in the x-axis relative to the accelerometer'
+#        cdf_fp['xAcceleration'].attrs['description'] = 'Acceleration in the \
+#        x-axis relative to the accelerometer'
 #        cdf_fp['xAcceleration'].attrs['unitPrefix'] = ''
 #        cdf_fp['xAcceleration'].attrs['baseUnit'] = 'm/s^2'
 #        cdf_fp['xAcceleration'].attrs['unitType'] = 'derivedSI'
 #        cdf_fp['xAcceleration'].attrs['otherAttributes'] = ''
         
         #Set variable attributes for yAcceleration
-#        cdf_fp['yAcceleration'].attrs['description'] = 'Acceleration in the y-axis relative to the accelerometer'
+#        cdf_fp['yAcceleration'].attrs['description'] = 'Acceleration in the \
+#        y-axis relative to the accelerometer'
 #        cdf_fp['yAcceleration'].attrs['unitPrefix'] = ''
 #        cdf_fp['yAcceleration'].attrs['baseUnit'] = 'm/s^2'
 #        cdf_fp['yAcceleration'].attrs['unitType'] = 'derivedSI'
 #        cdf_fp['yAcceleration'].attrs['otherAttributes'] = ''
         
         #Set variable attributes for zAcceleration
-#        cdf_fp['zAcceleration'].attrs['description'] = 'Acceleration in the z-axis relative to the accelerometer'
+#        cdf_fp['zAcceleration'].attrs['description'] = 'Acceleration in the \
+#        z-axis relative to the accelerometer'
 #        cdf_fp['zAcceleration'].attrs['unitPrefix'] = ''
 #        cdf_fp['zAcceleration'].attrs['baseUnit'] = 'm/s^2'
 #        cdf_fp['zAcceleration'].attrs['unitType'] = 'derivedSI'
@@ -163,14 +173,16 @@ def makeCDF():
 #        cdf_fp['uvIndex'].attrs['otherAttributes'] = ''
         
         #Set variable attributes for temperature
-#        cdf_fp['temperature'].attrs['description'] = 'Ambient air temperature in degrees Kelvin'
+#        cdf_fp['temperature'].attrs['description'] = 'Ambient air \
+#        temperature in degrees Kelvin'
 #        cdf_fp['temperature'].attrs['unitPrefix'] = ''
 #        cdf_fp['temperature'].attrs['baseUnit'] = 'K'
 #        cdf_fp['temperature'].attrs['unitType'] = 'baseSI'
 #        cdf_fp['temperature'].attrs['otherAttributes'] = ''
         
         #Set variable attributes for longitude
-#        cdf_fp['longitude'].attrs['description'] = 'Longitude in decimal degrees'
+#        cdf_fp['longitude'].attrs['description'] = 'Longitude in decimal \
+#        degrees'
 #        cdf_fp['longitude'].attrs['unitPrefix'] = ''
 #        cdf_fp['longitude'].attrs['baseUnit'] = 'deg'
 #        cdf_fp['longitude'].attrs['unitType'] = 'nonSI'
@@ -191,6 +203,6 @@ def makeCDF():
 #        cdf_fp['event'].attrs['otherAttributes'] = 'event code definition'
         
     #Set download flag to true (0)
-    setDownloadFlag()
+    set_download_flag()
     Tk().withdraw()
     showerror('Success!','Download Complete.')

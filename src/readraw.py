@@ -1,47 +1,50 @@
-#ReadRaw
-#Author: Jed Kundl
-#Creation Date: 13.06.2013
-#INPUT: log_file, data_file
-#OUTPUT: Data to be pased to a CDF processing script
+"""
+read_raw
+Author: Jed Kundl
+Creation Date: 13.06.2013
+INPUT: log_file, data_file
+OUTPUT: Data to be pased to a CDF processing script
+"""
 
-def readRaw():
-    import sys
-    import struct
-    import logging
-    import time
-    import math
-    from Tkinter import Tk
-    from tkMessageBox import askyesno
-    from datetime import datetime
-    from datetime import timedelta
-    from geterrlog import getErrLog
-    from adjactiveflag import adjActiveFlag
-    from getcalibinfo import getCalibInfo
-    from processconstants import processConstants
-    from calcluxcla import calcLuxCLA
-    from lowpassfilter import lowpassFilter
-    from calccs import calcCS
-    from finddaysimeter import findDaysimeter
-    from datetimetodatenum import dt2dn
-    from convertheader import convertHeaderF1
-    import constants
-    
-    LOG_FILENAME = constants.LOG_FILENAME
-    DATA_FILENAME = constants.DATA_FILENAME
-    ADJ_ACTIVE_FLAG = constants.ADJ_ACTIVE_FLAG
-    OLD_FLAG = constants.OLD_FLAG
-    ADJ_ACTIVE_FIRM = constants.ADJ_ACTIVE_FIRM
+import sys
+import struct
+import logging
+import time
+import math
+from Tkinter import Tk
+from tkMessageBox import askyesno
+from datetime import datetime
+from datetime import timedelta
+from geterrlog import get_err_log
+from adjactiveflag import adj_active_flag
+from getcalibinfo import get_calib_info
+from processconstants import process_constants
+from calcluxcla import calc_lux_cla
+from lowpassfilter import lowpass_filter
+from calccs import calc_cs
+from finddaysimeter import find_daysimeter
+from datetimetodatenum import dt2dn
+from convertheader import convert_header_f1
+import constants as constants_
+
+def read_raw():
+    """ PURPOSE: Reads raw binary data and packages it. """
+    log_filename = constants_.LOG_FILENAME
+    data_filename = constants_.DATA_FILENAME
+    adj_active_flag_ = constants_.ADJ_ACTIVE_FLAG
+    old_flag = constants_.OLD_FLAG
+    adj_active_firm = constants_.ADJ_ACTIVE_FIRM
     
     #Create error log file named error.log on the desktop
-    ERRLOG_FILENAME = getErrLog()
-    if ERRLOG_FILENAME == '':
+    errlog_filename = get_err_log()
+    if errlog_filename == '':
         sys.exit(1)
-    logging.basicConfig(filename=ERRLOG_FILENAME,level=logging.DEBUG)
+    logging.basicConfig(filename=errlog_filename, level=logging.DEBUG)
     
-    PATH = findDaysimeter()
+    path = find_daysimeter()
     #Open header file for reading
     try:
-        logfile_fp = open(PATH + LOG_FILENAME,'r')
+        logfile_fp = open(path + log_filename,'r')
     #Catch IO exception (if present), add to log and quit
     except IOError:
         logging.error('Could not open logfile')
@@ -57,28 +60,29 @@ def readRaw():
     
     #If we are using an old format, set flag to True
     if len(info) > 17:
-        OLD_FLAG = False
+        old_flag = False
     
     #Find the daysimeter device ID
-    if OLD_FLAG:
-        daysimeterID = int(info[1])
-        deviceModel = constants.DEVICE_MODEL
-        deviceSN = constants.DEVICE_VERSION + info[1]
+    if old_flag:
+        daysimeter_id = int(info[1])
+        device_model = constants_.DEVICE_MODEL
+        device_sn = constants_.DEVICE_VERSION + info[1]
     else:
-        daysimeterID = int(info[3])
-        deviceModel = info[2]
-        deviceSN = info[2].lstrip('abcdefghijklmnopqrstuvwxyz') + info[3]
+        daysimeter_id = int(info[3])
+        device_model = info[2]
+        device_sn = info[2].lstrip('abcdefghijklmnopqrstuvwxyz') + info[3]
     
     #Get calibration info
-    if not OLD_FLAG:
-        calibConst = [float(x) for x in info[9].strip('\n').split('\t')]
-        calibInfo = [daysimeterID, calibConst[0], calibConst[1], calibConst[2]]
+    if not old_flag:
+        calib_const = [float(x) for x in info[9].strip('\n').split('\t')]
+        calib_info = \
+        [daysimeter_id, calib_const[0], calib_const[1], calib_const[2]]
     else:
-        calibInfo = getCalibInfo(daysimeterID)
+        calib_info = get_calib_info(daysimeter_id)
         
     #Open binary data file for reading
     try:
-        datafile_fp = open(PATH + DATA_FILENAME,"rb")
+        datafile_fp = open(path + data_filename,"rb")
     #Catch IO exception (if present), add to log and quit
     except IOError:
         logging.error('Could not open datafile')
@@ -96,50 +100,50 @@ def readRaw():
 
     #Converts a time string into a float representing seconds
     #since epoch (UNIX)
-    if not OLD_FLAG:
-        structTime = time.strptime(info[4], "%m-%d-%y %H:%M")
+    if not old_flag:
+        struct_time = time.strptime(info[4], "%m-%d-%y %H:%M")
     else:
-        structTime = time.strptime(info[2], "%m-%d-%y %H:%M")
-    epochTime = datetime.fromtimestamp(time.mktime(structTime))
-    #logInterval is interval that the Daysimeter took measurements at.
+        struct_time = time.strptime(info[2], "%m-%d-%y %H:%M")
+    epoch_time = datetime.fromtimestamp(time.mktime(struct_time))
+    #log_interval is interval that the Daysimeter took measurements at.
     #Since python uses seconds since epoch, cast as int
-    if not OLD_FLAG:
-        logInterval = int(info[5])
+    if not old_flag:
+        log_interval = int(info[5])
     else:
-        logInterval = int(info[3])
+        log_interval = int(info[3])
     
     #Determine the number of of logged entries. Why divded by 8?
     #I'm glad you asked! There are 4 things that are logged, and
     #each item takes up 2 bytes. So, we take the total number of
     #bytes (len(data)) and dived by 2*4. It makes so much sense!
     #I will admit, I only figure that out during debugging...
-    numEntries = int(math.floor(len(data)/8))
+    num_entries = int(math.floor(len(data)/8))
     #Create lists for raw Red, Green, Blue, and Activity
-    red = [-1] * numEntries
-    green = [-1] * numEntries
-    blue = [-1] * numEntries
-    activity = [-1] * numEntries
+    red = [-1] * num_entries
+    green = [-1] * num_entries
+    blue = [-1] * num_entries
+    activity = [-1] * num_entries
     #Iteratively seperate data into raw R,G,B,A
     #struct.unpack unpacks binary data given a format.
     #>H is an unsigned short (16 bit unsigned integer) in big
     #endian notation.
-    for x in range(0,numEntries):
+    for x in range(0, num_entries):
         #If value is 65278 the daysimeter reset, skip and leave
         #the value at -1
-        if struct.unpack('>H',data[x*8:x*8+2])[0] == 65278:
+        if struct.unpack('>H', data[x*8:x*8+2])[0] == 65278:
             continue
         #If value is 65535 there are no more entires to be
         #read. Remove 'empty' entries and break
-        elif struct.unpack('>H',data[x*8:x*8+2])[0] == 65535:
+        elif struct.unpack('>H', data[x*8:x*8+2])[0] == 65535:
             del red[x:]
             del green[x:]
             del blue[x:]
             del activity[x:]
             break
-        red[x] = struct.unpack('>H',data[x*8:x*8+2])[0]
-        green[x] = struct.unpack('>H',data[x*8+2:x*8+4])[0]
-        blue[x] = struct.unpack('>H',data[x*8+4:x*8+6])[0]
-        activity[x] = struct.unpack('>H',data[x*8+6:x*8+8])[0]
+        red[x] = struct.unpack('>H', data[x*8:x*8+2])[0]
+        green[x] = struct.unpack('>H', data[x*8+2:x*8+4])[0]
+        blue[x] = struct.unpack('>H', data[x*8+4:x*8+6])[0]
+        activity[x] = struct.unpack('>H', data[x*8+6:x*8+8])[0]
         
     #Create array to keep track of resets; resets[x] = y means
     #there have been y resets before point x.
@@ -155,43 +159,43 @@ def readRaw():
             del green[x]
             del blue [x]
             del activity[x]
-            y+=1
+            y += 1
             continue
         resets[x] = y
-        x+=1
+        x += 1
     
     #If there were resets, R,G,B,A are now shorter than resets,
     #so we shall resize it.
     del resets[len(red):]
     
-    #As of right now this uses either daysimeterID (bad) or
+    #As of right now this uses either daysimeter_id (bad) or
     #firmware version (good). Once all daysimeters use a F1.x 
     #header or above, this code can be reduced to just the 
     #elif statement (as an if, of course )
-    if OLD_FLAG:    
-        if (daysimeterID >= 54 and daysimeterID <= 69) or daysimeterID >= 83:
-            ADJ_ACTIVE_FLAG = True
-    elif float(info[1]) in ADJ_ACTIVE_FIRM:
-        ADJ_ACTIVE_FLAG = True
+    if old_flag:    
+        if (daysimeter_id >= 54 and daysimeter_id <= 69) or daysimeter_id >= 83:
+            adj_active_flag_ = True
+    elif float(info[1]) in adj_active_firm:
+        adj_active_flag_ = True
     
     #If we are using the firmware version where the LSB of
     #activity is actually a monitor for RGB values rolling over
     #we need to adjust the values accordingly.
-    if ADJ_ACTIVE_FLAG:
-        adjustedRGB = adjActiveFlag(red,green,blue,activity)
+    if adj_active_flag_:
+        adjusted_rgb = adj_active_flag(red, green, blue, activity)
         #Unpack adjusted values
-        red = adjustedRGB[0]
-        green = adjustedRGB[1]
-        blue = adjustedRGB[2]
+        red = adjusted_rgb[0]
+        green = adjusted_rgb[1]
+        blue = adjusted_rgb[2]
         
     #Create list for time called times (because time is
     #a python module)
     times = [-1] * len(red)
-    matTimes = [-1] * len(red)
+    mat_times = [-1] * len(red)
     #Iteratively 'generate' timestamps and place into times
-    for x in range(0,len(times)):
-        times[x] = epochTime + timedelta(seconds=logInterval*x)
-        matTimes[x] = dt2dn(times[x])
+    for x in range(0, len(times)):
+        times[x] = epoch_time + timedelta(seconds=log_interval*x)
+        mat_times[x] = dt2dn(times[x])
     
     #Activity is captured on the daysimeter as a mean squared
     #value (i.e. activity = x^2 + y^2 + z^2) and is measured in
@@ -203,37 +207,41 @@ def readRaw():
     activity = [math.sqrt(x)*.0039*4 for x in activity]
     
     #Apply calibration constants to raw data
-    red = [x*calibInfo[1] for x in red]
-    green = [x*calibInfo[2] for x in green]
-    blue = [x*calibInfo[3] for x in blue]
+    red = [x*calib_info[1] for x in red]
+    green = [x*calib_info[2] for x in green]
+    blue = [x*calib_info[3] for x in blue]
     
     #If new fireware, find constants in the header, process them, and
-    #calculate lux and CLA
-    if not OLD_FLAG:
-        constants = processConstants(info[14],info[13],info[12],info[11],info[10],info[15])
-        temp = calcLuxCLA(red,green,blue,constants)
+    #calculate lux and cla
+    if not old_flag:
+        constants = process_constants(info[14], info[13], info[12], \
+        info[11], info[10], info[15])
+        temp = calc_lux_cla(red, green, blue, constants)
     #Else, search for a constants file, process constants, and calculate
-    #lux and CLA
+    #lux and cla
     else:
-        temp = calcLuxCLA(red,green,blue)
-    #Unpack lux and CLA
+        temp = calc_lux_cla(red, green, blue)
+    #Unpack lux and cla
     lux = temp[0]
-    CLA = temp[1]
+    cla = temp[1]
 
     del(temp)
-    #Apply a zero phase shift filter to CLA and activity
-    CLA = lowpassFilter(CLA,logInterval)
-    activity = lowpassFilter(activity,logInterval)
-    #Calculate CS
-    CS = calcCS(CLA)
+    #Apply a zero phase shift filter to cla and activity
+    cla = lowpass_filter(cla, log_interval)
+    activity = lowpass_filter(activity, log_interval)
+    #Calculate cs
+    cs = calc_cs(cla)
     
-    if OLD_FLAG:
+    if old_flag:
         Tk().withdraw()
-        if askyesno(None,'Your ' + deviceModel + '\'s header file is out of date.\nWould you like to update it now?'):
-            convertHeaderF1()
+        if askyesno(None,'Your ' + device_model + \
+        '\'s header file is out of date.\nWould you like to update it now?'):
+            convert_header_f1()
     
     #Return a tuple of lists of mixed lists. The first list in the tuple is
     #global attributes, and the second is variable data
-    return ([deviceModel, deviceSN, calibInfo],[times, matTimes, red, green, blue, lux, CLA, CS, activity, resets])
+    return ([device_model, device_sn, calib_info], \
+    [times, mat_times, red, green, blue, lux, cla, cs, activity, resets])
 
-if __name__ == '__main__':readRaw()
+if __name__ == '__main__':
+    read_raw()

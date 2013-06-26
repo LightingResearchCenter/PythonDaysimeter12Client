@@ -1,22 +1,24 @@
-#LowpassFilter
-#Author: Jed Kundl
-#Creation Date: 18.06.2013
-#INPUT: data, sSampleRate
-#OUTPUT: filtered data
+"""
+lowpass_filter
+Author: Jed Kundl
+Creation Date: 18.06.2013
+INPUT: data, s_sample_rate
+OUTPUT: filtered data
+"""
 
-#sSampleRate is the sample rate, in seconds. It should be the log
+from scipy.signal import filtfilt
+from numpy import ones
+import constants
+from math import floor
+
+#s_sample_rate is the sample rate, in seconds. It should be the log
 #interval of the daysimeter device
 
-def lowpassFilter(data, sSampleRate):   
-    from scipy.signal import filtfilt
-    from numpy import ones
-    import constants
-    from math import floor
-    
-    MINUTES = constants.MINUTES
-  
-    #hSampleRate is the sample rate in hertz
-    hSampleRate = 1.0/sSampleRate
-    window_size = int(floor(MINUTES * 60 * hSampleRate))
+def lowpass_filter(data, s_sample_rate):   
+    """ PURPOSE: Filter data to smooth curves. """
+    minutes = constants.MINUTES
+    #h_sample_rate is the sample rate in hertz
+    h_sample_rate = 1.0/s_sample_rate
+    window_size = int(floor(minutes * 60 * h_sample_rate))
     b = ones(window_size)/window_size
     return filtfilt(b, [1], data, padlen=0)

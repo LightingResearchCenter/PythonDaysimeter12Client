@@ -1,46 +1,46 @@
-#GetConstants
-#Author: Jed Kundl
-#Creation Date: 17.06.2013
-#INPUT:
-#OUTPUT: Constants to calculate CLA and lux
+"""
+get_constants
+Author: Jed Kundl
+Creation Date: 17.06.2013
+INPUT:
+OUTPUT: Constants to calculate cla and lux
+"""
 
-def getConstants ():  
-    import sys
-    import logging
-    from geterrlog import getErrLog
-    import constants
-    
-    CONSTANTS_FILENAME = constants.CONSTANTS_FILENAME
-    LOCAL_CONST_FILENAME = constants.LOCAL_CONST_FILENAME
-    
-    
+import sys
+import logging
+from geterrlog import get_err_log
+import constants
+
+def get_constants ():  
+    """ PURPOSE: Get consstnats for calculations. """
+    constants_filename = constants.CONSTANTS_FILENAME
+    local_const_filename = constants.LOCAL_CONST_FILENAME
 
     #Create error log file named error.log on the desktop
-    ERRLOG_FILENAME = getErrLog()
-    logging.basicConfig(filename=ERRLOG_FILENAME,level=logging.DEBUG)
+    errlog_filename = get_err_log()
+    logging.basicConfig(filename=errlog_filename, level=logging.DEBUG)
     
     if True:
         #Open constants file and get data
         try:
-            constants_fp = open(CONSTANTS_FILENAME,"r")
+            constants_fp = open(constants_filename,"r")
         #Catch IO exception, add to log and continue
         except IOError:
             logging.error('Could not open constants file from server')
-            pass
         #Read data into lists
         else:
             #Trash handles header and/or empty lines in the file.
             #This unfortunately means that the file structure
             #cannot be changed.
             trash = constants_fp.readline()
-            sconeMacula = constants_fp.readline()
-            vLamdaMacula = constants_fp.readline()
+            scone_macula = constants_fp.readline()
+            v_lamda_macula = constants_fp.readline()
             melanopsin = constants_fp.readline()
-            vPrime = constants_fp.readline()
-            vLamda = constants_fp.readline()
+            v_prime = constants_fp.readline()
+            v_lamda = constants_fp.readline()
             trash = constants_fp.readline()
             trash = constants_fp.readline()
-            CLA = constants_fp.readline()
+            cla = constants_fp.readline()
             del(trash)
         #Close the file
         finally:
@@ -49,7 +49,7 @@ def getConstants ():
     else:
         #Open constants file and get data
         try:
-            constants_fp = open(LOCAL_CONST_FILENAME,"r")
+            constants_fp = open(local_const_filename,"r")
         #Catch IO exception, add to log and quit
         except IOError:
             logging.error('Could not open constants file locally')
@@ -60,14 +60,14 @@ def getConstants ():
             #This unfortunately means that the file structure
             #cannot be changed.
             trash = constants_fp.readline()
-            sconeMacula = constants_fp.readline()
-            vLamdaMacula = constants_fp.readline()
+            scone_macula = constants_fp.readline()
+            v_lamda_macula = constants_fp.readline()
             melanopsin = constants_fp.readline()
-            vPrime = constants_fp.readline()
-            vLamda = constants_fp.readline()
+            v_prime = constants_fp.readline()
+            v_lamda = constants_fp.readline()
             trash = constants_fp.readline()
             trash = constants_fp.readline()
-            CLA = constants_fp.readline()
+            cla = constants_fp.readline()
             del(trash)
         #Close the file
         finally:
@@ -76,26 +76,28 @@ def getConstants ():
     #Process data by eliminating tabs, newlines, and leading/trailing
     #spaces. Then, it deletes the first element of each list (the name)
     #and converts the reaming elements to floats.
-    sconeMacula = [x.strip('\n') for x in sconeMacula.split('\t') if x.strip()]
-    vLamdaMacula = [x.strip('\n') for x in vLamdaMacula.split('\t') if x.strip()]
+    scone_macula = \
+    [x.strip('\n') for x in scone_macula.split('\t') if x.strip()]
+    v_lamda_macula = \
+    [x.strip('\n') for x in v_lamda_macula.split('\t') if x.strip()]
     melanopsin = [x.strip('\n') for x in melanopsin.split('\t') if x.strip()]
-    vPrime = [x.strip('\n') for x in vPrime.split('\t') if x.strip()]
-    vLamda = [x.strip('\n') for x in vLamda.split('\t') if x.strip()]
-    CLA = [x.strip('\n') for x in CLA.split('\t') if x.strip()]
+    v_prime = [x.strip('\n') for x in v_prime.split('\t') if x.strip()]
+    v_lamda = [x.strip('\n') for x in v_lamda.split('\t') if x.strip()]
+    cla = [x.strip('\n') for x in cla.split('\t') if x.strip()]
     
-    del(sconeMacula[0])
-    del(vLamdaMacula[0])
+    del(scone_macula[0])
+    del(v_lamda_macula[0])
     del(melanopsin[0])
-    del(vPrime[0])
-    del(vLamda[0])
-    del(CLA[0])
+    del(v_prime[0])
+    del(v_lamda[0])
+    del(cla[0])
     
-    sconeMacula = [float(x) for x in sconeMacula]
-    vLamdaMacula = [float(x) for x in vLamdaMacula]
+    scone_macula = [float(x) for x in scone_macula]
+    v_lamda_macula = [float(x) for x in v_lamda_macula]
     melanopsin = [float(x) for x in melanopsin]
-    vPrime = [float(x) for x in vPrime]
-    vLamda = [float(x) for x in vLamda]
-    CLA = [float(x) for x in CLA]
+    v_prime = [float(x) for x in v_prime]
+    v_lamda = [float(x) for x in v_lamda]
+    cla = [float(x) for x in cla]
     
     #Pack constants into a single list & return
-    return [sconeMacula, vLamdaMacula, melanopsin, vPrime, vLamda, CLA]
+    return [scone_macula, v_lamda_macula, melanopsin, v_prime, v_lamda, cla]

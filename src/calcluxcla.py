@@ -1,65 +1,75 @@
-#CalcLuxCLA
-#Author: Jed Kundl
-#Creation Date: 17.06.2013
-#INPUT: Red, Green, Blue, daysimeterID
-#OUTPUT: lux, CLA
+"""
+calc_lux_cla
+Author: Jed Kundl
+Creation Date: 17.06.2013
+INPUT: Red, Green, Blue, daysimeterID
+OUTPUT: lux, cla
+calc_lux_cla either takes 3 or 4 arguments. Usage: red, green, blue, [constants]
+"""
 
-#calcLuxCLA either takes 3 or 4 arguments. Usage: red, green, blue, [constants]
-def calcLuxCLA(*args): 
-    import sys
-    import logging
-    from getconstants import getConstants
-    from geterrlog import getErrLog
+import sys
+import logging
+from getconstants import get_constants
+from geterrlog import get_err_log
 
-    ERRLOG_FILENAME = getErrLog()
-    logging.basicConfig(filename=ERRLOG_FILENAME,level=logging.DEBUG)
+def calc_lux_cla(*args): 
+    """ PURPOSE: Calculates CS and cla. """
+    error_log_filename = get_err_log()
+    logging.basicConfig(filename=error_log_filename, level=logging.DEBUG)
     
     if len(args) == 3:
         red = args[0]
         green = args[1]
         blue = args[2]
         #Constants is a list of lists, with hardware specific constants
-        constants = getConstants()
+        constants = get_constants()
     elif len(args) == 4:
         red = args[0]
         green = args[1]
         blue = args[2]
         constants = args[3]
     else:
-        logging.warning('Invalid usage of calcLuxCLA')
+        logging.warning('Invalid usage of calc_lux_cla')
         sys.exit(1)
         
-    loopMax = numEntries = len(red)
+    loop_max = num_entries = len(red)
     
     #Create lux list and allocate space
-    lux = [-1] * numEntries
+    lux = [-1] * num_entries
     #Calculate and fill lux
-    for x in range(0,loopMax):
-        lux[x] = constants[4][0]*red[x] + constants[4][1]*green[x] + constants[4][2]*blue[x]
+    for x in range(0, loop_max):
+        lux[x] = constants[4][0]*red[x] + constants[4][1]*green[x] + \
+        constants[4][2]*blue[x]
         
     #Create lists and allocate space for each list
-    sconeMacula = [-1] * numEntries
-    vLamdaMacula =  [-1] * numEntries
-    melanopsin =  [-1] * numEntries
-    vPrime =  [-1] * numEntries
-    CLA = [-1] * numEntries
+    scone_macula = [-1] * num_entries
+    v_lamda_macula =  [-1] * num_entries
+    melanopsin =  [-1] * num_entries
+    v_prime =  [-1] * num_entries
+    cla = [-1] * num_entries
     
     #Following is lots of fancy math which I do not understand the
     #reasoning for. I based it off the MatLab code, with some exceptions
     #to optimize code for python
-    for x in range(0,loopMax):
-        sconeMacula[x] = constants[0][0]*red[x] + constants[0][1]*green[x] + constants[0][2]*blue[x]
-        vLamdaMacula[x] = constants[1][0]*red[x] + constants[1][1]*green[x] + constants[1][2]*blue[x]
-        melanopsin[x] = constants[2][0]*red[x] + constants[2][1]*green[x] + constants[2][2]*blue[x]
-        vPrime[x] = constants[3][0]*red[x] + constants[3][1]*green[x] + constants[3][2]*blue[x]
+    for x in range(0, loop_max):
+        scone_macula[x] = constants[0][0]*red[x] + constants[0][1]*green[x] + \
+        constants[0][2]*blue[x]
+        v_lamda_macula[x] = constants[1][0]*red[x] + \
+        constants[1][1]*green[x] + constants[1][2]*blue[x]
+        melanopsin[x] = constants[2][0]*red[x] + constants[2][1]*green[x] + \
+        constants[2][2]*blue[x]
+        v_prime[x] = constants[3][0]*red[x] + constants[3][1]*green[x] + \
+        constants[3][2]*blue[x]
         
-        if sconeMacula[x] > vLamdaMacula[x] * constants[5][2]:
+        if scone_macula[x] > v_lamda_macula[x] * constants[5][2]:
             #Some super fancy math. I wish I knew what was going on here...
-            CLA[x] = melanopsin[x] + constants[5][0] * (sconeMacula[x] - vLamdaMacula[x] * constants[5][2]) - constants[5][1]*683*(1 - 2.71**(-(vPrime[x]/(683*6.5))))
+            cla[x] = melanopsin[x] + constants[5][0] * (scone_macula[x] - \
+            v_lamda_macula[x] * constants[5][2]) - \
+            constants[5][1]*683*(1 - 2.71**(-(v_prime[x]/(683*6.5))))
         else:
-            CLA[x] = melanopsin[x]
+            cla[x] = melanopsin[x]
             
-        CLA[x] *= constants[5][3]
-        CLA = [0 if x < 0 else x for x in CLA]
-    #Pack lux and CLA into a single list & return
-    return [lux, CLA]
+        cla[x] *= constants[5][3]
+        cla = [0 if x < 0 else x for x in cla]
+    #Pack lux and cla into a single list & return
+    return [lux, cla]
