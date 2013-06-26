@@ -5,11 +5,12 @@ Created on Wed Jun 12 15:34:13 2013
 @author: pentla
 """
 
-import sys
+import sys, os
 import PyQt4.QtGui as qt
 import numpy as np
 import datetime as dt
 import graphingwidget as gw
+import ConfigParser
 
 QT_APP = qt.QApplication(sys.argv) 
  
@@ -20,27 +21,54 @@ class LayoutExample(qt.QMainWindow):
         self.setMinimumSize(600, 400)
         self.main_widget = gw.GraphingWidget(self)
         self.setCentralWidget(self.main_widget)
-        #self.create_actions()
+        
         self.create_menus()
         
+    def load_config(self):
+        dir_path = os.getcwd()
+        file_path = os.path.join(dir_path, 'daysim.ini')
+        
+        
     def create_menus(self):
-        file_menu = self.menuBar().addMenu("&File")
-        file_actions = self.create_menu_actions()
-        file_menu.addAction(file_actions)
+        self.create_file_menu()
+        self.create_daysimeter_menu()
         
-    def create_menu_actions(self):
-        open_act = qt.QAction("&Open...", self)
-        open_act.setStatusTip = "Open a processed daysimeter file",
-        open_act.triggered.connect(self.open_file)
+    def create_file_menu(self):
+        file_menu = self.menuBar().addMenu('&File')
+        actions = []
+        open_act = self.create_action("&Open...", 
+                                      self.open_file,
+                                      statustip="Open a processed daysimeter file",
+                                      shortcut=qt.QKeySequence.Open)
         
-        quit_act = qt.QAction("&Quit", self)
+        quit_act = self.create_action("&Quit",
+                                      sys.exit,
+                                      shortcut=qt.QKeySequence.Quit)
+        actions.extend([open_act, quit_act])
+        for action in actions:
+            file_menu.addAction(action)
+            
+    def create_daysimeter_menu(self):
+        daysim_menu = self.menuBar().addMenu('&Daysim')
+        actions = []
+        #actions = self.create_action("&Set save path")
         
-        return open_act
+    def create_action(self, name, function, statustip=None,
+                      shortcut=None):
+        """Convenience function for creating new actions"""
+        action = qt.QAction(name, self)
+        if statustip:
+            action.setStatusTip(statustip)
+        if shortcut:
+            action.setShortcut(shortcut)
+        action.triggered.connect(function)
+        return action
         
-    def create_action(self, name, status_tip,  function)
         
     def open_file(self):
         file_name = str(qt.QFileDialog.getOpenFileName(self))
+        if not file_name:
+            return
         #file_name = "C:\Users\pentla\Documents\GitHub\PythonDaysimeter12Client\gui\TestFile0.txt"
         daysim_values = np.genfromtxt(file_name, 
                                      dtype=['S11', 'S8', 'f8', 'f8', 'f8', 'f8'],
