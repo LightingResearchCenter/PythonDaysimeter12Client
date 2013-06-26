@@ -26,7 +26,7 @@ class DaysimeterData:
         self.data = None
         self.canvas = FigureCanvas(self.fig)
         
-    def show_plots(self, button_group):
+    def show_plots(self, button_names):
         """Show the created plots
         
         Keyword arguments:
@@ -34,17 +34,17 @@ class DaysimeterData:
                          of the data values (e.g. Lux, CS, etc.)
                             
         """
+        print button_names
         # Only tries to show plots once the data and timestamps have been set
         if self.values_set:
             # Iterates through the buttons and gets their names
             # If its name is matches an axis name, show the axis, otherwise 
             # hide it
-            for button in button_group.buttons():
-                button_name = str(button.text())
-                if button.isChecked():
-                    self.ax_dict[button_name].set_visible(True)
+            for name in self.ax_dict:
+                if name in button_names:
+                    self.ax_dict[name].set_visible(True)
                 else:
-                    self.ax_dict[button_name].set_visible(False)
+                    self.ax_dict[name].set_visible(False)
                     
     def get_plot(self):
         """Return the canvas for drawing"""
@@ -60,7 +60,6 @@ class DaysimeterData:
         self.timestamps = times
         self.data = data
         self.smooth()
-        self.make_plots()
         self.values_set = True
         
     def make_plots(self):
@@ -101,6 +100,7 @@ class DaysimeterData:
         names = list(self.data.dtype.names)
         for name in names:
             if name != 'Activity':
+                
                 self.data[name] = lpf.lowpassFilter(self.data[name], 90)
                 
     def get_data_names(self):
