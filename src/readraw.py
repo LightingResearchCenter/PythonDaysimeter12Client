@@ -11,8 +11,6 @@ import struct
 import logging
 import time
 import math
-from Tkinter import Tk
-from tkMessageBox import askyesno
 from datetime import datetime
 from datetime import timedelta
 from geterrlog import get_err_log
@@ -24,7 +22,6 @@ from lowpassfilter import lowpass_filter
 from calccs import calc_cs
 from finddaysimeter import find_daysimeter
 from datetimetodatenum import dt2dn
-from convertheader import convert_header_f1
 import constants as constants_
 
 def read_raw():
@@ -231,13 +228,7 @@ def read_raw():
     activity = lowpass_filter(activity, log_interval)
     #Calculate cs
     cs = calc_cs(cla)
-    
-    if old_flag:
-        Tk().withdraw()
-        if askyesno(None,'Your ' + device_model + \
-        '\'s header file is out of date.\nWould you like to update it now?'):
-            convert_header_f1()
-    
+
     #Return a tuple of lists of mixed lists. The first list in the tuple is
     #global attributes, and the second is variable data
     return ([device_model, device_sn, calib_info], \

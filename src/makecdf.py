@@ -7,22 +7,18 @@ OUTPUT: CDF File
 """
 
 from spacepy import pycdf
-from savenamecdf import savename_cdf
 from readraw import read_raw
 from datetime import datetime
 from getlocaloffset import get_local_offset_s
 from setdownloadflag import set_download_flag
-from Tkinter import Tk
-from tkMessageBox import showerror
 from accesssubjectinfo import read_subject_info
 import time
 import os
 
-def make_cdf():
+def make_cdf(filename):
     """ PURPOSE: Makes a CDF file from data. """
-    filename = savename_cdf()
     if not os.path.exists(os.getcwd() + '/usr/data/subject info.txt'):
-        return
+        return False
     sub_info = read_subject_info()
     struct_time = time.strptime(sub_info[2], '%d %B %Y')
     sub_info[2] = datetime.fromtimestamp(time.mktime(struct_time))
@@ -204,5 +200,4 @@ def make_cdf():
         
     #Set download flag to true (0)
     set_download_flag()
-    Tk().withdraw()
-    showerror('Success!','Download Complete.')
+    return True

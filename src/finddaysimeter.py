@@ -41,6 +41,6 @@ def find_daysimeter():
             if os.path.isfile(x + '/' + log_filename) and \
             os.path.isfile(x + '/' + data_filename):
                 return x + '/'
-    else:
-        pass
+                
+    return False
 ####Need to write cross-platform code here
