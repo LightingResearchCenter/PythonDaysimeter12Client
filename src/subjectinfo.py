@@ -7,11 +7,15 @@ Creation Date: 25.06.2013
 import sys
 from PyQt4.QtGui import QPushButton, QHBoxLayout, QLineEdit, QWidget, \
                         QFormLayout, QApplication, QMainWindow, QComboBox
+from PyQt4 import QtCore
 from accesssubjectinfo import write_subject_info
 
 
 class SubjectInfo(QWidget):
     """ PURPOSE: Creates a widget for a user to enter subject information """
+
+    on_submit = QtCore.pyqtSignal()    
+    
     def __init__(self,parent=None):
         super(SubjectInfo, self).__init__(parent)
         QMainWindow.__init__(self)
@@ -85,7 +89,8 @@ class SubjectInfo(QWidget):
             str(self.month_dob.currentText()) + ' ' + \
             str(self.year_dob.currentText())
         sub_mass = str(self.subject_mass.text())
-        write_subject_info(sub_id, sub_sex, sub_dob, sub_mass)
+        self.info = [sub_id, sub_sex, sub_dob, sub_mass]
+        self.emit(QtCore.SIGNAL('giveinfo'), self.info)
         self.close()
     
    
@@ -101,6 +106,14 @@ class SubjectInfo(QWidget):
             self.submit.setEnabled(True)
         else:
             self.submit.setEnabled(False)
+            
+    @QtCore.pyqtSlot()
+    def on_signal(self):
+        self.show()
+        
+    @QtCore.pyqtSlot()
+    def on_submit(self):
+        self.emit(self.info)
 
 def main():
     """ PURPOSE: Creates app and runs widget """

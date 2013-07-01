@@ -63,7 +63,8 @@ class DownloadMake(QtGui.QWidget):
         
     def start_download(self):
         if not find_daysimeter():
-            self.status_bar.showMessage('No Daysimeter plugged into this computer.')
+            self.status_bar.showMessage('No Daysimeter plugged into this' + \
+            ' computer.')
         else:
             self.filename = str(QtGui.QFileDialog.getSaveFileName(self, \
             ("Save CDF"), "./", ("CDF Files (*.cdf)")))
@@ -72,8 +73,10 @@ class DownloadMake(QtGui.QWidget):
                 self.start.setText('Downloading...')
                 self.start.setEnabled(False)
                 self.downloader = DownloadDaysimeter(self)
-                self.connect(self.downloader, QtCore.SIGNAL('update'), self.update_progress)
-                self.connect(self.downloader, QtCore.SIGNAL('make'), self.make_cdf)
+                self.connect(self.downloader, QtCore.SIGNAL('update'), \
+                self.update_progress)
+                self.connect(self.downloader, QtCore.SIGNAL('make'), \
+                self.make_cdf)
                 self.downloader.start()
         
     def make_cdf(self, data):
@@ -245,7 +248,8 @@ class DownloadDaysimeter(QtCore.QThread):
         #header or above, this code can be reduced to just the 
         #elif statement (as an if, of course )
         if old_flag:    
-            if (daysimeter_id >= 54 and daysimeter_id <= 69) or daysimeter_id >= 83:
+            if (daysimeter_id >= 54 and daysimeter_id <= 69) or \
+            daysimeter_id >= 83:
                 adj_active_flag_ = True
         elif float(info[1]) in adj_active_firm:
             adj_active_flag_ = True
@@ -268,7 +272,7 @@ class DownloadDaysimeter(QtCore.QThread):
         for x in range(0, len(times)):
             times[x] = epoch_time + timedelta(seconds=log_interval*x)
             mat_times[x] = dt2dn(times[x])
-        
+            
         #Activity is captured on the daysimeter as a mean squared
         #value (i.e. activity = x^2 + y^2 + z^2) and is measured in
         #counts. To get the number of g's, calculate the root mean
@@ -303,8 +307,9 @@ class DownloadDaysimeter(QtCore.QThread):
         #Calculate cs
         cs = calc_cs(cla)
         
-        self.emit(QtCore.SIGNAL('make'),([device_model, device_sn, calib_info], \
-        [times, mat_times, red, green, blue, lux, cla, cs, activity, resets]))
+        self.emit(QtCore.SIGNAL('make'),([device_model, device_sn, \
+        calib_info], [times, mat_times, red, green, blue, lux, cla, cs, \
+        activity, resets]))
         
     def calc_lux_cla(self, *args):
         """ PURPOSE: Calculates CS and cla. """
@@ -348,12 +353,12 @@ class DownloadDaysimeter(QtCore.QThread):
         #reasoning for. I based it off the MatLab code, with some exceptions
         #to optimize code for python
         for x in range(0, loop_max):
-            scone_macula[x] = constants[0][0]*red[x] + constants[0][1]*green[x] + \
-            constants[0][2]*blue[x]
+            scone_macula[x] = constants[0][0]*red[x] + \
+            constants[0][1]*green[x] + constants[0][2]*blue[x]
             v_lamda_macula[x] = constants[1][0]*red[x] + \
             constants[1][1]*green[x] + constants[1][2]*blue[x]
-            melanopsin[x] = constants[2][0]*red[x] + constants[2][1]*green[x] + \
-            constants[2][2]*blue[x]
+            melanopsin[x] = constants[2][0]*red[x] + \
+            constants[2][1]*green[x] + constants[2][2]*blue[x]
             v_prime[x] = constants[3][0]*red[x] + constants[3][1]*green[x] + \
             constants[3][2]*blue[x]
             
@@ -365,12 +370,12 @@ class DownloadDaysimeter(QtCore.QThread):
             else:
                 cla[x] = melanopsin[x]
             
+
             if math.ceil((100*x)/loop_max) > emit_sig:
                 emit_sig += 1
                 self.emit(QtCore.SIGNAL('update'))
-                
             cla[x] *= constants[5][3]
-            cla = [0 if x < 0 else x for x in cla]
+        cla = [0 if x < 0 else x for x in cla]
             
         return [lux, cla]
         
@@ -435,23 +440,24 @@ class MakeCDF(QtCore.QThread):
     #        cdf_fp['event'] =
             
             #Set variable attributes for time
-            cdf_fp['time'].attrs['description'] = 'UTC in CDF Epoch format, \
-            milliseconds since 1-Jan-0000'
+            cdf_fp['time'].attrs['description'] = 'UTC in CDF Epoch format,' + \
+            ' milliseconds since 1-Jan-0000'
             cdf_fp['time'].attrs['unitPrefix'] = 'm'
             cdf_fp['time'].attrs['baseUnit'] = 's'
             cdf_fp['time'].attrs['unitType'] = 'baseSI'
             cdf_fp['time'].attrs['otherAttributes'] = ''
             
             #Set variable attributes for matTime
-            cdf_fp['matTime'].attrs['description'] = 'UTC in MATLAB serial date \
-            format, days since 1-Jan-0000'
+            cdf_fp['matTime'].attrs['description'] = 'UTC in MATLAB serial' + \
+            ' date format, days since 1-Jan-0000'
             cdf_fp['matTime'].attrs['unitPrefix'] = ''
             cdf_fp['matTime'].attrs['baseUnit'] = 'days'
             cdf_fp['matTime'].attrs['unitType'] = 'nonSI'
             cdf_fp['matTime'].attrs['otherAttributes'] = ''
             
             #Set variable attributes for timeOffset
-            cdf_fp['timeOffset'].attrs['description'] = 'Localized offset from UTC'
+            cdf_fp['timeOffset'].attrs['description'] = 'Localized offset ' + \
+            'from UTC'
             cdf_fp['timeOffset'].attrs['unitPrefix'] = ''
             cdf_fp['timeOffset'].attrs['baseUnit'] = 's'
             cdf_fp['timeOffset'].attrs['unitType'] = 'baseSI'
@@ -500,32 +506,32 @@ class MakeCDF(QtCore.QThread):
             cdf_fp['CS'].attrs['otherAttributes'] = 'model'
             
             #Set variable attributes for activity
-            cdf_fp['activity'].attrs['description'] = 'Activity index in g-force \
-            (acceleration in m/2^2 over standard gravity 9.80665 m/s^2)'
+            cdf_fp['activity'].attrs['description'] = 'Activity index in ' + \
+            'g-force (acceleration in m/2^2 over standard gravity 9.80665 m/s^2)'
             cdf_fp['activity'].attrs['unitPrefix'] = ''
             cdf_fp['activity'].attrs['baseUnit'] = 'g_n'
             cdf_fp['activity'].attrs['unitType'] = 'nonSI'
             cdf_fp['activity'].attrs['otherAttributes'] = 'method'
             
             #Set variable attributes for xAcceleration
-    #        cdf_fp['xAcceleration'].attrs['description'] = 'Acceleration in the \
-    #        x-axis relative to the accelerometer'
+    #        cdf_fp['xAcceleration'].attrs['description'] = 'Acceleration ' + \
+    #        'in the x-axis relative to the accelerometer'
     #        cdf_fp['xAcceleration'].attrs['unitPrefix'] = ''
     #        cdf_fp['xAcceleration'].attrs['baseUnit'] = 'm/s^2'
     #        cdf_fp['xAcceleration'].attrs['unitType'] = 'derivedSI'
     #        cdf_fp['xAcceleration'].attrs['otherAttributes'] = ''
             
             #Set variable attributes for yAcceleration
-    #        cdf_fp['yAcceleration'].attrs['description'] = 'Acceleration in the \
-    #        y-axis relative to the accelerometer'
+    #        cdf_fp['yAcceleration'].attrs['description'] = 'Acceleration ' + \ 
+    #        'in the y-axis relative to the accelerometer'
     #        cdf_fp['yAcceleration'].attrs['unitPrefix'] = ''
     #        cdf_fp['yAcceleration'].attrs['baseUnit'] = 'm/s^2'
     #        cdf_fp['yAcceleration'].attrs['unitType'] = 'derivedSI'
     #        cdf_fp['yAcceleration'].attrs['otherAttributes'] = ''
             
             #Set variable attributes for zAcceleration
-    #        cdf_fp['zAcceleration'].attrs['description'] = 'Acceleration in the \
-    #        z-axis relative to the accelerometer'
+    #        cdf_fp['zAcceleration'].attrs['description'] = 'Acceleration ' + \
+    #        'in the z-axis relative to the accelerometer'
     #        cdf_fp['zAcceleration'].attrs['unitPrefix'] = ''
     #        cdf_fp['zAcceleration'].attrs['baseUnit'] = 'm/s^2'
     #        cdf_fp['zAcceleration'].attrs['unitType'] = 'derivedSI'
@@ -539,23 +545,24 @@ class MakeCDF(QtCore.QThread):
     #        cdf_fp['uvIndex'].attrs['otherAttributes'] = ''
             
             #Set variable attributes for temperature
-    #        cdf_fp['temperature'].attrs['description'] = 'Ambient air \
-    #        temperature in degrees Kelvin'
+    #        cdf_fp['temperature'].attrs['description'] = 'Ambient air ' + \
+    #        'temperature in degrees Kelvin'
     #        cdf_fp['temperature'].attrs['unitPrefix'] = ''
     #        cdf_fp['temperature'].attrs['baseUnit'] = 'K'
     #        cdf_fp['temperature'].attrs['unitType'] = 'baseSI'
     #        cdf_fp['temperature'].attrs['otherAttributes'] = ''
             
             #Set variable attributes for longitude
-    #        cdf_fp['longitude'].attrs['description'] = 'Longitude in decimal \
-    #        degrees'
+    #        cdf_fp['longitude'].attrs['description'] = 'Longitude in ' + \
+    #        'decimal degrees'
     #        cdf_fp['longitude'].attrs['unitPrefix'] = ''
     #        cdf_fp['longitude'].attrs['baseUnit'] = 'deg'
     #        cdf_fp['longitude'].attrs['unitType'] = 'nonSI'
     #        cdf_fp['longitude'].attrs['otherAttributes'] = ''
             
             #Set variable attributes for latitude
-    #        cdf_fp['latitude'].attrs['description'] = 'Latitude in decimal degrees'
+    #        cdf_fp['latitude'].attrs['description'] = 'Latitude in ' + \
+    #        'decimal degrees'
     #        cdf_fp['latitude'].attrs['unitPrefix'] = ''
     #        cdf_fp['latitude'].attrs['baseUnit'] = 'deg'
     #        cdf_fp['latitude'].attrs['unitType'] = 'nonSI'
