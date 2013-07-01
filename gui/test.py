@@ -11,6 +11,7 @@ import numpy as np
 import datetime as dt
 import graphingwidget as gw
 from ConfigParser import ConfigParser
+from subjectinfo import SubjectInfo
 from functools import partial
 from spacepy import pycdf
 from re import sub, search
@@ -41,15 +42,20 @@ class LayoutExample(qt.QMainWindow):
             self.set_sub_info()
             self.set_save_path()
         elif update == 'Application Settings':
-            self.set_save_path()
-            
+            self.set_save_path() 
         self.init.write(w_init_file)
         w_init_file.close()
         r_init_file.close()
 
     def set_save_path(self):
         dir_name = str(qt.QFileDialog.getExistingDirectory(self))
-        self.init.set("Application Settings", 'savepath', dir_name)           
+        self.init.set("Application Settings", 'savepath', dir_name)
+        gw.ButtonBox().make_buttons(self.main_widget.get_)
+        
+    def set_sub_info(self):
+        info = SubjectInfo(self)
+        if info.exec_():
+            self.init = info.get_info(self.init)            
         
     def create_menus(self):
         self.create_file_menu()
@@ -97,10 +103,10 @@ class LayoutExample(qt.QMainWindow):
         ext = os.path.splitext(file_name)[-1].lower()
         if ext == '.txt':
             self.update_header(file_name)
-            timestamps, daysim_values = self.read_txt_data(file_name)
+            timestamps, daysim_values, filetype = self.read_txt_data(file_name)
         else:
-            timestamps, daysim_values = self.read_cdf_data(file_name)
-        self.main_widget.set_data(timestamps, daysim_values)
+            timestamps, daysim_values, filetype = self.read_cdf_data(file_name)
+        self.main_widget.set_data(timestamps, daysim_values, filetype)
     
     def read_txt_data(self, file_name):
         daysim_values = np.genfromtxt(file_name, 
@@ -114,14 +120,19 @@ class LayoutExample(qt.QMainWindow):
         timestamps = [dt.datetime.strptime(datetime_str[x], "%m/%d/%Y %H:%M:%S")
                       for x in range(len(datetime_str))]
         daysim_values = self.remove_datetime_fields(daysim_values)
-        return timestamps, daysim_values
+        return timestamps, daysim_values, 'txt'
         
     def read_cdf_data(self, file_name):
         with pycdf.CDF(file_name) as data_cdf:
-            print(data_cdf)
-        return None, None
+            data_cdf = data_cdf.copy()
+            time = data_cdf['time']
+            data_cdf = self.slicedict(data_cdf, 'time')
+        return time, data_cdf, 'cdf'
         #graphing_options = gw.ButtonBox().make_buttons()
        # self.init.set("Application Settings", 'graphvars', dir_name)
+        
+    def slicedict(self, d, s):
+        return {k:v for k,v in d.iteritems() if s not in k.lower()}
         
     def update_header(self, file_name):
         with open(file_name, 'r') as f:

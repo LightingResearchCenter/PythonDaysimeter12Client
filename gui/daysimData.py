@@ -6,6 +6,7 @@ Created on Mon Jun 17 10:43:13 2013
 """
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
+from matplotlib import tight_layout
 import lowpassfilter as lpf
 
 class DaysimeterData:
@@ -22,8 +23,10 @@ class DaysimeterData:
         self.fig.add_subplot(111)
         self.values_set = False
         self.ax_dict = {}
+        self.plot_tup = []
         self.timestamps = None
         self.data = None
+        self.filetype = None
         self.canvas = FigureCanvas(self.fig)
         
     def show_plots(self, button_names):
@@ -50,7 +53,7 @@ class DaysimeterData:
         """Return the canvas for drawing"""
         return self.canvas
         
-    def set_values(self, times, data):  
+    def set_values(self, times, data, filetype):  
         """Set the daysimeter values from a file
         
         Sets the timestamps and data of the object(lux, CS, etc.) then smooths
@@ -59,6 +62,7 @@ class DaysimeterData:
         """
         self.timestamps = times
         self.data = data
+        self.filetype = filetype
         self.smooth()
         self.values_set = True
         
@@ -68,36 +72,39 @@ class DaysimeterData:
         is_first = True
         colors = ('r', 'g', 'b', 'c', 'm', 'y', 'k')
         main_ax = None
-        names = list(self.data.dtype.names)
+        names = self.get_data_names()
         # Iterates through the sets of values (lux, CS, CLA, etc.) and creates 
         # axes for them and stores the axes in a dictionary mapped with their 
         # name e.g. ax_dict['Lux'] returns the lux axis
         for name, color in zip(names, colors):
             # Makes the first set of values the 'main' axis and adds to figure
             if is_first:
+                print self.data[name]
                 self.ax_dict[name] = main_ax = self.fig.add_subplot(111)
                 self.ax_dict[name].set_yscale('log')
+                self.ax_dict[name].set_ylabel(name)
                 self.ax_dict[name].plot(self.timestamps, self.data[name], 
-                                        color=color, alpha=0.8)
+                                        color=color, alpha=0.8, label=name)
                 is_first = False
             # Makes the rest of the values 'children' of the the main, using
             # the x axis of 'main, while creating thei own y axes
             else:
                 self.ax_dict[name] = main_ax.twinx()
                 self.ax_dict[name].set_yscale('log')
-                self.ax_dict[name].plot(self.timestamps, self.data[name], 
-                                        color=color, alpha=0.8)
+                self.ax_dict[name].set_ylabel(name)
+                self.plot_tup.append(self.ax_dict[name].plot(self.timestamps, self.data[name], 
+                                        color=color, alpha=0.8, label=name))
                 # Finds the min of the data, then sets that as the the lower y
                 # bound of the plot to better align the graphs vertically    
                 minimum = self.data[name].min()
                 self.ax_dict[name].set_ybound(lower=minimum)
                 self.ax_dict[name].tick_params(axis='y', colors=color)
-        self.canvas = FigureCanvas(self.fig)
         self.fig.autofmt_xdate()
+        self.canvas = FigureCanvas(self.fig)
         
     def smooth(self):
         """Applies a lowpass filter to smooth out the data"""
-        names = list(self.data.dtype.names)
+        names = self.get_data_names()
         for name in names:
             if name != 'Activity':
                 
@@ -105,4 +112,7 @@ class DaysimeterData:
                 
     def get_data_names(self):
         """Returns a list of the data names"""
-        return list(self.data.dtype.names)
+        if self.filetype == 'txt':
+            return list(self.data.dtype.names)
+        else:
+            return self.data.keys()

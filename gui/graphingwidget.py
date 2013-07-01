@@ -13,7 +13,7 @@ class GraphingWidget(qt.QWidget):
     buttons for controlling the plots shown on the graph"""
     
     def __init__(self, parent=None):
-        """Creates a grapging widget witha playholder graph and button box"""
+        """Creates a graphing widget with a placeholder graph and button box"""
         super(GraphingWidget, self).__init__(parent)
         self.data = dd.DaysimeterData()
         self.buttons = ButtonBox(self)
@@ -24,7 +24,7 @@ class GraphingWidget(qt.QWidget):
         self.layout.addWidget(self.buttons)
         self.setLayout(self.layout)
         
-    def set_data(self, timestamps, data):
+    def set_data(self, timestamps, data, filetype):
         """Sets the data from the daysimeter and creates the plot and buttons
         
         timestamps - An ndarray of date times
@@ -34,7 +34,7 @@ class GraphingWidget(qt.QWidget):
         # Creates a new daysimeter data object, sets its data, and creates the
         # new plots
         self.data = dd.DaysimeterData()
-        self.data.set_values(timestamps, data)
+        self.data.set_values(timestamps, data, filetype)
         self.data.make_plots()
         # Deletes the current plot in tht widget, sets it to the plot in the
         # new data, and adds it to this widget
