@@ -31,14 +31,15 @@ from convertheader import convert_header_f1
 from PyQt4 import QtGui, QtCore
     
 class DownloadMake(QtGui.QWidget):
-    
+    """ Widget that manages download daysimeter data and making CDF 
+    or CSV file """
     def __init__(self):
-        super(DownloadMake,self).__init__()
+        super(DownloadMake, self).__init__()
         self.initUI()
         
     def initUI(self):
-        
-        self.setFixedSize(500,100)
+        """ initialize the GUI """
+        self.setFixedSize(500, 100)
         self.pbar = QtGui.QProgressBar(self)
         
         self.start = QtGui.QPushButton('Start Download')
@@ -63,6 +64,7 @@ class DownloadMake(QtGui.QWidget):
         self.show()
         
     def start_download(self):
+        """ starts / manages download """
         if not find_daysimeter():
             self.status_bar.showMessage('No Daysimeter plugged into this' + \
             ' computer.')
@@ -83,38 +85,49 @@ class DownloadMake(QtGui.QWidget):
                 self.downloader.start()
         
     def make(self, data):
+        """ determines filetype to be written, creates maker """
         if self.filename[len(self.filename)-4:] == '.cdf':
             self.subjectinfo = SubjectInfo()
-            self.connect(self.subjectinfo, QtCore.SIGNAL('sendinfo'), self.make_cdf)
-            self.connect(self.subjectinfo, QtCore.SIGNAL('cancelled'), self.cancelled)
+            self.connect(self.subjectinfo, QtCore.SIGNAL('sendinfo'), \
+            self.make_cdf)
+            self.connect(self.subjectinfo, QtCore.SIGNAL('cancelled'), \
+            self.cancelled)
             self.data = data
         else:
             self.status_bar.showMessage('Writing CSV File...')
             self.maker = MakeCSV(self, data, self.filename)
-            self.connect(self.maker, QtCore.SIGNAL('update'), self.update_progress)
+            self.connect(self.maker, QtCore.SIGNAL('update'), \
+            self.update_progress)
             self.maker.start()
             
     def make_cdf(self, info):
+        """ makes a CDF file """
         self.status_bar.showMessage('Writing CDF File...')
         self.maker = MakeCDF(self, self.data, self.filename, info)
         self.connect(self.maker, QtCore.SIGNAL('update'), self.update_progress)
         self.maker.start()
         
     def cancelled(self):
+        """ determines if the download has been cancelled """
+        #As a side note, the ceiling started leaking again...
         self.pbar.hide()
         self.done.setText('Download Cancelled')
         self.start.hide()
         self.done.show()
-        self.status_bar.showMessage('No Subject information was entered. Download cancelled.')
+        self.status_bar.showMessage('No Subject information was entered. ' + \
+        'Download cancelled.')
         
     def update_progress(self):
+        """ updates progress bar """
+        #it kind fakes it until it makes it
         self.step += 1
         self.pbar.setValue(self.step)
         if self.step == 100:
             if update_header():
                 reply = QtGui.QMessageBox.question(self, 'Message',
-            "Your daysimeter's header is out of date. Would you like to update it now?", \
-            QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
+            'Your daysimeter\'s header is out of date.\n' + \
+            'Would you like to update it now?', QtGui.QMessageBox.Yes, \
+            QtGui.QMessageBox.No)
 
                 if reply == QtGui.QMessageBox.Yes:
                     convert_header_f1()
@@ -124,17 +137,19 @@ class DownloadMake(QtGui.QWidget):
             self.download_done()
         
     def download_done(self):
-        self.status_bar.showMessage('Download Complete. It is now safe to eject your daysimeter.')
+        """ sets everything when the download is finished """
+        self.status_bar.showMessage('Download Complete. It is now safe ' + \
+        'to eject your daysimeter.')
         self.start.hide()
         self.done.show()
         
 class SubjectInfo(QtGui.QWidget):
     """ PURPOSE: Creates a widget for a user to enter subject information """
     send_info_sig = QtCore.pyqtSignal(list)
-    def __init__(self,parent=None):
+    def __init__(self, parent=None):
         super(SubjectInfo, self).__init__(parent)
         self.setWindowTitle('Enter Subject Information')
-        self.setFixedSize(300,160)
+        self.setFixedSize(300, 160)
         self.subject_id = QtGui.QLineEdit()
         self.subject_sex = QtGui.QComboBox()
         self.subject_mass = QtGui.QLineEdit()
@@ -197,6 +212,7 @@ class SubjectInfo(QtGui.QWidget):
         self.show()
     
     def closeEvent(self, event):
+        """ catches the close event """
         if self.success:
             event.accept()
         else:
@@ -218,7 +234,8 @@ class SubjectInfo(QtGui.QWidget):
             str(self.year_dob.currentText())
         sub_mass = str(self.subject_mass.text())
         self.success = True
-        self.emit(QtCore.SIGNAL('sendinfo'), [sub_id, sub_sex, sub_dob, sub_mass])
+        self.emit(QtCore.SIGNAL('sendinfo'), [sub_id, sub_sex, sub_dob, \
+        sub_mass])
         self.close()
     
    
@@ -249,7 +266,6 @@ class DownloadDaysimeter(QtCore.QThread):
         adj_active_flag_ = constants_.ADJ_ACTIVE_FLAG
         old_flag = constants_.OLD_FLAG
         adj_active_firm = constants_.ADJ_ACTIVE_FIRM
-        self.emit(QtCore.SIGNAL('released()'),10)
         #Create error log file named error.log on the desktop
         errlog_filename = get_err_log()
         if errlog_filename == '':
@@ -645,8 +661,8 @@ class MakeCDF(QtCore.QThread):
             cdf_fp['CS'].attrs['otherAttributes'] = 'model'
             
             #Set variable attributes for activity
-            cdf_fp['activity'].attrs['description'] = 'Activity index in ' + \
-            'g-force (acceleration in m/2^2 over standard gravity 9.80665 m/s^2)'
+            cdf_fp['activity'].attrs['description'] = 'Activity index in g' + \
+            '-force (acceleration in m/2^2 over standard gravity 9.80665 m/s^2)'
             cdf_fp['activity'].attrs['unitPrefix'] = ''
             cdf_fp['activity'].attrs['baseUnit'] = 'g_n'
             cdf_fp['activity'].attrs['unitType'] = 'nonSI'
@@ -739,9 +755,11 @@ class MakeCSV(QtCore.QThread):
             csv_fp.write('time,red,green,blue,lux,CLA,activity\n')
             for x in range(len(self.data[1][0])):
 #                print self.data[1][0][x]
-                csv_fp.write(str(self.data[1][0][x]) + ',' + str(self.data[1][2][x]) + ',' + \
-                str(self.data[1][3][x]) + ',' + str(self.data[1][4][x]) + ',' +  str(self.data[1][5][x]) + \
-                 ',' +  str(self.data[1][6][x]) + ',' +  str(self.data[1][8][x]) + '\n')
+                csv_fp.write(str(self.data[1][0][x]) + ',' + \
+                str(self.data[1][2][x]) + ',' + str(self.data[1][3][x]) + ',' \
+                + str(self.data[1][4][x]) + ',' +  str(self.data[1][5][x]) + \
+                 ',' +  str(self.data[1][6][x]) + ',' + \
+                 str(self.data[1][8][x]) + '\n')
        
         self.emit(QtCore.SIGNAL('update'))
             

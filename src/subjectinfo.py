@@ -8,13 +8,12 @@ import sys
 from PyQt4.QtGui import QPushButton, QHBoxLayout, QLineEdit, QWidget, \
                         QFormLayout, QApplication, QMainWindow, QComboBox
 from PyQt4 import QtCore
-from accesssubjectinfo import write_subject_info
 
 
 class SubjectInfo(QWidget):
     """ PURPOSE: Creates a widget for a user to enter subject information """
     send_info_sig = QtCore.pyqtSignal(list)
-    def __init__(self,parent=None):
+    def __init__(self, parent=None):
         super(SubjectInfo, self).__init__(parent)
         QMainWindow.__init__(self)
         self.setWindowTitle('Enter Subject Information')
