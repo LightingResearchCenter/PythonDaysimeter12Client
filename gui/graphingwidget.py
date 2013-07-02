@@ -18,10 +18,14 @@ class GraphingWidget(qt.QWidget):
         self.data = dd.DaysimeterData()
         self.buttons = ButtonBox(self)
         self.plot = self.data.get_plot()
+        self.metadata = DisplayMetadata(self)
         
+        self.hbox = qt.QHBoxLayout()
+        self.hbox.addWidget(self.buttons)
+        self.hbox.addWidget(self.metadata)
         self.layout = qt.QVBoxLayout()
         self.layout.addWidget(self.plot)
-        self.layout.addWidget(self.buttons)
+        self.layout.addLayout(self.hbox)
         self.setLayout(self.layout)
         
     def set_data(self, timestamps, data, filetype):
@@ -36,17 +40,31 @@ class GraphingWidget(qt.QWidget):
         self.data = dd.DaysimeterData()
         self.data.set_values(timestamps, data, filetype)
         self.data.make_plots()
+        
         # Deletes the current plot in tht widget, sets it to the plot in the
-        # new data, and adds it to this widget
+        # new data, and adds it to this widgetself.buttons
         self.plot.deleteLater()
         self.plot = self.data.get_plot()
         self.layout.addWidget(self.plot)
+        
+        #Clear the horizontal layout for use
+        self.hbox.deleteLater()
+        self.hbox = qt.QHBoxLayout()
         
         # Deletes the current set of buttons, creates a new set, and adds it to
         # this widget
         self.buttons.deleteLater()
         self.buttons = ButtonBox(self).make_buttons(self.data.get_data_names())
-        self.layout.addWidget(self.buttons)
+        self.hbox.addWidget(self.buttons)
+        
+        # Deletes the current set of metadata, creates a new set, and adds it
+        # to this widget
+        self.metadata.deleteLater()
+        metadata = self.data.get_metadata()
+        self.metadata = DisplayMetadata(self).set_metadata(metadata)
+        self.hbox.addWidget(self.metadata)
+        
+        self.layout.addLayout(self.hbox)
         # Shows the set of plots with their corresponding buttons checked
         self.buttons.buttonsChecked.connect(self.show_plots)
         
@@ -80,15 +98,20 @@ class ButtonBox(qt.QGroupBox):
         """
         self._button_group = qt.QButtonGroup()
         self._button_group.setExclusive(False)
-        vbox = qt.QVBoxLayout()
+        grid = qt.QGridLayout()
         # Creates a button for each name in the list given and adds that button
         # to the button group (container for the objects) and the button box 
         # (container for the buttons in the GUI)
+        col = row = 0
         for name in names:
             button = qt.QRadioButton(name, self)
             self._button_group.addButton(button)
-            vbox.addWidget(button)
-        self.setLayout(vbox)
+            if row >= 5:
+                col += 1
+                row = 0
+            grid.addWidget(button, row, col)
+            row += 1
+        self.setLayout(grid)
         self._button_group.buttonClicked.connect(self.get_buttons_pressed)
         return self
         
@@ -100,3 +123,23 @@ class ButtonBox(qt.QGroupBox):
             if button.isChecked():
                 button_names.append(str(button.text()))
         self.buttonsChecked.emit(button_names)
+        
+class DisplayMetadata(qt.QWidget):
+    def __init__(self, parent=None):
+        super(DisplayMetadata, self).__init__(parent)
+        self.grid = qt.QGridLayout()
+    def set_metadata(self, data):
+        row = col = 0
+        for item in data.items():
+            print item
+            print row
+            print col
+            text = '<b>' +  item[0] + '</b>' + ': ' + str(item[1][0])
+            q_text = qt.QLabel(text, self)
+            self.grid.addWidget(q_text, row, col)
+            row += 1
+            if row >= 5:
+                col += 1
+                row = 0
+        self.setLayout(self.grid)
+        return self

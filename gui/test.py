@@ -132,7 +132,10 @@ class LayoutExample(qt.QMainWindow):
        # self.init.set("Application Settings", 'graphvars', dir_name)
         
     def slicedict(self, d, s):
-        return {k:v for k,v in d.iteritems() if s not in k.lower()}
+        attrs = d.attrs
+        d = {k:v for k,v in d.iteritems() if s not in k.lower()}
+        d['attrs'] = attrs
+        return d
         
     def update_header(self, file_name):
         with open(file_name, 'r') as f:
