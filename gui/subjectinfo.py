@@ -4,15 +4,14 @@ Author: Jed Kundl
 Creation Date: 25.06.2013
 """
 
-import sys
 from PyQt4.QtGui import QPushButton, QHBoxLayout, QLineEdit, QWidget, \
-                        QFormLayout, QApplication, QMainWindow, QComboBox
-from accesssubjectinfo import write_subject_info
+                        QFormLayout, QMainWindow, QComboBox, QDialog
+from PyQt4.QtCore import Signal
 
-
-class SubjectInfo(QWidget):
+class SubjectInfo(QDialog):
     """ PURPOSE: Creates a widget for a user to enter subject information """
-    def __init__(self,parent=None):
+    submitted = Signal(object)
+    def __init__(self, parent=None):
         super(SubjectInfo, self).__init__(parent)
         QMainWindow.__init__(self)
         self.setWindowTitle('Enter Subject Information')
@@ -72,10 +71,10 @@ class SubjectInfo(QWidget):
         self.year_dob.currentIndexChanged.connect(self.enable_submit)
         self.subject_mass.textChanged.connect(self.enable_submit)
         
-        self.submit.pressed.connect(self.submit_info)
-        self.cancel.pressed.connect(self.close)
+        self.submit.pressed.connect(self.accept)
+        self.cancel.pressed.connect(self.reject)
 
-    def submit_info(self):
+    def get_info(self, config_parser):
         """
         PURPOSE: Submit info given my user and pass to function that saves it
         """
@@ -85,8 +84,11 @@ class SubjectInfo(QWidget):
             str(self.month_dob.currentText()) + ' ' + \
             str(self.year_dob.currentText())
         sub_mass = str(self.subject_mass.text())
-        write_subject_info(sub_id, sub_sex, sub_dob, sub_mass)
-        self.close()
+        config_parser.set('Subject Info', 'id', sub_id)
+        config_parser.set('Subject Info', 'sex', sub_sex)
+        config_parser.set('Subject Info', 'Date of birth', sub_dob)
+        config_parser.set('Subject Info', 'mass', sub_mass)
+        return config_parser
     
    
     def enable_submit(self):
@@ -101,16 +103,3 @@ class SubjectInfo(QWidget):
             self.submit.setEnabled(True)
         else:
             self.submit.setEnabled(False)
-
-def main():
-    """ PURPOSE: Creates app and runs widget """
-    # Create the Qt Application
-    app = QApplication(sys.argv)
-    # Create and show the form
-    session = SubjectInfo()
-    session.show()
-    # Run the main Qt loop
-    sys.exit(app.exec_())
-            
-if __name__ == '__main__':
-    main()

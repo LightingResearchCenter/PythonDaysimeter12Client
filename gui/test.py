@@ -11,15 +11,21 @@ import numpy as np
 import datetime as dt
 import graphingwidget as gw
 from ConfigParser import ConfigParser
-from subjectinfo import SubjectInfo
 from functools import partial
 from spacepy import pycdf
-from re import sub, search
+from re import sub
 
 QT_APP = qt.QApplication(sys.argv) 
  
 class LayoutExample(qt.QMainWindow):
+    """The main window for the daysimeter download client. It opens daysimeter
+    data files and displays a central widget"""
     def __init__(self):
+        """Initialize the daysimeter client with a placeholder widget
+        
+        Creates the main window, creates the menus, and loads info from the
+        ini file        
+        """
         qt.QMainWindow.__init__(self)
         self.setWindowTitle('Daysimeter Download Client')
         self.setMinimumSize(600, 400)
@@ -30,17 +36,25 @@ class LayoutExample(qt.QMainWindow):
         self.load_config()
         
     def load_config(self, update=None):
+        """Loads the info from the ini file if it exists, otherwise creates it
+        
+        update - a string that lets the function know if it's the initial run
+                 or if it's just updating a value from the program
+        
+        """
+        # Get the path of the file and open it
         dir_path = os.getcwd()
         file_path = os.path.join(dir_path, 'daysimeter.ini')
-        w_init_file = open(file_path, mode='r+')
+        w_init_file = open(file_path, mode='w+')
         r_init_file = open(file_path, mode='r')
+        # Parse the ini file
         self.init = ConfigParser()
         self.init.readfp(r_init_file)
+        # Create a new sections and populate them if file is empty
         if not self.init.sections():
-            print(self.init.sections())
             self.init.add_section("Application Settings")
-            self.set_sub_info()
             self.set_save_path()
+        # Update the Application settings
         elif update == 'Application Settings':
             self.set_save_path() 
         self.init.write(w_init_file)
@@ -48,21 +62,19 @@ class LayoutExample(qt.QMainWindow):
         r_init_file.close()
 
     def set_save_path(self):
+        """Create a dialog to set the savepath and set it in the ini file"""
         dir_name = str(qt.QFileDialog.getExistingDirectory(self))
         self.init.set("Application Settings", 'savepath', dir_name)
-        gw.ButtonBox().make_buttons(self.main_widget.get_)
-        
-    def set_sub_info(self):
-        info = SubjectInfo(self)
-        if info.exec_():
-            self.init = info.get_info(self.init)            
         
     def create_menus(self):
+        """Create the menus"""
         self.create_file_menu()
         self.create_daysimeter_menu()
         
     def create_file_menu(self):
+        """Creates the file menu"""
         file_menu = self.menuBar().addMenu('&File')
+        # Makes menu options
         actions = []
         open_act = qt.QAction("&Open...", 
                               self,
@@ -73,12 +85,15 @@ class LayoutExample(qt.QMainWindow):
                               self,
                               shortcut=qt.QKeySequence.Quit,
                               triggered=sys.exit)
+        # Adds the options to the menu
         actions.extend([open_act, quit_act])
         for action in actions:
             file_menu.addAction(action)
             
     def create_daysimeter_menu(self):
+        """Creates the daysimeter menu"""
         daysim_menu = self.menuBar().addMenu('&Daysim')
+        # Makes menu options
         actions = []
         set_sub_info = qt.QAction("&Set subject info", 
                                   self,
@@ -90,67 +105,122 @@ class LayoutExample(qt.QMainWindow):
                                   processed Daysimeter data file",
                                   triggered=partial(self.load_config, 
                                                     update='savepath'))
+        # Adds the options to the menu
         actions.extend([set_sub_info, set_savepath])
         for action in actions:
             daysim_menu.addAction(action)
         
     def open_file(self):
-        file_name = str(qt.QFileDialog.getOpenFileName(self, 
+        """Opens and read a cdf or txt file and pass its data"""
+        file_name = str(qt.QFileDialog.getOpenFileName(self,
                                                        filter="Data File (*.cdf *.txt)"))
         if not file_name:
             return
         
+        # Gets the file extension of the file
         ext = os.path.splitext(file_name)[-1].lower()
+        # Reads the data based on the file type
         if ext == '.txt':
             self.update_header(file_name)
-            timestamps, daysim_values, filetype = self.read_txt_data(file_name)
+            timestamps, daysim_data, filetype = self.read_txt_data(file_name)
         else:
-            timestamps, daysim_values, filetype = self.read_cdf_data(file_name)
-        self.main_widget.set_data(timestamps, daysim_values, filetype)
+            timestamps, daysim_data, filetype = self.read_cdf_data(file_name)
+        # Sets the data in the graphing widget
+        self.main_widget.set_data(timestamps, daysim_data, filetype)
     
     def read_txt_data(self, file_name):
-        daysim_values = np.genfromtxt(file_name, 
+        """Reads the data from a daysimeter txt file
+        
+        file_name - the string filename of the file
+        
+        returns an array of timestamps, a recarray of daysim_data, and txt (
+        the filetype)
+        
+        """
+        # Parses the data from the file into an recarray
+        daysim_data = np.genfromtxt(file_name, 
                                      dtype=['S11', 'S8', 'f8', 'f8', 'f8', 'f8'],
                                      names=True)
-
-        daysim_values['Date'] = np.core.defchararray.add(daysim_values['Date'], 
+        # Concatenates the dates and times
+        daysim_data['Date'] = np.core.defchararray.add(daysim_data['Date'],
                                                          ' ')
-        datetime_str = np.core.defchararray.add(daysim_values['Date'],
-                                                daysim_values['Time'])
+        datetime_str = np.core.defchararray.add(daysim_data['Date'],
+                                                daysim_data['Time'])
+        # Converts the string timestamps to datetime objects
         timestamps = [dt.datetime.strptime(datetime_str[x], "%m/%d/%Y %H:%M:%S")
                       for x in range(len(datetime_str))]
-        daysim_values = self.remove_datetime_fields(daysim_values)
-        return timestamps, daysim_values, 'txt'
+        # Removes the dates/times from the data (prevents program from 
+        # trying to graph the dates/times)
+        daysim_data = self.remove_datetime_fields(daysim_data)
+        return timestamps, daysim_data, 'txt'
         
     def read_cdf_data(self, file_name):
-        with pycdf.CDF(file_name) as data_cdf:
-            data_cdf = data_cdf.copy()
-            time = data_cdf['time']
-            data_cdf = self.slicedict(data_cdf, 'time')
-        return time, data_cdf, 'cdf'
-        #graphing_options = gw.ButtonBox().make_buttons()
-       # self.init.set("Application Settings", 'graphvars', dir_name)
+        """Reads the data from a daysimeter cdf file
         
-    def slicedict(self, d, s):
-        attrs = d.attrs
-        d = {k:v for k,v in d.iteritems() if s not in k.lower()}
-        d['attrs'] = attrs
-        return d
+        file_name - the string filename of the file
+        
+        returns an array of timestamps, a dict of daysim_data, and txt (
+        the filetype)
+        
+        """
+        # Opens and parses the cdf file 
+        with pycdf.CDF(file_name) as daysim_data:
+            daysim_data = daysim_data.copy()
+            timestamps = daysim_data['time']
+            # Removes any data in the cdf related to time
+            daysim_data = self.slicedict(daysim_data, 'time')
+        return timestamps, daysim_data, 'cdf'
+        
+    def slicedict(self, cdf_dict, substr):
+        """Removes the keys containing substr from cdf_dict
+        
+        cdf_dict - dict
+        substr - substring to be removed
+        
+        returns the dict with the keys removed
+        
+        """
+        # Saves the global attributes of the cdf
+        attrs = cdf_dict.attrs
+        # Removes any keys that contain the string substr
+        cdf_dict = {k:v for k, v in cdf_dict.iteritems() 
+                    if substr not in k.lower()}
+        # Adds a key for the attributes of the cdf into the data
+        cdf_dict['attrs'] = attrs
+        return cdf_dict
         
     def update_header(self, file_name):
-        with open(file_name, 'r') as f:
-            lines = f.readlines()
+        """Updates the header of the older daysimeter txt data files
+        
+        file_name - the string filename of the file
+        
+        """
+        # Opens the file and parses it
+        with open(file_name, 'r') as txt_file:
+            lines = txt_file.readlines()
+            # If Date is at the beginning of the first line, it is replaced 
+            # with date and time so it can be read by read_txt
             lines[0] = sub('^Date', '#Date Time', lines[0])
+            # If the line was changed,then write the file
             if lines[0]:
-                print "New header" + lines[0]
                 open(file_name, 'w').write(''.join(lines))
         
     def remove_datetime_fields(self, data_array):
+        """Removes the dates/times from the daysimeter data
+        
+        data_array - recarray of the daysimeter data
+        
+        returns the daysimeter data without the date/times
+        
+        """
+        # Makes a list of the differnent fields in the daysimeter data
         names = list(data_array.dtype.names)
+        # Ignores the first 2 fields
         new_names = names[2:]
         return data_array[new_names]
     
     def run(self):
+        """Runs the main window"""
         self.show()
         sys.exit(QT_APP.exec_())
 

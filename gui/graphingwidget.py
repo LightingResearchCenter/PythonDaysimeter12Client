@@ -90,7 +90,7 @@ class ButtonBox(qt.QGroupBox):
         self.setTitle("Graph Options")
         
     def make_buttons(self, names=['Lux', 'CLA', 'CS', 'Activity']):
-        """Creates buttons based on the names given
+        """Creates buttons based on the names given and returns itself
         
         names - A list of strings representing the names of the buttons that
                 should be made
@@ -106,6 +106,7 @@ class ButtonBox(qt.QGroupBox):
         for name in names:
             button = qt.QRadioButton(name, self)
             self._button_group.addButton(button)
+            # Only put 5 buttons per row, then make a new column
             if row >= 5:
                 col += 1
                 row = 0
@@ -125,16 +126,24 @@ class ButtonBox(qt.QGroupBox):
         self.buttonsChecked.emit(button_names)
         
 class DisplayMetadata(qt.QWidget):
+    """A widget that displays the different metadata"""
+    
     def __init__(self, parent=None):
+        """Initializes the widget with a grid layout"""
         super(DisplayMetadata, self).__init__(parent)
         self.grid = qt.QGridLayout()
-    def set_metadata(self, data):
+        
+    def set_metadata(self, metadata):
+        """Sets the text contained in the widget to the given metadata
+        
+        metadata - a dict of the different pieces of metadata
+        
+        """
+        # Creates a text label for each key in the given dict. After there are
+        # 5 items in a row, it starts a new column
         row = col = 0
-        for item in data.items():
-            print item
-            print row
-            print col
-            text = '<b>' +  item[0] + '</b>' + ': ' + str(item[1][0])
+        for title in metadata.keys():
+            text = '<b>' +  title + '</b>' + '- ' + str(metadata[title][0])
             q_text = qt.QLabel(text, self)
             self.grid.addWidget(q_text, row, col)
             row += 1

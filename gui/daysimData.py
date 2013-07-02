@@ -32,9 +32,8 @@ class DaysimeterData:
     def show_plots(self, button_names):
         """Show the created plots
         
-        Keyword arguments:
-        button_group  -- Group of buttons with buttons names matching the names
-                         of the data values (e.g. Lux, CS, etc.)
+        button_group - Group of buttons with buttons names matching the names
+                       of the data values (e.g. Lux, CS, etc.)
                             
         """
         print button_names
@@ -53,14 +52,20 @@ class DaysimeterData:
         """Return the canvas for drawing"""
         return self.canvas
         
-    def set_values(self, times, data, filetype):  
+    def set_values(self, timestamps, data, filetype):  
         """Set the daysimeter values from a file
         
-        Sets the timestamps and data of the object(lux, CS, etc.) then smooths
-        them out.
+        times - data structure of datetimes containing the timestamps of the 
+                daysimeter data
+        data - dict of the the different kinds of data taken in from the 
+               daysimeter 
+        filetype - a string that is either 'cdf' or 'txt'
+        
+        Sets the timestamps, the data from the daysimeter (lux, CS, etc.) then 
+        smooths them out.
         
         """
-        self.timestamps = times
+        self.timestamps = timestamps
         self.data = data
         self.attrs = data['attrs']
         del data['attrs']
@@ -69,7 +74,7 @@ class DaysimeterData:
         self.values_set = True
         
     def make_plots(self):
-        """Create the plots on the canvas."""
+        """Create the plots from the data."""
         
         is_first = True
         colors = ('aqua', 'black', 'fuchsia', 'gray', 'lime', 'maroon', 
@@ -88,16 +93,18 @@ class DaysimeterData:
             if is_first:
                 self.ax_dict[name] = main_ax = self.fig.add_subplot(111)
                 self.ax_dict[name].set_yscale('log')
-                plots.extend(self.ax_dict[name].plot(self.timestamps, self.data[name], 
-                             color=color, alpha=0.8, label=name))
+                plots.extend(self.ax_dict[name].plot(self.timestamps, 
+                             self.data[name], color=color, alpha=0.8,
+                             label=name))
                 is_first = False
             # Makes the rest of the values 'children' of the the main, using
             # the x axis of 'main, while creating thei own y axes
             else:
                 self.ax_dict[name] = main_ax.twinx()
                 self.ax_dict[name].set_yscale('log')
-                plots.extend(self.ax_dict[name].plot(self.timestamps, self.data[name], 
-                             color = color, alpha=0.8, label=name))
+                plots.extend(self.ax_dict[name].plot(self.timestamps,
+                             self.data[name], color = color, alpha=0.8,
+                             label=name))
                 # Finds the min of the data, then sets that as the the lower y
                 # bound of the plot to better align the graphs vertically    
                 minimum = self.data[name].min()
@@ -122,6 +129,7 @@ class DaysimeterData:
             return self.data.keys()
             
     def get_metadata(self):
+        """Returns a dictionary of the cdf's attributes"""
         if self.filetype == 'cdf':
             return self.attrs
         else:
