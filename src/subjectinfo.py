@@ -13,9 +13,7 @@ from accesssubjectinfo import write_subject_info
 
 class SubjectInfo(QWidget):
     """ PURPOSE: Creates a widget for a user to enter subject information """
-
-    on_submit = QtCore.pyqtSignal()    
-    
+    send_info_sig = QtCore.pyqtSignal(list)
     def __init__(self,parent=None):
         super(SubjectInfo, self).__init__(parent)
         QMainWindow.__init__(self)
@@ -78,6 +76,9 @@ class SubjectInfo(QWidget):
         
         self.submit.pressed.connect(self.submit_info)
         self.cancel.pressed.connect(self.close)
+        
+        self.show()
+
 
     def submit_info(self):
         """
@@ -89,8 +90,7 @@ class SubjectInfo(QWidget):
             str(self.month_dob.currentText()) + ' ' + \
             str(self.year_dob.currentText())
         sub_mass = str(self.subject_mass.text())
-        self.info = [sub_id, sub_sex, sub_dob, sub_mass]
-        self.emit(QtCore.SIGNAL('giveinfo'), self.info)
+        self.send_info_sig.emit([sub_id, sub_sex, sub_dob, sub_mass])
         self.close()
     
    
@@ -106,14 +106,6 @@ class SubjectInfo(QWidget):
             self.submit.setEnabled(True)
         else:
             self.submit.setEnabled(False)
-            
-    @QtCore.pyqtSlot()
-    def on_signal(self):
-        self.show()
-        
-    @QtCore.pyqtSlot()
-    def on_submit(self):
-        self.emit(self.info)
 
 def main():
     """ PURPOSE: Creates app and runs widget """
@@ -121,7 +113,6 @@ def main():
     app = QApplication(sys.argv)
     # Create and show the form
     session = SubjectInfo()
-    session.show()
     # Run the main Qt loop
     sys.exit(app.exec_())
             

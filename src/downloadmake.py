@@ -36,7 +36,7 @@ class DownloadMake(QtGui.QWidget):
         
     def initUI(self):
         
-        self.resize(500,80)
+        self.setFixedSize(500,100)
         self.pbar = QtGui.QProgressBar(self)
         
         self.start = QtGui.QPushButton('Start Download')
@@ -53,12 +53,11 @@ class DownloadMake(QtGui.QWidget):
         layout.addWidget(self.status_bar)
         self.setLayout(layout)
         
-        
         self.setWindowTitle('Datsimeter Downloader')
         self.step = 0.0
         self.pbar.setValue(self.step)
         self.pbar.hide()
-        self.done.hide()
+        self.done.hide()        
         self.show()
         
     def start_download(self):
@@ -66,27 +65,45 @@ class DownloadMake(QtGui.QWidget):
             self.status_bar.showMessage('No Daysimeter plugged into this' + \
             ' computer.')
         else:
+            self.status_bar.showMessage('')
             self.filename = str(QtGui.QFileDialog.getSaveFileName(self, \
             ("Save CDF"), "./", ("CDF Files (*.cdf);; CSV Files (*.csv)")))
             if not str(self.filename) == '':
                 self.pbar.show()
                 self.start.setText('Downloading...')
+                self.status_bar.showMessage('Processing Data...')
                 self.start.setEnabled(False)
                 self.downloader = DownloadDaysimeter(self)
                 self.connect(self.downloader, QtCore.SIGNAL('update'), \
                 self.update_progress)
                 self.connect(self.downloader, QtCore.SIGNAL('make'), \
-                self.make_cdf)
+                self.make)
                 self.downloader.start()
         
-    def make_cdf(self, data):
+    def make(self, data):
         if self.filename[len(self.filename)-4:] == '.cdf':
-            self.maker = MakeCDF(self, data, self.filename)
+            self.subjectinfo = SubjectInfo()
+            self.connect(self.subjectinfo, QtCore.SIGNAL('sendinfo'), self.make_cdf)
+            self.connect(self.subjectinfo, QtCore.SIGNAL('cancelled'), self.cancelled)
+            self.data = data
         else:
+            self.status_bar.showMessage('Writing CSV File...')
             self.maker = MakeCSV(self, data, self.filename)
+            self.connect(self.maker, QtCore.SIGNAL('update'), self.update_progress)
+            self.maker.start()
+            
+    def make_cdf(self, info):
+        self.status_bar.showMessage('Writing CDF File...')
+        self.maker = MakeCDF(self, self.data, self.filename, info)
         self.connect(self.maker, QtCore.SIGNAL('update'), self.update_progress)
         self.maker.start()
         
+    def cancelled(self):
+        self.pbar.hide()
+        self.done.setText('Download Cancelled')
+        self.start.hide()
+        self.done.show()
+        self.status_bar.showMessage('No Subject information was entered. Download cancelled.')
         
     def update_progress(self):
         self.step += 1
@@ -95,8 +112,116 @@ class DownloadMake(QtGui.QWidget):
             self.download_done()
         
     def download_done(self):
+        self.status_bar.showMessage('Download Complete. It is now safe to eject your daysimeter.')
         self.start.hide()
         self.done.show()
+        
+class SubjectInfo(QtGui.QWidget):
+    """ PURPOSE: Creates a widget for a user to enter subject information """
+    send_info_sig = QtCore.pyqtSignal(list)
+    def __init__(self,parent=None):
+        super(SubjectInfo, self).__init__(parent)
+        self.setWindowTitle('Enter Subject Information')
+        self.setFixedSize(300,160)
+        self.subject_id = QtGui.QLineEdit()
+        self.subject_sex = QtGui.QComboBox()
+        self.subject_mass = QtGui.QLineEdit()
+        
+        self.subject_id.setMaxLength(64)
+        
+        self.day_dob = QtGui.QComboBox()
+        self.month_dob = QtGui.QComboBox()
+        self.year_dob = QtGui.QComboBox()
+        
+        self.subject_sex.addItems(['-', 'Male', 'Female', 'Other'])
+        
+        self.day_dob.addItem('-')
+        self.month_dob.addItem('-')
+        self.year_dob.addItem('-')
+        
+        self.day_dob.addItems([str(x) for x in range(1, 32)])
+        self.month_dob.addItems(['January', 'February', 'March', 'April'] + \
+        ['May', 'June', 'July', 'August', 'September', 'October'] + \
+        ['November', 'December'])
+        self.year_dob.addItems([str(x) for x in reversed(range(1900, 2021))])
+        
+        self.layout_dob = QtGui.QHBoxLayout()
+        self.layout_dob.addWidget(self.day_dob)
+        self.layout_dob.addWidget(self.month_dob)
+        self.layout_dob.addWidget(self.year_dob)
+        
+        self.subject_mass.setInputMask('000.000')
+        self.subject_mass.setText('000.000')
+        
+        self.submit = QtGui.QPushButton('Submit')
+        self.cancel = QtGui.QPushButton('Cancel')
+        
+        button_layout = QtGui.QHBoxLayout()
+        button_layout.addWidget(self.submit)
+        button_layout.addWidget(self.cancel)
+        
+        layout = QtGui.QFormLayout()
+        layout.addRow('Subject ID Number', self.subject_id)
+        layout.addRow('Sex', self.subject_sex)
+        layout.addRow('Date of Birth', self.layout_dob)
+        layout.addRow('Mass (in kg)', self.subject_mass)
+        layout.addRow(button_layout)
+        
+        self.submit.setEnabled(False)
+        
+        self.setLayout(layout)
+        
+        self.subject_id.textChanged.connect(self.enable_submit)
+        self.subject_sex.currentIndexChanged.connect(self.enable_submit)
+        self.day_dob.currentIndexChanged.connect(self.enable_submit)
+        self.month_dob.currentIndexChanged.connect(self.enable_submit)
+        self.year_dob.currentIndexChanged.connect(self.enable_submit)
+        self.subject_mass.textChanged.connect(self.enable_submit)
+        
+        
+        self.submit.pressed.connect(self.submit_info)
+        self.cancel.pressed.connect(self.closeself)
+        
+        self.show()
+    
+    def closeEvent(self, event):
+        if self.success:
+            event.accept()
+        else:
+            self.emit(QtCore.SIGNAL('cancelled'))
+            event.accept()
+            
+    def closeself(self):
+        self.emit(QtCore.SIGNAL('cancelled'))
+        self.close()
+        
+    def submit_info(self):
+        """
+        PURPOSE: Submit info given my user and pass to function that saves it
+        """
+        sub_id = str(self.subject_id.text())
+        sub_sex = str(self.subject_sex.currentText())
+        sub_dob = str(self.day_dob.currentText()) + ' ' + \
+            str(self.month_dob.currentText()) + ' ' + \
+            str(self.year_dob.currentText())
+        sub_mass = str(self.subject_mass.text())
+        self.success = True
+        self.emit(QtCore.SIGNAL('sendinfo'), [sub_id, sub_sex, sub_dob, sub_mass])
+        self.close()
+    
+   
+    def enable_submit(self):
+        """ PURPOSE: Enables submit button once all fields are filled with
+        valid info """
+        if  not self.subject_id.text() == '' and \
+            self.subject_sex.currentIndex() > 0 and \
+            self.day_dob.currentIndex() > 0 and \
+            self.month_dob.currentIndex() > 0 and \
+            self.year_dob.currentIndex() > 0 and \
+            float(self.subject_mass.text()) > 0.000:
+            self.submit.setEnabled(True)
+        else:
+            self.submit.setEnabled(False)
 
         
 class DownloadDaysimeter(QtCore.QThread):
@@ -384,16 +509,15 @@ class DownloadDaysimeter(QtCore.QThread):
         
 class MakeCDF(QtCore.QThread):
     
-    def __init__(self, parent, data, filename):
+    def __init__(self, parent, data, filename, info):
         QtCore.QThread.__init__(self, parent)
         self.data = data
         self.filename = filename
+        self.info = info
         
     def run(self):
         """ PURPOSE: Makes a CDF file from data. """
-        if not os.path.exists(os.getcwd() + '/usr/data/subject info.txt'):
-            return False
-        sub_info = read_subject_info()
+        sub_info = self.info
         struct_time = time.strptime(sub_info[2], '%d %B %Y')
         sub_info[2] = datetime.fromtimestamp(time.mktime(struct_time))
 
