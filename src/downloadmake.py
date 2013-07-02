@@ -10,6 +10,7 @@ import struct
 import logging
 import time
 import math
+from ConfigParser import SafeConfigParser
 from datetime import datetime
 from datetime import timedelta
 from geterrlog import get_err_log
@@ -63,6 +64,12 @@ class DownloadMake(QtGui.QWidget):
         self.done.hide()        
         self.show()
         
+        self.parser = SafeConfigParser()
+        self.parser.read('daysimeter.ini')
+        
+        self.savedir = self.parser.get('Application Settings', 'savepath')
+        print self.savedir
+        
     def start_download(self):
         """ starts / manages download """
         if not find_daysimeter():
@@ -71,7 +78,7 @@ class DownloadMake(QtGui.QWidget):
         else:
             self.status_bar.showMessage('')
             self.filename = str(QtGui.QFileDialog.getSaveFileName(self, \
-            ("Save CDF"), "./", ("CDF Files (*.cdf);; CSV Files (*.csv)")))
+            ('Save File'), self.savedir, ('CDF Files (*.cdf);; CSV Files (*.csv)')))
             if not str(self.filename) == '':
                 self.pbar.show()
                 self.start.setText('Downloading...')
@@ -754,7 +761,6 @@ class MakeCSV(QtCore.QThread):
         with open(filename,'w') as csv_fp:
             csv_fp.write('time,red,green,blue,lux,CLA,activity\n')
             for x in range(len(self.data[1][0])):
-#                print self.data[1][0][x]
                 csv_fp.write(str(self.data[1][0][x]) + ',' + \
                 str(self.data[1][2][x]) + ',' + str(self.data[1][3][x]) + ',' \
                 + str(self.data[1][4][x]) + ',' +  str(self.data[1][5][x]) + \
@@ -762,8 +768,7 @@ class MakeCSV(QtCore.QThread):
                  str(self.data[1][8][x]) + '\n')
        
         self.emit(QtCore.SIGNAL('update'))
-            
-        
+
 def main():
     """ PURPOSE: Creates app and runs widget """
     # Create the Qt Application
