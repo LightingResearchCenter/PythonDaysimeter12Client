@@ -67,7 +67,7 @@ class DownloadMake(QtGui.QWidget):
             ' computer.')
         else:
             self.filename = str(QtGui.QFileDialog.getSaveFileName(self, \
-            ("Save CDF"), "./", ("CDF Files (*.cdf)")))
+            ("Save CDF"), "./", ("CDF Files (*.cdf);; CSV Files (*.csv)")))
             if not str(self.filename) == '':
                 self.pbar.show()
                 self.start.setText('Downloading...')
@@ -80,7 +80,10 @@ class DownloadMake(QtGui.QWidget):
                 self.downloader.start()
         
     def make_cdf(self, data):
-        self.maker = MakeCDF(self, data, self.filename)
+        if self.filename[len(self.filename)-4:] == '.cdf':
+            self.maker = MakeCDF(self, data, self.filename)
+        else:
+            self.maker = MakeCSV(self, data, self.filename)
         self.connect(self.maker, QtCore.SIGNAL('update'), self.update_progress)
         self.maker.start()
         
@@ -578,7 +581,34 @@ class MakeCDF(QtCore.QThread):
         #Set download flag to true (0)
         set_download_flag()
         self.emit(QtCore.SIGNAL('update'))
+
+class MakeCSV(QtCore.QThread):
+    
+    def __init__(self, parent, data, filename):
+        QtCore.QThread.__init__(self, parent)
+        self.data = data
+        self.filename = filename
         
+    def run(self):
+        """ PURPOSE: Makes a CSV file from data. """
+        if not os.path.exists(os.getcwd() + '/usr/data/subject info.txt'):
+            return False
+        sub_info = read_subject_info()
+        struct_time = time.strptime(sub_info[2], '%d %B %Y')
+        sub_info[2] = datetime.fromtimestamp(time.mktime(struct_time))
+
+        filename = self.filename
+
+        with open(filename,'w') as csv_fp:
+            csv_fp.write('time,red,green,blue,lux,CLA,activity\n')
+            for x in range(len(self.data[1][0])):
+#                print self.data[1][0][x]
+                csv_fp.write(str(self.data[1][0][x]) + ',' + str(self.data[1][2][x]) + ',' + \
+                str(self.data[1][3][x]) + ',' + str(self.data[1][4][x]) + ',' +  str(self.data[1][5][x]) + \
+                 ',' +  str(self.data[1][6][x]) + ',' +  str(self.data[1][8][x]) + '\n')
+       
+        self.emit(QtCore.SIGNAL('update'))
+            
         
 def main():
     """ PURPOSE: Creates app and runs widget """
