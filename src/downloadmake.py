@@ -26,6 +26,8 @@ from spacepy import pycdf
 from getlocaloffset import get_local_offset_s
 from setdownloadflag import set_download_flag
 from accesssubjectinfo import read_subject_info
+from updateheader import update_header
+from convertheader import convert_header_f1
 from PyQt4 import QtGui, QtCore
     
 class DownloadMake(QtGui.QWidget):
@@ -109,6 +111,16 @@ class DownloadMake(QtGui.QWidget):
         self.step += 1
         self.pbar.setValue(self.step)
         if self.step == 100:
+            if update_header():
+                reply = QtGui.QMessageBox.question(self, 'Message',
+            "Your daysimeter's header is out of date. Would you like to update it now?", \
+            QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
+
+                if reply == QtGui.QMessageBox.Yes:
+                    convert_header_f1()
+                else:
+                    self.download_done()
+        else:
             self.download_done()
         
     def download_done(self):
