@@ -7,12 +7,13 @@ Creation Date: 25.06.2013
 import sys
 from PyQt4.QtGui import QPushButton, QHBoxLayout, QLineEdit, QWidget, \
                         QFormLayout, QApplication, QMainWindow, QComboBox
-from accesssubjectinfo import write_subject_info
+from PyQt4 import QtCore
 
 
 class SubjectInfo(QWidget):
     """ PURPOSE: Creates a widget for a user to enter subject information """
-    def __init__(self,parent=None):
+    send_info_sig = QtCore.pyqtSignal(list)
+    def __init__(self, parent=None):
         super(SubjectInfo, self).__init__(parent)
         QMainWindow.__init__(self)
         self.setWindowTitle('Enter Subject Information')
@@ -74,6 +75,9 @@ class SubjectInfo(QWidget):
         
         self.submit.pressed.connect(self.submit_info)
         self.cancel.pressed.connect(self.close)
+        
+        self.show()
+
 
     def submit_info(self):
         """
@@ -85,7 +89,7 @@ class SubjectInfo(QWidget):
             str(self.month_dob.currentText()) + ' ' + \
             str(self.year_dob.currentText())
         sub_mass = str(self.subject_mass.text())
-        write_subject_info(sub_id, sub_sex, sub_dob, sub_mass)
+        self.send_info_sig.emit([sub_id, sub_sex, sub_dob, sub_mass])
         self.close()
     
    
@@ -108,7 +112,6 @@ def main():
     app = QApplication(sys.argv)
     # Create and show the form
     session = SubjectInfo()
-    session.show()
     # Run the main Qt loop
     sys.exit(app.exec_())
             

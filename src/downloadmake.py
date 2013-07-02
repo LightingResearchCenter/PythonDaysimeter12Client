@@ -26,17 +26,20 @@ from spacepy import pycdf
 from getlocaloffset import get_local_offset_s
 from setdownloadflag import set_download_flag
 from accesssubjectinfo import read_subject_info
+from updateheader import update_header
+from convertheader import convert_header_f1
 from PyQt4 import QtGui, QtCore
     
 class DownloadMake(QtGui.QWidget):
-    
+    """ Widget that manages download daysimeter data and making CDF 
+    or CSV file """
     def __init__(self):
-        super(DownloadMake,self).__init__()
+        super(DownloadMake, self).__init__()
         self.initUI()
         
     def initUI(self):
-        
-        self.resize(500,80)
+        """ initialize the GUI """
+        self.setFixedSize(500, 100)
         self.pbar = QtGui.QProgressBar(self)
         
         self.start = QtGui.QPushButton('Start Download')
@@ -53,44 +56,201 @@ class DownloadMake(QtGui.QWidget):
         layout.addWidget(self.status_bar)
         self.setLayout(layout)
         
-        
         self.setWindowTitle('Datsimeter Downloader')
         self.step = 0.0
         self.pbar.setValue(self.step)
         self.pbar.hide()
-        self.done.hide()
+        self.done.hide()        
         self.show()
         
     def start_download(self):
+        """ starts / manages download """
         if not find_daysimeter():
-            self.status_bar.showMessage('No Daysimeter plugged into this computer.')
+            self.status_bar.showMessage('No Daysimeter plugged into this' + \
+            ' computer.')
         else:
+            self.status_bar.showMessage('')
             self.filename = str(QtGui.QFileDialog.getSaveFileName(self, \
-            ("Save CDF"), "./", ("CDF Files (*.cdf)")))
+            ("Save CDF"), "./", ("CDF Files (*.cdf);; CSV Files (*.csv)")))
             if not str(self.filename) == '':
                 self.pbar.show()
                 self.start.setText('Downloading...')
+                self.status_bar.showMessage('Processing Data...')
                 self.start.setEnabled(False)
                 self.downloader = DownloadDaysimeter(self)
-                self.connect(self.downloader, QtCore.SIGNAL('update'), self.update_progress)
-                self.connect(self.downloader, QtCore.SIGNAL('make'), self.make_cdf)
+                self.connect(self.downloader, QtCore.SIGNAL('update'), \
+                self.update_progress)
+                self.connect(self.downloader, QtCore.SIGNAL('make'), \
+                self.make)
                 self.downloader.start()
         
-    def make_cdf(self, data):
-        self.maker = MakeCDF(self, data, self.filename)
+    def make(self, data):
+        """ determines filetype to be written, creates maker """
+        if self.filename[len(self.filename)-4:] == '.cdf':
+            self.subjectinfo = SubjectInfo()
+            self.connect(self.subjectinfo, QtCore.SIGNAL('sendinfo'), \
+            self.make_cdf)
+            self.connect(self.subjectinfo, QtCore.SIGNAL('cancelled'), \
+            self.cancelled)
+            self.data = data
+        else:
+            self.status_bar.showMessage('Writing CSV File...')
+            self.maker = MakeCSV(self, data, self.filename)
+            self.connect(self.maker, QtCore.SIGNAL('update'), \
+            self.update_progress)
+            self.maker.start()
+            
+    def make_cdf(self, info):
+        """ makes a CDF file """
+        self.status_bar.showMessage('Writing CDF File...')
+        self.maker = MakeCDF(self, self.data, self.filename, info)
         self.connect(self.maker, QtCore.SIGNAL('update'), self.update_progress)
         self.maker.start()
         
+    def cancelled(self):
+        """ determines if the download has been cancelled """
+        #As a side note, the ceiling started leaking again...
+        self.pbar.hide()
+        self.done.setText('Download Cancelled')
+        self.start.hide()
+        self.done.show()
+        self.status_bar.showMessage('No Subject information was entered. ' + \
+        'Download cancelled.')
         
     def update_progress(self):
+        """ updates progress bar """
+        #it kind fakes it until it makes it
         self.step += 1
         self.pbar.setValue(self.step)
         if self.step == 100:
+            if update_header():
+                reply = QtGui.QMessageBox.question(self, 'Message',
+            'Your daysimeter\'s header is out of date.\n' + \
+            'Would you like to update it now?', QtGui.QMessageBox.Yes, \
+            QtGui.QMessageBox.No)
+
+                if reply == QtGui.QMessageBox.Yes:
+                    convert_header_f1()
+                else:
+                    self.download_done()
+        else:
             self.download_done()
         
     def download_done(self):
+        """ sets everything when the download is finished """
+        self.status_bar.showMessage('Download Complete. It is now safe ' + \
+        'to eject your daysimeter.')
         self.start.hide()
         self.done.show()
+        
+class SubjectInfo(QtGui.QWidget):
+    """ PURPOSE: Creates a widget for a user to enter subject information """
+    send_info_sig = QtCore.pyqtSignal(list)
+    def __init__(self, parent=None):
+        super(SubjectInfo, self).__init__(parent)
+        self.setWindowTitle('Enter Subject Information')
+        self.setFixedSize(300, 160)
+        self.subject_id = QtGui.QLineEdit()
+        self.subject_sex = QtGui.QComboBox()
+        self.subject_mass = QtGui.QLineEdit()
+        
+        self.subject_id.setMaxLength(64)
+        
+        self.day_dob = QtGui.QComboBox()
+        self.month_dob = QtGui.QComboBox()
+        self.year_dob = QtGui.QComboBox()
+        
+        self.subject_sex.addItems(['-', 'Male', 'Female', 'Other'])
+        
+        self.day_dob.addItem('-')
+        self.month_dob.addItem('-')
+        self.year_dob.addItem('-')
+        
+        self.day_dob.addItems([str(x) for x in range(1, 32)])
+        self.month_dob.addItems(['January', 'February', 'March', 'April'] + \
+        ['May', 'June', 'July', 'August', 'September', 'October'] + \
+        ['November', 'December'])
+        self.year_dob.addItems([str(x) for x in reversed(range(1900, 2021))])
+        
+        self.layout_dob = QtGui.QHBoxLayout()
+        self.layout_dob.addWidget(self.day_dob)
+        self.layout_dob.addWidget(self.month_dob)
+        self.layout_dob.addWidget(self.year_dob)
+        
+        self.subject_mass.setInputMask('000.000')
+        self.subject_mass.setText('000.000')
+        
+        self.submit = QtGui.QPushButton('Submit')
+        self.cancel = QtGui.QPushButton('Cancel')
+        
+        button_layout = QtGui.QHBoxLayout()
+        button_layout.addWidget(self.submit)
+        button_layout.addWidget(self.cancel)
+        
+        layout = QtGui.QFormLayout()
+        layout.addRow('Subject ID Number', self.subject_id)
+        layout.addRow('Sex', self.subject_sex)
+        layout.addRow('Date of Birth', self.layout_dob)
+        layout.addRow('Mass (in kg)', self.subject_mass)
+        layout.addRow(button_layout)
+        
+        self.submit.setEnabled(False)
+        
+        self.setLayout(layout)
+        
+        self.subject_id.textChanged.connect(self.enable_submit)
+        self.subject_sex.currentIndexChanged.connect(self.enable_submit)
+        self.day_dob.currentIndexChanged.connect(self.enable_submit)
+        self.month_dob.currentIndexChanged.connect(self.enable_submit)
+        self.year_dob.currentIndexChanged.connect(self.enable_submit)
+        self.subject_mass.textChanged.connect(self.enable_submit)
+        
+        
+        self.submit.pressed.connect(self.submit_info)
+        self.cancel.pressed.connect(self.closeself)
+        
+        self.show()
+    
+    def closeEvent(self, event):
+        """ catches the close event """
+        if self.success:
+            event.accept()
+        else:
+            self.emit(QtCore.SIGNAL('cancelled'))
+            event.accept()
+            
+    def closeself(self):
+        self.emit(QtCore.SIGNAL('cancelled'))
+        self.close()
+        
+    def submit_info(self):
+        """
+        PURPOSE: Submit info given my user and pass to function that saves it
+        """
+        sub_id = str(self.subject_id.text())
+        sub_sex = str(self.subject_sex.currentText())
+        sub_dob = str(self.day_dob.currentText()) + ' ' + \
+            str(self.month_dob.currentText()) + ' ' + \
+            str(self.year_dob.currentText())
+        sub_mass = str(self.subject_mass.text())
+        self.success = True
+        self.emit(QtCore.SIGNAL('sendinfo'), [sub_id, sub_sex, sub_dob, \
+        sub_mass])
+        self.close()
+    
+   
+    def enable_submit(self):
+        """ PURPOSE: Enables submit button once all fields are filled with
+        valid info """
+        if  not self.subject_id.text() == '' and \
+            self.subject_sex.currentIndex() > 0 and \
+            self.day_dob.currentIndex() > 0 and \
+            self.month_dob.currentIndex() > 0 and \
+            self.year_dob.currentIndex() > 0 and \
+            float(self.subject_mass.text()) > 0.000:
+            self.submit.setEnabled(True)
+        else:
+            self.submit.setEnabled(False)
 
         
 class DownloadDaysimeter(QtCore.QThread):
@@ -106,7 +266,6 @@ class DownloadDaysimeter(QtCore.QThread):
         adj_active_flag_ = constants_.ADJ_ACTIVE_FLAG
         old_flag = constants_.OLD_FLAG
         adj_active_firm = constants_.ADJ_ACTIVE_FIRM
-        self.emit(QtCore.SIGNAL('released()'),10)
         #Create error log file named error.log on the desktop
         errlog_filename = get_err_log()
         if errlog_filename == '':
@@ -245,7 +404,8 @@ class DownloadDaysimeter(QtCore.QThread):
         #header or above, this code can be reduced to just the 
         #elif statement (as an if, of course )
         if old_flag:    
-            if (daysimeter_id >= 54 and daysimeter_id <= 69) or daysimeter_id >= 83:
+            if (daysimeter_id >= 54 and daysimeter_id <= 69) or \
+            daysimeter_id >= 83:
                 adj_active_flag_ = True
         elif float(info[1]) in adj_active_firm:
             adj_active_flag_ = True
@@ -268,7 +428,7 @@ class DownloadDaysimeter(QtCore.QThread):
         for x in range(0, len(times)):
             times[x] = epoch_time + timedelta(seconds=log_interval*x)
             mat_times[x] = dt2dn(times[x])
-        
+            
         #Activity is captured on the daysimeter as a mean squared
         #value (i.e. activity = x^2 + y^2 + z^2) and is measured in
         #counts. To get the number of g's, calculate the root mean
@@ -303,8 +463,9 @@ class DownloadDaysimeter(QtCore.QThread):
         #Calculate cs
         cs = calc_cs(cla)
         
-        self.emit(QtCore.SIGNAL('make'),([device_model, device_sn, calib_info], \
-        [times, mat_times, red, green, blue, lux, cla, cs, activity, resets]))
+        self.emit(QtCore.SIGNAL('make'),([device_model, device_sn, \
+        calib_info], [times, mat_times, red, green, blue, lux, cla, cs, \
+        activity, resets]))
         
     def calc_lux_cla(self, *args):
         """ PURPOSE: Calculates CS and cla. """
@@ -348,12 +509,12 @@ class DownloadDaysimeter(QtCore.QThread):
         #reasoning for. I based it off the MatLab code, with some exceptions
         #to optimize code for python
         for x in range(0, loop_max):
-            scone_macula[x] = constants[0][0]*red[x] + constants[0][1]*green[x] + \
-            constants[0][2]*blue[x]
+            scone_macula[x] = constants[0][0]*red[x] + \
+            constants[0][1]*green[x] + constants[0][2]*blue[x]
             v_lamda_macula[x] = constants[1][0]*red[x] + \
             constants[1][1]*green[x] + constants[1][2]*blue[x]
-            melanopsin[x] = constants[2][0]*red[x] + constants[2][1]*green[x] + \
-            constants[2][2]*blue[x]
+            melanopsin[x] = constants[2][0]*red[x] + \
+            constants[2][1]*green[x] + constants[2][2]*blue[x]
             v_prime[x] = constants[3][0]*red[x] + constants[3][1]*green[x] + \
             constants[3][2]*blue[x]
             
@@ -365,27 +526,26 @@ class DownloadDaysimeter(QtCore.QThread):
             else:
                 cla[x] = melanopsin[x]
             
+
             if math.ceil((100*x)/loop_max) > emit_sig:
                 emit_sig += 1
                 self.emit(QtCore.SIGNAL('update'))
-                
             cla[x] *= constants[5][3]
-            cla = [0 if x < 0 else x for x in cla]
+        cla = [0 if x < 0 else x for x in cla]
             
         return [lux, cla]
         
 class MakeCDF(QtCore.QThread):
     
-    def __init__(self, parent, data, filename):
+    def __init__(self, parent, data, filename, info):
         QtCore.QThread.__init__(self, parent)
         self.data = data
         self.filename = filename
+        self.info = info
         
     def run(self):
         """ PURPOSE: Makes a CDF file from data. """
-        if not os.path.exists(os.getcwd() + '/usr/data/subject info.txt'):
-            return False
-        sub_info = read_subject_info()
+        sub_info = self.info
         struct_time = time.strptime(sub_info[2], '%d %B %Y')
         sub_info[2] = datetime.fromtimestamp(time.mktime(struct_time))
 
@@ -435,23 +595,24 @@ class MakeCDF(QtCore.QThread):
     #        cdf_fp['event'] =
             
             #Set variable attributes for time
-            cdf_fp['time'].attrs['description'] = 'UTC in CDF Epoch format, \
-            milliseconds since 1-Jan-0000'
+            cdf_fp['time'].attrs['description'] = 'UTC in CDF Epoch format,' + \
+            ' milliseconds since 1-Jan-0000'
             cdf_fp['time'].attrs['unitPrefix'] = 'm'
             cdf_fp['time'].attrs['baseUnit'] = 's'
             cdf_fp['time'].attrs['unitType'] = 'baseSI'
             cdf_fp['time'].attrs['otherAttributes'] = ''
             
             #Set variable attributes for matTime
-            cdf_fp['matTime'].attrs['description'] = 'UTC in MATLAB serial date \
-            format, days since 1-Jan-0000'
+            cdf_fp['matTime'].attrs['description'] = 'UTC in MATLAB serial' + \
+            ' date format, days since 1-Jan-0000'
             cdf_fp['matTime'].attrs['unitPrefix'] = ''
             cdf_fp['matTime'].attrs['baseUnit'] = 'days'
             cdf_fp['matTime'].attrs['unitType'] = 'nonSI'
             cdf_fp['matTime'].attrs['otherAttributes'] = ''
             
             #Set variable attributes for timeOffset
-            cdf_fp['timeOffset'].attrs['description'] = 'Localized offset from UTC'
+            cdf_fp['timeOffset'].attrs['description'] = 'Localized offset ' + \
+            'from UTC'
             cdf_fp['timeOffset'].attrs['unitPrefix'] = ''
             cdf_fp['timeOffset'].attrs['baseUnit'] = 's'
             cdf_fp['timeOffset'].attrs['unitType'] = 'baseSI'
@@ -500,32 +661,32 @@ class MakeCDF(QtCore.QThread):
             cdf_fp['CS'].attrs['otherAttributes'] = 'model'
             
             #Set variable attributes for activity
-            cdf_fp['activity'].attrs['description'] = 'Activity index in g-force \
-            (acceleration in m/2^2 over standard gravity 9.80665 m/s^2)'
+            cdf_fp['activity'].attrs['description'] = 'Activity index in g' + \
+            '-force (acceleration in m/2^2 over standard gravity 9.80665 m/s^2)'
             cdf_fp['activity'].attrs['unitPrefix'] = ''
             cdf_fp['activity'].attrs['baseUnit'] = 'g_n'
             cdf_fp['activity'].attrs['unitType'] = 'nonSI'
             cdf_fp['activity'].attrs['otherAttributes'] = 'method'
             
             #Set variable attributes for xAcceleration
-    #        cdf_fp['xAcceleration'].attrs['description'] = 'Acceleration in the \
-    #        x-axis relative to the accelerometer'
+    #        cdf_fp['xAcceleration'].attrs['description'] = 'Acceleration ' + \
+    #        'in the x-axis relative to the accelerometer'
     #        cdf_fp['xAcceleration'].attrs['unitPrefix'] = ''
     #        cdf_fp['xAcceleration'].attrs['baseUnit'] = 'm/s^2'
     #        cdf_fp['xAcceleration'].attrs['unitType'] = 'derivedSI'
     #        cdf_fp['xAcceleration'].attrs['otherAttributes'] = ''
             
             #Set variable attributes for yAcceleration
-    #        cdf_fp['yAcceleration'].attrs['description'] = 'Acceleration in the \
-    #        y-axis relative to the accelerometer'
+    #        cdf_fp['yAcceleration'].attrs['description'] = 'Acceleration ' + \ 
+    #        'in the y-axis relative to the accelerometer'
     #        cdf_fp['yAcceleration'].attrs['unitPrefix'] = ''
     #        cdf_fp['yAcceleration'].attrs['baseUnit'] = 'm/s^2'
     #        cdf_fp['yAcceleration'].attrs['unitType'] = 'derivedSI'
     #        cdf_fp['yAcceleration'].attrs['otherAttributes'] = ''
             
             #Set variable attributes for zAcceleration
-    #        cdf_fp['zAcceleration'].attrs['description'] = 'Acceleration in the \
-    #        z-axis relative to the accelerometer'
+    #        cdf_fp['zAcceleration'].attrs['description'] = 'Acceleration ' + \
+    #        'in the z-axis relative to the accelerometer'
     #        cdf_fp['zAcceleration'].attrs['unitPrefix'] = ''
     #        cdf_fp['zAcceleration'].attrs['baseUnit'] = 'm/s^2'
     #        cdf_fp['zAcceleration'].attrs['unitType'] = 'derivedSI'
@@ -539,23 +700,24 @@ class MakeCDF(QtCore.QThread):
     #        cdf_fp['uvIndex'].attrs['otherAttributes'] = ''
             
             #Set variable attributes for temperature
-    #        cdf_fp['temperature'].attrs['description'] = 'Ambient air \
-    #        temperature in degrees Kelvin'
+    #        cdf_fp['temperature'].attrs['description'] = 'Ambient air ' + \
+    #        'temperature in degrees Kelvin'
     #        cdf_fp['temperature'].attrs['unitPrefix'] = ''
     #        cdf_fp['temperature'].attrs['baseUnit'] = 'K'
     #        cdf_fp['temperature'].attrs['unitType'] = 'baseSI'
     #        cdf_fp['temperature'].attrs['otherAttributes'] = ''
             
             #Set variable attributes for longitude
-    #        cdf_fp['longitude'].attrs['description'] = 'Longitude in decimal \
-    #        degrees'
+    #        cdf_fp['longitude'].attrs['description'] = 'Longitude in ' + \
+    #        'decimal degrees'
     #        cdf_fp['longitude'].attrs['unitPrefix'] = ''
     #        cdf_fp['longitude'].attrs['baseUnit'] = 'deg'
     #        cdf_fp['longitude'].attrs['unitType'] = 'nonSI'
     #        cdf_fp['longitude'].attrs['otherAttributes'] = ''
             
             #Set variable attributes for latitude
-    #        cdf_fp['latitude'].attrs['description'] = 'Latitude in decimal degrees'
+    #        cdf_fp['latitude'].attrs['description'] = 'Latitude in ' + \
+    #        'decimal degrees'
     #        cdf_fp['latitude'].attrs['unitPrefix'] = ''
     #        cdf_fp['latitude'].attrs['baseUnit'] = 'deg'
     #        cdf_fp['latitude'].attrs['unitType'] = 'nonSI'
@@ -571,7 +733,36 @@ class MakeCDF(QtCore.QThread):
         #Set download flag to true (0)
         set_download_flag()
         self.emit(QtCore.SIGNAL('update'))
+
+class MakeCSV(QtCore.QThread):
+    
+    def __init__(self, parent, data, filename):
+        QtCore.QThread.__init__(self, parent)
+        self.data = data
+        self.filename = filename
         
+    def run(self):
+        """ PURPOSE: Makes a CSV file from data. """
+        if not os.path.exists(os.getcwd() + '/usr/data/subject info.txt'):
+            return False
+        sub_info = read_subject_info()
+        struct_time = time.strptime(sub_info[2], '%d %B %Y')
+        sub_info[2] = datetime.fromtimestamp(time.mktime(struct_time))
+
+        filename = self.filename
+
+        with open(filename,'w') as csv_fp:
+            csv_fp.write('time,red,green,blue,lux,CLA,activity\n')
+            for x in range(len(self.data[1][0])):
+#                print self.data[1][0][x]
+                csv_fp.write(str(self.data[1][0][x]) + ',' + \
+                str(self.data[1][2][x]) + ',' + str(self.data[1][3][x]) + ',' \
+                + str(self.data[1][4][x]) + ',' +  str(self.data[1][5][x]) + \
+                 ',' +  str(self.data[1][6][x]) + ',' + \
+                 str(self.data[1][8][x]) + '\n')
+       
+        self.emit(QtCore.SIGNAL('update'))
+            
         
 def main():
     """ PURPOSE: Creates app and runs widget """

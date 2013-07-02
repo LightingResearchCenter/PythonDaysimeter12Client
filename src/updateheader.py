@@ -7,6 +7,7 @@ import constants
 from finddaysimeter import find_daysimeter
 
 def update_header():
+    """ Checks to see if daysimeter header needs to be updated. """
     log_filename = constants.LOG_FILENAME
     path = find_daysimeter()
     
