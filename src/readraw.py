@@ -25,7 +25,9 @@ from datetimetodatenum import dt2dn
 import constants as constants_
 
 def read_raw():
-    """ PURPOSE: Reads raw binary data and packages it. """
+    """
+    PURPOSE: Reads raw binary data, processes and packages it for makecdf.py
+    """
     log_filename = constants_.LOG_FILENAME
     data_filename = constants_.DATA_FILENAME
     adj_active_flag_ = constants_.ADJ_ACTIVE_FLAG

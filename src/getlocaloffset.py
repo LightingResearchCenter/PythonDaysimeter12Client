@@ -2,7 +2,7 @@
 get_local_offset
 Author: Jed Kundl
 Creation Date: 21.06.2013
-INPUT: 
+INPUT: None
 OUTPUT: Local UTC offset
 """
 

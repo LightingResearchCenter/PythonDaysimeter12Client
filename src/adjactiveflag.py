@@ -7,7 +7,10 @@ OUTPUT: Processed Red, Green, Blue, Activity
 """
 
 def adj_active_flag(red, green, blue, activity):
-    """ PURPOSE: Adjusts red, green, blue values. """
+    """
+    PURPOSE: Adjusts red, green, blue values if LSB of activity was used to
+    monitor rollover.    
+    """
     loop_max = len(activity)
     #The LSB of activity was used to measure rollover values for R, G, B.
     #So if activity is odd, then we need to calculate the actual values

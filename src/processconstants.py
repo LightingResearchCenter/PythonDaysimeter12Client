@@ -9,9 +9,9 @@ OUTPUT: Constants to calculate cla and lux
 def process_constants(scone_macula, v_lamda_macula, melanopsin, \
 v_prime, v_lamda, cla):
     """
-    Process data by eliminating tabs, newlines, and leading/trailing
-    spaces. Then, it deletes the first element of each list (the name)
-    and converts the reaming elements to floats.
+    PURPOSE: Process data by eliminating tabs, newlines, and leading/trailing
+    spaces. Then, it deletes the first element of each list (the name) and 
+    converts the reaming elements to floats.
     """
     scone_macula = \
     [x.strip('\n') for x in scone_macula.split('\t') if x.strip()]

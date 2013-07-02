@@ -2,7 +2,7 @@
 savename_cdf
 Author: Jed Kundl
 Creation Date: 24.06.2013
-INPUT: 
+INPUT: None
 OUTPUT: The path the CDF file should be saved as
 """
 
@@ -13,7 +13,10 @@ from tkMessageBox import showerror
 
 
 def savename_cdf():
-    """ PURSPOE: Promt user for savename of outputted CDF. """
+    """
+    PURSPOE: Promt user for savename of outputted CDF.
+    NOTE: Code is no longer used, but remains for furture use.
+    """
     valid_name = False
     
     Tk().withdraw()

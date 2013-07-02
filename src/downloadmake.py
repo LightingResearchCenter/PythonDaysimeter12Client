@@ -32,14 +32,16 @@ from convertheader import convert_header_f1
 from PyQt4 import QtGui, QtCore
     
 class DownloadMake(QtGui.QWidget):
-    """ Widget that manages download daysimeter data and making CDF 
-    or CSV file """
+    """
+    PURPOSE: Widget that manages downloading daysimeter data and making CDF 
+    or CSV files. 
+    """
     def __init__(self):
         super(DownloadMake, self).__init__()
         self.initUI()
         
     def initUI(self):
-        """ initialize the GUI """
+        """ PURPOSE: Initialize the GUI """
         self.setFixedSize(500, 100)
         self.pbar = QtGui.QProgressBar(self)
         
@@ -71,7 +73,7 @@ class DownloadMake(QtGui.QWidget):
         print self.savedir
         
     def start_download(self):
-        """ starts / manages download """
+        """ PURPOSE: Starts and manages download of data """
         if not find_daysimeter():
             self.status_bar.showMessage('No Daysimeter plugged into this' + \
             ' computer.')
@@ -92,7 +94,10 @@ class DownloadMake(QtGui.QWidget):
                 self.downloader.start()
         
     def make(self, data):
-        """ determines filetype to be written, creates maker """
+        """
+        PURPOSE: Determines filetype to be written, creates maker thread
+        that actually writes data to file.
+        """
         if self.filename[len(self.filename)-4:] == '.cdf':
             self.subjectinfo = SubjectInfo()
             self.connect(self.subjectinfo, QtCore.SIGNAL('sendinfo'), \
@@ -108,14 +113,17 @@ class DownloadMake(QtGui.QWidget):
             self.maker.start()
             
     def make_cdf(self, info):
-        """ makes a CDF file """
+        """ PURPOSE: Makes a CDF file. """
         self.status_bar.showMessage('Writing CDF File...')
         self.maker = MakeCDF(self, self.data, self.filename, info)
         self.connect(self.maker, QtCore.SIGNAL('update'), self.update_progress)
         self.maker.start()
         
     def cancelled(self):
-        """ determines if the download has been cancelled """
+        """
+        PURPOSE: Determines whether the download has been cancelled, this
+        usually occurs when no subject info was given.
+        """
         #As a side note, the ceiling started leaking again...
         self.pbar.hide()
         self.done.setText('Download Cancelled')
@@ -125,7 +133,7 @@ class DownloadMake(QtGui.QWidget):
         'Download cancelled.')
         
     def update_progress(self):
-        """ updates progress bar """
+        """ PURPOSE: Updates progress bar when given signal to do so. """
         #it kind fakes it until it makes it
         self.step += 1
         self.pbar.setValue(self.step)
@@ -144,7 +152,7 @@ class DownloadMake(QtGui.QWidget):
             self.download_done()
         
     def download_done(self):
-        """ sets everything when the download is finished """
+        """ PURPOSE: Displays done message when download is complete """
         self.status_bar.showMessage('Download Complete. It is now safe ' + \
         'to eject your daysimeter.')
         self.start.hide()
@@ -219,7 +227,9 @@ class SubjectInfo(QtGui.QWidget):
         self.show()
     
     def closeEvent(self, event):
-        """ catches the close event """
+        """ PURPOSE: Catches the close event, check to see if it is a 
+        successful close, or an aborted close and takes appropriate action.
+        """
         if self.success:
             event.accept()
         else:
@@ -227,12 +237,14 @@ class SubjectInfo(QtGui.QWidget):
             event.accept()
             
     def closeself(self):
+        """ PURPOSE: Signals that there was an unsuccessful close event. """
         self.emit(QtCore.SIGNAL('cancelled'))
         self.close()
         
     def submit_info(self):
         """
-        PURPOSE: Submit info given my user and pass to function that saves it
+        PURPOSE: Take user given infomation and pass it back to the main widget
+        to be sent to a file maker thread.
         """
         sub_id = str(self.subject_id.text())
         sub_sex = str(self.subject_sex.currentText())
@@ -247,8 +259,10 @@ class SubjectInfo(QtGui.QWidget):
     
    
     def enable_submit(self):
-        """ PURPOSE: Enables submit button once all fields are filled with
-        valid info """
+        """
+        PURPOSE: Enables submit button once all fields are filled with
+        valid info.
+        """
         if  not self.subject_id.text() == '' and \
             self.subject_sex.currentIndex() > 0 and \
             self.day_dob.currentIndex() > 0 and \
@@ -266,7 +280,9 @@ class DownloadDaysimeter(QtCore.QThread):
         QtCore.QThread.__init__(self, parent)
         
     def run(self):
-        """ PURPOSE: Reads raw binary data and packages it. """
+        """
+        PURPOSE: Reads raw binary data, processed and packages it.
+        """
 
         log_filename = constants_.LOG_FILENAME
         data_filename = constants_.DATA_FILENAME
@@ -475,7 +491,7 @@ class DownloadDaysimeter(QtCore.QThread):
         activity, resets]))
         
     def calc_lux_cla(self, *args):
-        """ PURPOSE: Calculates CS and cla. """
+        """ PURPOSE: Calculates CS and CLA. """
         error_log_filename = get_err_log()
         logging.basicConfig(filename=error_log_filename, level=logging.DEBUG)
         
@@ -766,7 +782,7 @@ class MakeCSV(QtCore.QThread):
                 + str(self.data[1][4][x]) + ',' +  str(self.data[1][5][x]) + \
                  ',' +  str(self.data[1][6][x]) + ',' + \
                  str(self.data[1][8][x]) + '\n')
-       
+        set_download_flag()
         self.emit(QtCore.SIGNAL('update'))
 
 def main():

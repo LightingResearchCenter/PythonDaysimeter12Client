@@ -2,7 +2,7 @@
 make_cdf
 Author: Jed Kundl
 Creation Date: 19.06.2013
-INPUT: 
+INPUT: None
 OUTPUT: CDF File
 """
 
@@ -16,7 +16,11 @@ import time
 import os
 
 def make_cdf(filename):
-    """ PURPOSE: Makes a CDF file from data. """
+    """
+    PURPOSE: Makes a CDF file from processed data.
+    NOTE: This function is no longer directly called and a modified version
+    exists in downloadmake.py    
+    """
     if not os.path.exists(os.getcwd() + '/usr/data/subject info.txt'):
         return False
     sub_info = read_subject_info()

@@ -15,7 +15,10 @@ from math import floor
 #interval of the daysimeter device
 
 def lowpass_filter(data, s_sample_rate):   
-    """ PURPOSE: Filter data to smooth curves. """
+    """
+    PURPOSE: Filters data using a zero phase distortion filter to smooth data
+    curves.
+    """
     minutes = constants.MINUTES
     #h_sample_rate is the sample rate in hertz
     h_sample_rate = 1.0/s_sample_rate

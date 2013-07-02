@@ -2,8 +2,6 @@
 ConvertHeader
 Author: Jed Kundl
 Creation Date: 20.06.2013
-INPUT: 
-OUTPUT:
 """
 
 import sys

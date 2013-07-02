@@ -2,15 +2,16 @@
 set_download_flag
 Author: Jed Kundl
 Creation Date: 24.06.2013
-INPUT: 
-OUTPUT: 
 """
 
 import constants
 from finddaysimeter import find_daysimeter
 
 def set_download_flag():
-    """ PURPOSE: Sets download flag to true (0) once download is compelte. """
+    """
+    PURPOSE: Once binary data has been downloaded, processed and saved, this
+    function modifies the header file and sets the download flag to downloaded (0)
+    """
     path = find_daysimeter()
     log_filename = constants.LOG_FILENAME
     

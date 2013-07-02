@@ -4,6 +4,9 @@ Author: Jed Kundl
 Creation Date: 19.06.2013
 INPUT: 
 OUTPUT: Constants
+NOTE: This file contains constants which all called from various parts of the
+code. Each constant has a description explaining why it is there. Constants are
+centralized to make it easier to modify code.
 """
 #This file just puts the constants in one place, for ease of
 #editing/adding/etc

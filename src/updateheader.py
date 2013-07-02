@@ -1,5 +1,5 @@
 """
-updateheader
+updateheader.py
 Author: Jed Kundl
 Creation Date: 26.06.2013
 """
@@ -7,7 +7,10 @@ import constants
 from finddaysimeter import find_daysimeter
 
 def update_header():
-    """ Checks to see if daysimeter header needs to be updated. """
+    """
+    PURPOSE: Function checks to see whether daysimeter's header is out of date.
+    If it is, function returns True, else function returns False.
+    """
     log_filename = constants.LOG_FILENAME
     path = find_daysimeter()
     

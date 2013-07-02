@@ -4,7 +4,7 @@ Author: Jed Kundl
 Creation Date: 17.06.2013
 INPUT: Red, Green, Blue, daysimeterID
 OUTPUT: lux, cla
-calc_lux_cla either takes 3 or 4 arguments. Usage: red, green, blue, [constants]
+NOTE: calc_lux_cla either takes 3 or 4 arguments. Usage: red, green, blue, [constants]
 """
 
 import sys
@@ -13,7 +13,11 @@ from getconstants import get_constants
 from geterrlog import get_err_log
 
 def calc_lux_cla(*args): 
-    """ PURPOSE: Calculates CS and cla. """
+    """
+    PURPOSE: Calculates CS and CLA.
+    NOTE: A modified version of this exists in downloadmake.py and this version
+    is no logner called.    
+    """
     error_log_filename = get_err_log()
     logging.basicConfig(filename=error_log_filename, level=logging.DEBUG)
     

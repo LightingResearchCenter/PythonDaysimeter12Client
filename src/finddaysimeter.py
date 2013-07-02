@@ -12,7 +12,7 @@ from win32api import GetLogicalDriveStrings
 import constants
 
 def find_daysimeter():
-    """ PUROSE: Finds the daysimeter and returns it's path """
+    """ PUROSE: Finds the daysimeter and returns its path """
     log_filename = constants.LOG_FILENAME
     data_filename = constants.DATA_FILENAME
     

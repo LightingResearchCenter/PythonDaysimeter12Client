@@ -11,7 +11,11 @@ from PyQt4 import QtCore
 
 
 class SubjectInfo(QWidget):
-    """ PURPOSE: Creates a widget for a user to enter subject information """
+    """ 
+    PURPOSE: Creates a widget for a user to enter subject information. This 
+    particular file is a standalone widget, but a modified version exists in
+    downloadmake.py
+    """
     send_info_sig = QtCore.pyqtSignal(list)
     def __init__(self, parent=None):
         super(SubjectInfo, self).__init__(parent)
