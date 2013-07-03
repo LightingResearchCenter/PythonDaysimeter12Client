@@ -97,7 +97,6 @@ class DownloadMake(QtGui.QWidget):
                 self.downloader.start()
         
     def make(self, data):
-        self.pbar.setValue(99)
         """
         PURPOSE: Determines filetype to be written, creates maker thread
         that actually writes data to file.
@@ -137,9 +136,10 @@ class DownloadMake(QtGui.QWidget):
         'Download cancelled.')
         
     def fake_progress(self):
-        for x in range(80):
-            time.sleep(.1875)
-            self.update_progress()
+        self.progresssim = ProgressSim()
+        self.connect(self.progresssim, QtCore.SIGNAL('update'), \
+        self.update_progress)
+        self.progresssim.start()
     
         
     def update_progress(self):
@@ -167,6 +167,21 @@ class DownloadMake(QtGui.QWidget):
         'to eject your daysimeter.')
         self.start.hide()
         self.done.show()
+        
+class ProgressSim(QtCore.QThread):
+    """
+    PURPOSE: Simulates progress while daysimeter transfers data from EEPROM
+    to RAM
+    """
+    
+    def __init__(self, parent=None):
+        QtCore.QThread.__init__(self, parent)
+        
+    def run(self):
+        for x in range(80):
+            time.sleep(.1875)
+            self.emit(QtCore.SIGNAL('update'))
+    
         
 class SubjectInfo(QtGui.QWidget):
     """ PURPOSE: Creates a widget for a user to enter subject information """
