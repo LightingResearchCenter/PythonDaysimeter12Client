@@ -58,7 +58,7 @@ class LayoutExample(qt.QMainWindow):
             self.init.add_section("Application Settings")
             self.set_save_path()
         # Update the Application settings
-        if update == 'Application Settings':
+        if update == 'savepath':
             self.set_save_path()
         self.init.write(init_file)
         init_file.close()
@@ -66,7 +66,8 @@ class LayoutExample(qt.QMainWindow):
     def set_save_path(self):
         """Create a dialog to set the savepath and set it in the ini file"""
         dir_name = str(qt.QFileDialog.getExistingDirectory(self))
-        self.init.set("Application Settings", 'savepath', dir_name)
+        if dir_name:
+            self.init.set("Application Settings", 'savepath', dir_name)
         
     def create_menus(self):
         """Create the menus"""
