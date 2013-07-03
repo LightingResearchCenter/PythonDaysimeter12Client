@@ -6,6 +6,7 @@ Created on Wed Jun 12 15:34:13 2013
 """
 
 import sys, os
+sys.path.insert(0, os.pardir)
 import PyQt4.QtGui as qt
 import numpy as np
 import datetime as dt
@@ -14,6 +15,7 @@ from ConfigParser import ConfigParser
 from functools import partial
 from spacepy import pycdf
 from re import sub
+from src.downloadmake import DownloadMake
 
 QT_APP = qt.QApplication(sys.argv) 
  
@@ -45,21 +47,21 @@ class LayoutExample(qt.QMainWindow):
         # Get the path of the file and open it
         dir_path = os.getcwd()
         file_path = os.path.join(dir_path, 'daysimeter.ini')
-        w_init_file = open(file_path, mode='w+')
-        r_init_file = open(file_path, mode='r')
         # Parse the ini file
         self.init = ConfigParser()
-        self.init.readfp(r_init_file)
-        # Create a new sections and populate them if file is empty
-        if not self.init.sections():
+        if os.path.isfile(file_path):
+            init_file = open(file_path, mode='r+')
+            self.init.readfp(init_file)
+            init_file.seek(0)
+        else:
+            init_file = open(file_path, mode='w+')
             self.init.add_section("Application Settings")
             self.set_save_path()
         # Update the Application settings
-        elif update == 'Application Settings':
-            self.set_save_path() 
-        self.init.write(w_init_file)
-        w_init_file.close()
-        r_init_file.close()
+        if update == 'Application Settings':
+            self.set_save_path()
+        self.init.write(init_file)
+        init_file.close()
 
     def set_save_path(self):
         """Create a dialog to set the savepath and set it in the ini file"""
@@ -95,20 +97,24 @@ class LayoutExample(qt.QMainWindow):
         daysim_menu = self.menuBar().addMenu('&Daysim')
         # Makes menu options
         actions = []
-        set_sub_info = qt.QAction("&Set subject info", 
-                                  self,
-                                  triggered=partial(self.load_config, 
-                                                    update='Subject Info'))
         set_savepath = qt.QAction("&Set save path", 
                                   self,
                                   statusTip="Set the save path for the \
                                   processed Daysimeter data file",
                                   triggered=partial(self.load_config, 
                                                     update='savepath'))
+        make_download = qt.QAction("&Download Daysimeter data", 
+                                  self,
+                                  statusTip="Set the save path for the \
+                                  processed Daysimeter data file",
+                                  triggered=self.download_data)                                
         # Adds the options to the menu
-        actions.extend([set_sub_info, set_savepath])
+        actions.extend([make_download, set_savepath])
         for action in actions:
             daysim_menu.addAction(action)
+            
+    def download_data(self):
+        self.download = DownloadMake()
         
     def open_file(self):
         """Opens and read a cdf or txt file and pass its data"""

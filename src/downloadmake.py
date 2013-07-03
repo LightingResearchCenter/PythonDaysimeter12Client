@@ -70,7 +70,6 @@ class DownloadMake(QtGui.QWidget):
         self.parser.read('daysimeter.ini')
         
         self.savedir = self.parser.get('Application Settings', 'savepath')
-        print self.savedir
         
     def start_download(self):
         """ PURPOSE: Starts and manages download of data """
