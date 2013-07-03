@@ -67,7 +67,6 @@ class GraphingWidget(qt.QWidget):
         self.layout.addLayout(self.hbox)
         # Shows the set of plots with their corresponding buttons checked
         self.buttons.buttonsChecked.connect(self.show_plots)
-        
     def show_plots(self, names):
         """Only shows the subplots listed in names
         

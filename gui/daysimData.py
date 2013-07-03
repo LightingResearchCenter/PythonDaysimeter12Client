@@ -26,7 +26,6 @@ class DaysimeterData:
         self.timestamps = None
         self.data = None
         self.attrs = None
-        self.filetype = None
         self.canvas = FigureCanvas(self.fig)
         
     def show_plots(self, button_names):
@@ -67,10 +66,9 @@ class DaysimeterData:
         """
         self.timestamps = timestamps
         self.data = data
-        self.attrs = data['attrs']
-        del data['attrs']
-        self.filetype = filetype
-        #self.smooth()
+        if filetype == 'cdf':
+            self.attrs = data['attrs']
+            del data['attrs']
         self.values_set = True
         
     def make_plots(self):
@@ -123,14 +121,14 @@ class DaysimeterData:
                 
     def get_data_names(self):
         """Returns a list of the data names"""
-        if self.filetype == 'txt':
+        if not self.attrs:
             return list(self.data.dtype.names)
         else:
             return self.data.keys()
             
     def get_metadata(self):
         """Returns a dictionary of the cdf's attributes"""
-        if self.filetype == 'cdf':
+        if self.attrs:
             return self.attrs
         else:
-            return ''
+            return {}
