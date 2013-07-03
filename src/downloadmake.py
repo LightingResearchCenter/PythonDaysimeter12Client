@@ -90,11 +90,14 @@ class DownloadMake(QtGui.QWidget):
                 self.downloader = DownloadDaysimeter(self)
                 self.connect(self.downloader, QtCore.SIGNAL('update'), \
                 self.update_progress)
+                self.connect(self.downloader, QtCore.SIGNAL('fprogress'), \
+                self.fake_progress)
                 self.connect(self.downloader, QtCore.SIGNAL('make'), \
                 self.make)
                 self.downloader.start()
         
     def make(self, data):
+        self.pbar.setValue(99)
         """
         PURPOSE: Determines filetype to be written, creates maker thread
         that actually writes data to file.
@@ -110,7 +113,7 @@ class DownloadMake(QtGui.QWidget):
             self.status_bar.showMessage('Writing CSV File...')
             self.maker = MakeCSV(self, data, self.filename)
             self.connect(self.maker, QtCore.SIGNAL('update'), \
-            self.update_progress)
+            self.dupdate_progress)
             self.maker.start()
             
     def make_cdf(self, info):
@@ -132,6 +135,12 @@ class DownloadMake(QtGui.QWidget):
         self.done.show()
         self.status_bar.showMessage('No Subject information was entered. ' + \
         'Download cancelled.')
+        
+    def fake_progress(self):
+        for x in range(80):
+            time.sleep(.1875)
+            self.update_progress()
+    
         
     def update_progress(self):
         """ PURPOSE: Updates progress bar when given signal to do so. """
@@ -338,6 +347,7 @@ class DownloadDaysimeter(QtCore.QThread):
             
         #Open binary data file for reading
         try:
+            self.emit(QtCore.SIGNAL('fprogress'))
             datafile_fp = open(path + data_filename,'rb')
         #Catch IO exception (if present), add to log and quit
         except IOError:
