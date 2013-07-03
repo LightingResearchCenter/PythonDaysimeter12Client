@@ -81,7 +81,6 @@ class DownloadMake(QtGui.QWidget):
             self.status_bar.showMessage('')
             self.filename = str(QtGui.QFileDialog.getSaveFileName(self, \
             ('Save File'), self.savedir, ('CDF Files (*.cdf);; CSV Files (*.csv)')))
-            self.emit(QtCore.SIGNAL('savename'), self.filename)
             if not str(self.filename) == '':
                 self.pbar.show()
                 self.start.setText('Downloading...')
@@ -167,6 +166,7 @@ class DownloadMake(QtGui.QWidget):
         'to eject your daysimeter.')
         self.start.hide()
         self.done.show()
+        self.emit(QtCore.SIGNAL('savename'), self.filename)
         
 class ProgressSim(QtCore.QThread):
     """

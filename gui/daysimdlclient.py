@@ -8,6 +8,7 @@ Created on Wed Jun 12 15:34:13 2013
 import sys, os
 sys.path.insert(0, os.pardir)
 import PyQt4.QtGui as qt
+from PyQt4.QtCore import SIGNAL
 import numpy as np
 import datetime as dt
 import graphingwidget as gw
@@ -95,7 +96,7 @@ class LayoutExample(qt.QMainWindow):
             
     def create_daysimeter_menu(self):
         """Creates the daysimeter menu"""
-        daysim_menu = self.menuBar().addMenu('&Daysim')
+        daysim_menu = self.menuBar().addMenu('&Daysimeter')
         # Makes menu options
         actions = []
         set_savepath = qt.QAction("&Set save path", 
@@ -116,6 +117,20 @@ class LayoutExample(qt.QMainWindow):
             
     def download_data(self):
         self.download = DownloadMake()
+        self.connect(self.download, SIGNAL('savename'), self.read_data)
+        
+    def read_data(self, file_name):
+        # Gets the file extension of the file
+        ext = os.path.splitext(file_name)[-1].lower()
+        # Reads the data based on the file type
+        if ext == '.txt':
+            self.update_header(file_name)
+            timestamps, daysim_data, filetype = self.read_txt_data(file_name)
+        elif ext == '.cdf':
+            timestamps, daysim_data, filetype = self.read_cdf_data(file_name)
+            
+        # Sets the data in the graphing widget
+        self.main_widget.set_data(timestamps, daysim_data, filetype)
         
     def open_file(self):
         """Opens and read a cdf or txt file and pass its data"""
@@ -123,17 +138,8 @@ class LayoutExample(qt.QMainWindow):
                                                        filter="Data File (*.cdf *.txt)"))
         if not file_name:
             return
-        
-        # Gets the file extension of the file
-        ext = os.path.splitext(file_name)[-1].lower()
-        # Reads the data based on the file type
-        if ext == '.txt':
-            self.update_header(file_name)
-            timestamps, daysim_data, filetype = self.read_txt_data(file_name)
-        else:
-            timestamps, daysim_data, filetype = self.read_cdf_data(file_name)
-        # Sets the data in the graphing widget
-        self.main_widget.set_data(timestamps, daysim_data, filetype)
+            
+        self.read_data(file_name)
     
     def read_txt_data(self, file_name):
         """Reads the data from a daysimeter txt file
