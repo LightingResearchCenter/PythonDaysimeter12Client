@@ -71,7 +71,6 @@ class DownloadMake(QtGui.QWidget):
             self.savedir = self.parser.get('Application Settings', 'savepath')
         else:
             self.savedir = os.getcwd()
-        self.emit(QtCore.SIGNAL('savename'), self.savedir)
         
     def start_download(self):
         """ PURPOSE: Starts and manages download of data """
@@ -82,6 +81,7 @@ class DownloadMake(QtGui.QWidget):
             self.status_bar.showMessage('')
             self.filename = str(QtGui.QFileDialog.getSaveFileName(self, \
             ('Save File'), self.savedir, ('CDF Files (*.cdf);; CSV Files (*.csv)')))
+            self.emit(QtCore.SIGNAL('savename'), self.filename)
             if not str(self.filename) == '':
                 self.pbar.show()
                 self.start.setText('Downloading...')
@@ -178,8 +178,8 @@ class ProgressSim(QtCore.QThread):
         QtCore.QThread.__init__(self, parent)
         
     def run(self):
-        for x in range(80):
-            time.sleep(.1875)
+        for x in range(99):
+            time.sleep(.1515)
             self.emit(QtCore.SIGNAL('update'))
     
         
@@ -553,8 +553,6 @@ class DownloadDaysimeter(QtCore.QThread):
         v_prime =  [-1] * num_entries
         cla = [-1] * num_entries
         
-        emit_sig = 0
-        
         #Following is lots of fancy math which I do not understand the
         #reasoning for. I based it off the MatLab code, with some exceptions
         #to optimize code for python
@@ -576,11 +574,6 @@ class DownloadDaysimeter(QtCore.QThread):
             else:
                 cla[x] = melanopsin[x]
             
-
-            if math.ceil((20*x)/loop_max) > emit_sig:
-                emit_sig += 1
-                self.emit(QtCore.SIGNAL('update'))
-            cla[x] *= constants[5][3]
         cla = [0 if x < 0 else x for x in cla]
             
         return [lux, cla]
