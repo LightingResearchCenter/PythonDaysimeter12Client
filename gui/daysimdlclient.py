@@ -66,7 +66,8 @@ class LayoutExample(qt.QMainWindow):
 
     def set_save_path(self):
         """Create a dialog to set the savepath and set it in the ini file"""
-        dir_name = str(qt.QFileDialog.getExistingDirectory(self))
+        dir_name = str(qt.QFileDialog.getExistingDirectory(self),
+                       directory=self.init.get('Application Settings', 'savepath'))
         if dir_name:
             self.init.set("Application Settings", 'savepath', dir_name)
         
@@ -116,10 +117,16 @@ class LayoutExample(qt.QMainWindow):
             daysim_menu.addAction(action)
             
     def download_data(self):
+        """Creates a widget to download data from the Daysimeter"""
         self.download = DownloadMake()
         self.connect(self.download, SIGNAL('savename'), self.read_data)
         
     def read_data(self, file_name):
+        """Reads the data from a txt of cdf and graphs it
+        
+        file_name - a string of the file name
+        
+        """
         # Gets the file extension of the file
         ext = os.path.splitext(file_name)[-1].lower()
         # Reads the data based on the file type
@@ -135,6 +142,7 @@ class LayoutExample(qt.QMainWindow):
     def open_file(self):
         """Opens and read a cdf or txt file and pass its data"""
         file_name = str(qt.QFileDialog.getOpenFileName(self,
+                                                       directory=self.init.get('Application Settings', 'savepath'),
                                                        filter="Data File (*.cdf *.txt)"))
         if not file_name:
             return
