@@ -36,8 +36,8 @@ class DownloadMake(QtGui.QWidget):
     PURPOSE: Widget that manages downloading daysimeter data and making CDF 
     or CSV files. 
     """
-    def __init__(self):
-        super(DownloadMake, self).__init__()
+    def __init__(self, parent=None):
+        super(DownloadMake, self).__init__(parent)
         self.initUI()
         
     def initUI(self):
@@ -67,9 +67,11 @@ class DownloadMake(QtGui.QWidget):
         self.show()
         
         self.parser = SafeConfigParser()
-        self.parser.read('daysimeter.ini')
-        
-        self.savedir = self.parser.get('Application Settings', 'savepath')
+        if not self.parser.read('daysimeter.ini') == []:
+            self.savedir = self.parser.get('Application Settings', 'savepath')
+        else:
+            self.savedir = os.getcwd()
+        self.emit(QtCore.SIGNAL('savename'), self.savedir)
         
     def start_download(self):
         """ PURPOSE: Starts and manages download of data """
@@ -147,8 +149,8 @@ class DownloadMake(QtGui.QWidget):
                     convert_header_f1()
                 else:
                     self.download_done()
-        else:
-            self.download_done()
+            else:
+                self.download_done()
         
     def download_done(self):
         """ PURPOSE: Displays done message when download is complete """
@@ -222,6 +224,7 @@ class SubjectInfo(QtGui.QWidget):
         
         self.submit.pressed.connect(self.submit_info)
         self.cancel.pressed.connect(self.closeself)
+        self.success = False
         
         self.show()
     
@@ -335,7 +338,7 @@ class DownloadDaysimeter(QtCore.QThread):
             
         #Open binary data file for reading
         try:
-            datafile_fp = open(path + data_filename,"rb")
+            datafile_fp = open(path + data_filename,'rb')
         #Catch IO exception (if present), add to log and quit
         except IOError:
             logging.error('Could not open datafile')
@@ -549,7 +552,7 @@ class DownloadDaysimeter(QtCore.QThread):
                 cla[x] = melanopsin[x]
             
 
-            if math.ceil((100*x)/loop_max) > emit_sig:
+            if math.ceil((20*x)/loop_max) > emit_sig:
                 emit_sig += 1
                 self.emit(QtCore.SIGNAL('update'))
             cla[x] *= constants[5][3]
