@@ -83,8 +83,8 @@ class DaysimeterData:
         plots = []
         
         main_ax = self.fig.add_subplot(111)
-        plots.extend(main_ax.plot(self.timestamps, 
-                     ones(len(self.timestamps)), visible=False))
+        main_ax.plot(self.timestamps, 
+                     ones(len(self.timestamps)), visible=False)
         main_ax.set_yticklabels([])
         # Iterates through the sets of values (lux, CS, CLA, etc.) and creates 
         # axes for them and stores the axes in a dictionary mapped with their 
@@ -97,7 +97,7 @@ class DaysimeterData:
             self.ax_dict[name] = main_ax.twinx()
             self.ax_dict[name].set_yscale('log')
             plots.extend(self.ax_dict[name].plot(self.timestamps,
-                         self.data[name], color = color, alpha=0.8,
+                         self.data[name], color=color, alpha=0.8,
                          label=name))
             # Finds the min of the data, then sets that as the the lower y
             # bound of the plot to better align the graphs vertically    
@@ -105,7 +105,8 @@ class DaysimeterData:
             self.ax_dict[name].set_ybound(lower=minimum)
             self.ax_dict[name].tick_params(axis='y', colors=color)
         self.fig.legend(plots, names, loc='lower center', ncol=5)
-        self.fig.autofmt_xdate()
+        #self.fig.autofmt_xdate(rotation=0)
+        self.fig.subplots_adjust(bottom=0.2)
         self.canvas = FigureCanvas(self.fig)
         
     def smooth(self):

@@ -9,8 +9,8 @@ import sys, os
 sys.path.insert(0, os.pardir)
 import PyQt4.QtGui as qt
 from PyQt4.QtCore import SIGNAL
-import numpy as np
-import datetime as dt
+from numpy import genfromtxt, core
+from datetime import datetime 
 import graphingwidget as gw
 from ConfigParser import ConfigParser
 from functools import partial
@@ -173,16 +173,16 @@ class LayoutExample(qt.QMainWindow):
         
         """
         # Parses the data from the file into an recarray
-        daysim_data = np.genfromtxt(file_name, 
+        daysim_data = genfromtxt(file_name, 
                                      dtype=['S11', 'S8', 'f8', 'f8', 'f8', 'f8'],
                                      names=True)
         # Concatenates the dates and times
-        daysim_data['Date'] = np.core.defchararray.add(daysim_data['Date'],
+        daysim_data['Date'] = core.defchararray.add(daysim_data['Date'],
                                                          ' ')
-        datetime_str = np.core.defchararray.add(daysim_data['Date'],
+        datetime_str = core.defchararray.add(daysim_data['Date'],
                                                 daysim_data['Time'])
         # Converts the string timestamps to datetime objects
-        timestamps = [dt.datetime.strptime(datetime_str[x], "%m/%d/%Y %H:%M:%S")
+        timestamps = [datetime.strptime(datetime_str[x], "%m/%d/%Y %H:%M:%S")
                       for x in range(len(datetime_str))]
         # Removes the dates/times from the data (prevents program from 
         # trying to graph the dates/times)
