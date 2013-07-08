@@ -78,6 +78,8 @@ class StartNewLog(QtGui.QWidget):
         self.start.pressed.connect(self.begin_log)
         self.cancel.pressed.connect(self.close)
         
+        self.show()
+        
     def begin_log(self):
         reply = QtGui.QMessageBox.question(self, 'Warning',
         'Starting a new log will delete current log.', QtGui.QMessageBox.Ok, \
@@ -89,6 +91,7 @@ class StartNewLog(QtGui.QWidget):
             pass
 
     def start_log(self):
+        self.battery_hours()
         self.logthread = NewLogThread([str(self.day.currentText()), \
                                      str(self.month.currentText()), \
                                      str(self.year.currentText()), \
@@ -109,7 +112,7 @@ class StartNewLog(QtGui.QWidget):
         log_filename = constants.LOG_FILENAME
         
         if not path:
-            self.no_daysim_sig.emit()
+            self.disp_error()
         else:
             with open(path + log_filename,'r') as log_fp:
                 info = log_fp.readlines()
@@ -161,13 +164,13 @@ class NewLogThread(QtCore.QThread):
                 info[0] = '2\n'
                 info[2] = self.month + '-' + self.day + '-' + self.year + \
                           ' ' + self.hour + ':' + self.minute + '\n'
-                info[3] = self.log_interval
+                info[3] = self.log_interval + '\n'
                 info[5] = '1\n'
             else:
                 info[0] = '2\n'
                 info[4] = self.month + '-' + self.day + '-' + self.year + \
                           ' ' + self.hour + ':' + self.minute + '\n'
-                info[5] = self.log_interval
+                info[5] = self.log_interval + '\n'
                 info[7] = '1\n'
             with open(path + log_filename, 'w') as log_fp:
                 for x in info:
@@ -182,7 +185,6 @@ def main():
     app = QtGui.QApplication(sys.argv)
     # Create and show the form
     session = StartNewLog()
-    session.show()
     # Run the main Qt loop
     sys.exit(app.exec_())
             

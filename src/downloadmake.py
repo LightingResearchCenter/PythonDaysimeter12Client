@@ -44,7 +44,7 @@ class DownloadMake(QtGui.QWidget):
         """ PURPOSE: Initialize the GUI """
         self.setFixedSize(500, 100)
         self.pbar = QtGui.QProgressBar(self)
-        
+
         self.start = QtGui.QPushButton('Start Download')
         self.done = QtGui.QPushButton('Done')
         self.start.pressed.connect(self.start_download)
@@ -59,7 +59,7 @@ class DownloadMake(QtGui.QWidget):
         layout.addWidget(self.status_bar)
         self.setLayout(layout)
         
-        self.setWindowTitle('Datsimeter Downloader')
+        self.setWindowTitle('Daysimeter Downloader')
         self.step = 0.0
         self.pbar.setValue(self.step)
         self.pbar.hide()
@@ -155,6 +155,7 @@ class DownloadMake(QtGui.QWidget):
 
                 if reply == QtGui.QMessageBox.Yes:
                     convert_header_f1()
+                    self.download_done()
                 else:
                     self.download_done()
             else:
@@ -512,7 +513,6 @@ class DownloadDaysimeter(QtCore.QThread):
         activity = lowpass_filter(activity, log_interval)
         #Calculate cs
         cs = calc_cs(cla)
-        
         self.emit(QtCore.SIGNAL('make'),([device_model, device_sn, \
         calib_info], [times, mat_times, red, green, blue, lux, cla, cs, \
         activity, resets]))
@@ -775,6 +775,7 @@ class MakeCDF(QtCore.QThread):
             
         #Set download flag to true (0)
         set_download_flag()
+        
         self.emit(QtCore.SIGNAL('update'))
 
 class MakeCSV(QtCore.QThread):
