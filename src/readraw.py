@@ -93,10 +93,6 @@ def read_raw():
     finally:
         datafile_fp.close()
 
-#####It is assumed that time is formatted correctly, if not this
-    #part of the code will not work. Time format is as follows:
-    #mm-dd-yy HH:MM
-
     #Converts a time string into a float representing seconds
     #since epoch (UNIX)
     if not old_flag:
