@@ -15,7 +15,7 @@ class StartNewLog(QtGui.QWidget):
     def __init__(self, parent=None):
         super(StartNewLog, self).__init__(parent)
         self.setWindowTitle('Start New Log')
-        self.setFixedSize(350,120)
+        self.setFixedSize(350,150)
         
         self.day = QtGui.QComboBox()
         self.month = QtGui.QComboBox()
@@ -27,12 +27,18 @@ class StartNewLog(QtGui.QWidget):
         self.start = QtGui.QPushButton('Start')
         self.cancel = QtGui.QPushButton('Cancel')
         
+        self.log_interval = QtGui.QComboBox()
+        
+        self.status = QtGui.QStatusBar()
+        
         self.day.addItems([str(x) for x in range(1,32)])
         self.month.addItems([str(x) for x in range(1,13)])
         self.year.addItems([str(x) for x in range(2000, 2021)])
         
         self.hour.addItems([str(x) for x in range(24)])
         self.minute.addItems([str(x) for x in range(60)])
+        
+        self.log_interval.addItems(['030', '060', '090', '120', '150', '180'])
         
         current_time = datetime.now()
         
@@ -43,7 +49,7 @@ class StartNewLog(QtGui.QWidget):
         self.hour.setCurrentIndex(current_time.hour)
         self.minute.setCurrentIndex(current_time.minute)
         
-        self.status = QtGui.QStatusBar()
+        self.log_interval.setCurrentIndex(1)
         
         self.battery_hours()
         
@@ -63,6 +69,7 @@ class StartNewLog(QtGui.QWidget):
         layout = QtGui.QFormLayout()
         layout.addRow('Date', dmy_layout)
         layout.addRow('Time', hm_layout)
+        layout.addRow('Logging Interval', self.log_interval)
         layout.addRow(button_layout)
         layout.addRow(self.status)
         
@@ -86,7 +93,8 @@ class StartNewLog(QtGui.QWidget):
                                      str(self.month.currentText()), \
                                      str(self.year.currentText()), \
                                      str(self.hour.currentText()), \
-                                     str(self.minute.currentText())])
+                                     str(self.minute.currentText()), \
+                                     str(self.log_interval.currentText())])
         self.logthread.done_sig.connect(self.close)
         self.logthread.no_daysim_sig.connect(self.disp_error)
         self.logthread.start()
@@ -128,6 +136,8 @@ class NewLogThread(QtCore.QThread):
         self.hour = args[3]
         self.minute = args[4]
         
+        self.log_interval = args[5]
+        
         if len(self.day) == 1:
             self.day = '0' + self.day
         if len(self.month) == 1:
@@ -151,11 +161,13 @@ class NewLogThread(QtCore.QThread):
                 info[0] = '2\n'
                 info[2] = self.month + '-' + self.day + '-' + self.year + \
                           ' ' + self.hour + ':' + self.minute + '\n'
+                info[3] = self.log_interval
                 info[5] = '1\n'
             else:
                 info[0] = '2\n'
                 info[4] = self.month + '-' + self.day + '-' + self.year + \
                           ' ' + self.hour + ':' + self.minute + '\n'
+                info[5] = self.log_interval
                 info[7] = '1\n'
             with open(path + log_filename, 'w') as log_fp:
                 for x in info:
