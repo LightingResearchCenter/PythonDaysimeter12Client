@@ -17,6 +17,8 @@ from functools import partial
 from spacepy import pycdf
 from re import sub
 from src.downloadmake import DownloadMake
+from src.stoplog import stop_log
+from src.startnewlog import StartNewLog
 
 QT_APP = qt.QApplication(sys.argv) 
  
@@ -100,22 +102,34 @@ class LayoutExample(qt.QMainWindow):
         daysim_menu = self.menuBar().addMenu('&Daysimeter')
         # Makes menu options
         actions = []
-        set_savepath = qt.QAction("&Set save path", 
+        set_savepath = qt.QAction("&Set Save Path", 
                                   self,
                                   statusTip="Set the save path for the \
                                   processed Daysimeter data file",
                                   triggered=partial(self.load_config, 
                                                     update='savepath'))
-        make_download = qt.QAction("&Download Daysimeter data", 
+        make_download = qt.QAction("&Download Daysimeter Data", 
                                   self,
                                   statusTip="Set the save path for the \
                                   processed Daysimeter data file",
-                                  triggered=self.download_data)                                
+                                  triggered=self.download_data)
+                                  
+        stop_logging = qt.QAction('&Stop Log', self, statusTip='Stop ' + \
+                                  'current log', triggered=self.stop_log)
+                                  
+        start_logging = qt.QAction('&Start New Log', self, statusTip='Starts'+\
+                                   ' a new data log.', triggered=self.start_log)
         # Adds the options to the menu
-        actions.extend([make_download, set_savepath])
+        actions.extend([make_download, set_savepath, start_logging, stop_logging])
         for action in actions:
             daysim_menu.addAction(action)
-            
+    
+    def start_log(self):
+        self.new_log = StartNewLog()
+    
+    def stop_log(self):
+        stop_log()
+    
     def download_data(self):
         """Creates a widget to download data from the Daysimeter"""
         self.download = DownloadMake()
