@@ -108,21 +108,27 @@ class LayoutExample(qt.QMainWindow):
                                   processed Daysimeter data file",
                                   triggered=partial(self.load_config, 
                                                     update='savepath'))
-        make_download = qt.QAction("&Download Daysimeter Data", 
+        make_download = qt.QAction("&Download Data", 
                                   self,
                                   statusTip="Set the save path for the \
                                   processed Daysimeter data file",
                                   triggered=self.download_data)
                                   
-        stop_logging = qt.QAction('&Stop Log', self, statusTip='Stop ' + \
+        stop_logging = qt.QAction('&Stop Current Log', self, statusTip='Stop ' + \
                                   'current log', triggered=self.stop_log)
                                   
         start_logging = qt.QAction('&Start New Log', self, statusTip='Starts'+\
                                    ' a new data log.', triggered=self.start_log)
         # Adds the options to the menu
-        actions.extend([make_download, set_savepath, start_logging, stop_logging])
+        log_menu = qt.QMenu(daysim_menu)
+        log_menu.setTitle('Log')
+        log_list = [start_logging, stop_logging]
+        for item in log_list:
+            log_menu.addAction(item)
+        actions.extend([make_download, set_savepath])
         for action in actions:
             daysim_menu.addAction(action)
+        daysim_menu.addMenu(log_menu)
     
     def start_log(self):
         self.new_log = StartNewLog()

@@ -11,8 +11,9 @@ from finddaysimeter import find_daysimeter
 import constants
 
 class StartNewLog(QtGui.QWidget):
-    
+    """PURPOSE: Starts a new Daysimeter log."""
     def __init__(self, parent=None):
+        """Initializes Widget."""
         super(StartNewLog, self).__init__(parent)
         self.setWindowTitle('Start New Log')
         self.setFixedSize(350,150)
@@ -42,6 +43,7 @@ class StartNewLog(QtGui.QWidget):
         
         current_time = datetime.now()
         
+        #Sets the comboboxes to now. User may changed date and time.
         self.day.setCurrentIndex(current_time.day - 1)
         self.month.setCurrentIndex(current_time.month - 1)
         self.year.setCurrentIndex(current_time.year - 2000)
@@ -81,6 +83,10 @@ class StartNewLog(QtGui.QWidget):
         self.show()
         
     def begin_log(self):
+        """
+        PURPOSE: Called when submit is clicked. Informs user that new log
+        will overrite old log, and asks for confimation.
+        """
         reply = QtGui.QMessageBox.question(self, 'Warning',
         'Starting a new log will delete current log.', QtGui.QMessageBox.Ok, \
         QtGui.QMessageBox.Cancel)
@@ -91,6 +97,7 @@ class StartNewLog(QtGui.QWidget):
             pass
 
     def start_log(self):
+        """"PURPOSE: Creates new log thread."""
         self.battery_hours()
         self.logthread = NewLogThread([str(self.day.currentText()), \
                                      str(self.month.currentText()), \
@@ -103,11 +110,13 @@ class StartNewLog(QtGui.QWidget):
         self.logthread.start()
         
     def disp_error(self):
+        """PURPOSE: Displays an error if no Daysimeter is found."""
         QtGui.QMessageBox.question(self, 'Error',
                                    'No Daysimeter Found!', \
                                    QtGui.QMessageBox.Ok)
                                    
     def battery_hours(self):
+        """PURPOSE: Sets status bar message to display battery hours logged."""
         path = find_daysimeter()
         log_filename = constants.LOG_FILENAME
         
@@ -126,10 +135,12 @@ class StartNewLog(QtGui.QWidget):
         
         
 class NewLogThread(QtCore.QThread):
+    """PURPOSE: Thread to handle starting a new log."""
     done_sig = QtCore.pyqtSignal()
     no_daysim_sig = QtCore.pyqtSignal()
     
     def __init__(self, args, parent=None):
+        """Initializes Thread."""
         QtCore.QThread.__init__(self, parent)
         
         self.day = args[0]
@@ -152,6 +163,7 @@ class NewLogThread(QtCore.QThread):
             self.minute = '0' + self.minute
         
     def run(self):
+        """What to do when start is called."""
         path = find_daysimeter()
         log_filename = constants.LOG_FILENAME
         
