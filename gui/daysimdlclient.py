@@ -17,7 +17,8 @@ from functools import partial
 from spacepy import pycdf
 from re import sub
 from src.downloadmake import DownloadMake
-from src.stoplog import stop_log
+from src.logfunc import stop_log
+from src.logfunc import resume_log
 from src.startnewlog import StartNewLog
 
 QT_APP = qt.QApplication(sys.argv) 
@@ -117,12 +118,15 @@ class LayoutExample(qt.QMainWindow):
         stop_logging = qt.QAction('&Stop Current Log', self, statusTip='Stop ' + \
                                   'current log', triggered=self.stop_log)
                                   
+        resume_logging = qt.QAction('&Resume Current Log', self, statusTip='Resumes ' + \
+                                  'current log', triggered=self.resume_log)
+                                  
         start_logging = qt.QAction('&Start New Log', self, statusTip='Starts'+\
                                    ' a new data log.', triggered=self.start_log)
         # Adds the options to the menu
         log_menu = qt.QMenu(daysim_menu)
         log_menu.setTitle('Log')
-        log_list = [start_logging, stop_logging]
+        log_list = [start_logging, stop_logging, resume_logging]
         for item in log_list:
             log_menu.addAction(item)
         actions.extend([make_download, set_savepath])
@@ -135,6 +139,9 @@ class LayoutExample(qt.QMainWindow):
     
     def stop_log(self):
         stop_log()
+        
+    def resume_log(self):
+        resume_log()
     
     def download_data(self):
         """Creates a widget to download data from the Daysimeter"""
