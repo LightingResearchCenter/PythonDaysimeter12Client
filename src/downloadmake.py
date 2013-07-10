@@ -310,7 +310,7 @@ class DownloadDaysimeter(QtCore.QThread):
         """
         PURPOSE: Reads raw binary data, processed and packages it.
         """
-
+        
         log_filename = constants_.LOG_FILENAME
         data_filename = constants_.DATA_FILENAME
         adj_active_flag_ = constants_.ADJ_ACTIVE_FLAG
@@ -360,7 +360,6 @@ class DownloadDaysimeter(QtCore.QThread):
             [daysimeter_id, calib_const[0], calib_const[1], calib_const[2]]
         else:
             calib_info = get_calib_info(daysimeter_id)
-            
         #Open binary data file for reading
         try:
             self.emit(QtCore.SIGNAL('fprogress'))

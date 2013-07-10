@@ -54,12 +54,12 @@ class LayoutExample(qt.QMainWindow):
         # Parse the ini file
         self.init = ConfigParser()
         if os.path.isfile(file_path):
-            init_file = open(file_path, mode='r+')
+            init_file = open(file_path, mode='r')
             self.init.readfp(init_file)
-            init_file.seek(0)
+            init_file.close()
+            init_file = open(file_path, mode='w')
         else:
-            init_file = open(file_path, mode='w+')
-            self.init.add_section("Application Settings")
+            init_file = open(file_path, mode='w')
             self.set_save_path()
         # Update the Application settings
         if update == 'savepath':
@@ -69,10 +69,20 @@ class LayoutExample(qt.QMainWindow):
 
     def set_save_path(self):
         """Create a dialog to set the savepath and set it in the ini file"""
-        dir_name = str(qt.QFileDialog.getExistingDirectory(self),
-                       directory=self.init.get('Application Settings', 'savepath'))
+        if self.init.has_section("Application Settings"):
+            dir_name = str(qt.QFileDialog.getExistingDirectory(self,
+                       directory=self.init.get('Application Settings', 'savepath')))
+        else:
+            dir_name = str(qt.QFileDialog.getExistingDirectory(self,
+                       directory=os.getcwd()))
+        
         if dir_name:
-            self.init.set("Application Settings", 'savepath', dir_name)
+            if self.init.has_section("Application Settings"):
+                self.init.set("Application Settings", 'savepath', dir_name)
+            else:
+                self.init.add_section("Application Settings")
+                self.init.set("Application Settings", 'savepath', dir_name)
+            
         
     def create_menus(self):
         """Create the menus"""
