@@ -68,7 +68,10 @@ class DownloadMake(QtGui.QWidget):
         
         self.parser = SafeConfigParser()
         if not self.parser.read('daysimeter.ini') == []:
-            self.savedir = self.parser.get('Application Settings', 'savepath')
+            if self.parser.has_section('Application Settings'):
+                self.savedir = self.parser.get('Application Settings', 'savepath')
+            else:
+                self.savedir = os.getcwd()
         else:
             self.savedir = os.getcwd()
         
