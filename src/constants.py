@@ -18,8 +18,8 @@ DATA_FILENAME = 'data_log.txt'
 #CALIBRATION_FILENAME is the full path to the calibration file stored
 #on the LRC's server. Will be obsolete when calibration is located
 #in the header files.
-CALIBRATION_FILENAME = '//root/projects/Daysimeter and dimesimeter reference' \
-    + ' files/data/Day12 RGB Values.txt'
+CALIBRATION_FILENAME = '//root/projects/DaysimeterAndDimesimeterReference' \
+    + 'Files/data/Day12 RGB Values.txt'
 #LOCAL_CALIB_FILENAME is the name of the calibration file to be found
 #locally. Ideally, this should never work because that would mean
 #there was a random file sitting on the daysimeter.
@@ -27,8 +27,8 @@ LOCAL_CALIB_FILENAME = 'Day12 RGB Values.txt'
 #CONSTANTS_FILENAME is the name of the constants stored
 #on the LRC's server. Will be obsolete when calibration is located
 #in the header files.
-CONSTANTS_FILENAME = '//root/projects/Daysimeter and dimesimeter reference' \
-    + ' files/data/Day12 Cal Values.txt'
+CONSTANTS_FILENAME = '//root/projects/DaysimeterAndDimesimeterReference' \
+    + 'Files/data/Day12 Cal Values.txt'
 #LOCAL_CONST_FILENAME is the name of the constants file to be found
 #locally. Ideally, this should never work because that would mean
 #there was a random file sitting on the daysimeter.
