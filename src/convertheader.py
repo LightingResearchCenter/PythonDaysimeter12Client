@@ -5,6 +5,7 @@ Creation Date: 20.06.2013
 """
 
 import sys
+import os
 import logging
 from geterrlog import get_err_log
 from getcalibinfo import get_calib_info
@@ -47,9 +48,10 @@ def convert_header_f1():
         #Remove binary garbage and whitesapce, if applicable, and format
         #strings in array.
         info = [x.strip('\n \xff') + '\n' for x in info]
-        #Seek to the second line. Because seek reads bytes, if the length
-        #of first time changes at all, then this will no longer work.
-        logfile_fp.seek(3)
+        logfile_fp.close()
+        os.remove(path + log_filename)
+        logfile_fp = open(path + log_filename,'w')
+        logfile_fp.write(info[0])
         #firm_12 is a set of daysimeter IDs below 83 (the official change
         #over) that use the LSB of activity as a rollover flag for RGB. 
         if int(info[1]) in firm_12 or int(info[1]) >= 83:
@@ -75,17 +77,17 @@ def convert_header_f1():
         for x in range(7, len(info)):
             if x == 11:
                 #Writes firmware version on the appropriate line
-                logfile_fp.write('Firmware Version Number (0.1 old, 1.x \
-                future e.g. 1.0) 1.1 = New Header, LSB of Activity is NOT a \
-                flag. 1.2 = New Header, LSB is a flag.\nDevice Model\n')
+                logfile_fp.write('Firmware Version Number (0.1 old, 1.x ' + \
+                'future e.g. 1.0) 1.1 = New Header, LSB of Activity is NOT' + \
+                ' a flag. 1.2 = New Header, LSB is a flag.\nDevice Model\n')
             if x == len(info) - 1:
                 logfile_fp.write(battery_string)
                 continue
             logfile_fp.write(info[x])
-        logfile_fp.write('Calibration Factor (R,G,B)\nPhotopic Coefficient \
-        (R,G,B)\nScotopic Coefficient  (R,G,B)\nMelanopsin Coefficient \
-        (R,G,B)\nVlambda/macula Coefficient (R,G,B)\nScone Coefficient \
-        (R,G,B)\nCLA (a2,a3,K,A)')
+        logfile_fp.write('Calibration Factor (R,G,B)\nPhotopic Coefficient' + \
+        ' (R,G,B)\nScotopic Coefficient  (R,G,B)\nMelanopsin Coefficient ' + \
+        '(R,G,B)\nVlambda/macula Coefficient (R,G,B)\nScone Coefficient ' + \
+        '(R,G,B)\nCLA (a2,a3,K,A)')
     #Close the logfile
     finally:
         logfile_fp.close()
