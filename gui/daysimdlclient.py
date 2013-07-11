@@ -7,8 +7,8 @@ Created on Wed Jun 12 15:34:13 2013
 
 import sys, os
 sys.path.insert(0, os.pardir)
-import PyQt4.QtGui as qt
-from PyQt4.QtCore import SIGNAL
+import time
+from PyQt4 import QtGui, QtCore
 from numpy import genfromtxt, core
 from datetime import datetime 
 import graphingwidget as gw
@@ -19,11 +19,12 @@ from re import sub
 from src.downloadmake import DownloadMake
 from src.logfunc import stop_log
 from src.logfunc import resume_log
+from src.finddaysimeter import find_daysimeter
 from src.startnewlog import StartNewLog
 
-QT_APP = qt.QApplication(sys.argv) 
+QT_APP = QtGui.QApplication(sys.argv) 
  
-class LayoutExample(qt.QMainWindow):
+class LayoutExample(QtGui.QMainWindow):
     """The main window for the daysimeter download client. It opens daysimeter
     data files and displays a central widget"""
     def __init__(self):
@@ -32,14 +33,62 @@ class LayoutExample(qt.QMainWindow):
         Creates the main window, creates the menus, and loads info from the
         ini file        
         """
-        qt.QMainWindow.__init__(self)
+        QtGui.QMainWindow.__init__(self)
         self.setWindowTitle('Daysimeter Download Client')
         self.setMinimumSize(600, 400)
         self.main_widget = gw.GraphingWidget(self)
         self.setCentralWidget(self.main_widget)
         self.init = None
-        self.create_menus()
+        self.statusBar()
+        self.make_toolbar()
+#        self.create_menus()
         self.load_config()
+        self.make_enabler()
+        
+    def make_toolbar(self):
+        self.top_toolbar = QtGui.QToolBar()
+        self.top_toolbar.setAllowedAreas(QtCore.Qt.TopToolBarArea)
+        self.top_toolbar.setMovable(False)
+        
+        actions = []
+        open_act = QtGui.QAction("&Open Processed File", 
+                              self,
+                              statusTip="Open a processed daysimeter file",
+                              shortcut=QtGui.QKeySequence.Open,
+                              triggered=self.open_file)
+        quit_act = QtGui.QAction("&Quit", 
+                              self,
+                              shortcut=QtGui.QKeySequence.Quit,
+                              triggered=sys.exit)
+                              
+        set_savepath = QtGui.QAction("&Set Save Path", 
+                                  self,
+                                  statusTip="Set the save path for the " + \
+                                  "processed Daysimeter data file",
+                                  triggered=partial(self.load_config, 
+                                                    update='savepath'))
+        self.make_download = QtGui.QAction("&Download Data", 
+                                  self,
+                                  statusTip="Download daysimeter data " +  \
+                                  "and write to file",
+                                  triggered=self.download_data)
+                                  
+        self.stop_logging = QtGui.QAction('&Stop Current Log', self, statusTip='Stop ' + \
+                                  'current log', triggered=self.stop_log)
+                                  
+        self.resume_logging = QtGui.QAction('&Resume Current Log', self, statusTip='Resumes ' + \
+                                  'current log', triggered=self.resume_log)
+                                  
+        self.start_logging = QtGui.QAction('&Start New Log', self, statusTip='Starts'+\
+                                   ' a new data log', triggered=self.start_log)
+        # Adds the options to the menu
+        actions.extend([open_act, quit_act, set_savepath, self.make_download, self.start_logging, self.stop_logging, self.resume_logging])
+        
+        
+        for action in actions:
+            self.top_toolbar.addAction(action)
+            
+        self.addToolBar(self.top_toolbar)
         
     def load_config(self, update=None):
         """Loads the info from the ini file if it exists, otherwise creates it
@@ -70,10 +119,10 @@ class LayoutExample(qt.QMainWindow):
     def set_save_path(self):
         """Create a dialog to set the savepath and set it in the ini file"""
         if self.init.has_section("Application Settings"):
-            dir_name = str(qt.QFileDialog.getExistingDirectory(self,
+            dir_name = str(QtGui.QFileDialog.getExistingDirectory(self,
                        directory=self.init.get('Application Settings', 'savepath')))
         else:
-            dir_name = str(qt.QFileDialog.getExistingDirectory(self,
+            dir_name = str(QtGui.QFileDialog.getExistingDirectory(self,
                        directory=os.getcwd()))
         
         if dir_name:
@@ -94,14 +143,14 @@ class LayoutExample(qt.QMainWindow):
         file_menu = self.menuBar().addMenu('&File')
         # Makes menu options
         actions = []
-        open_act = qt.QAction("&Open...", 
+        open_act = QtGui.QAction("&Open...", 
                               self,
                               statusTip="Open a processed daysimeter file",
-                              shortcut=qt.QKeySequence.Open,
+                              shortcut=QtGui.QKeySequence.Open,
                               triggered=self.open_file)
-        quit_act = qt.QAction("&Quit", 
+        quit_act = QtGui.QAction("&Quit", 
                               self,
-                              shortcut=qt.QKeySequence.Quit,
+                              shortcut=QtGui.QKeySequence.Quit,
                               triggered=sys.exit)
         # Adds the options to the menu
         actions.extend([open_act, quit_act])
@@ -113,28 +162,28 @@ class LayoutExample(qt.QMainWindow):
         daysim_menu = self.menuBar().addMenu('&Daysimeter')
         # Makes menu options
         actions = []
-        set_savepath = qt.QAction("&Set Save Path", 
+        set_savepath = QtGui.QAction("&Set Save Path", 
                                   self,
-                                  statusTip="Set the save path for the \
-                                  processed Daysimeter data file",
+                                  statusTip="Set the save path for the " + \
+                                  "processed Daysimeter data file",
                                   triggered=partial(self.load_config, 
                                                     update='savepath'))
-        make_download = qt.QAction("&Download Data", 
+        make_download = QtGui.QAction("&Download Data", 
                                   self,
-                                  statusTip="Set the save path for the \
-                                  processed Daysimeter data file",
+                                  statusTip="Download daysimeter data " +  \
+                                  "and write to file",
                                   triggered=self.download_data)
                                   
-        stop_logging = qt.QAction('&Stop Current Log', self, statusTip='Stop ' + \
+        stop_logging = QtGui.QAction('&Stop Current Log', self, statusTip='Stop ' + \
                                   'current log', triggered=self.stop_log)
                                   
-        resume_logging = qt.QAction('&Resume Current Log', self, statusTip='Resumes ' + \
+        resume_logging = QtGui.QAction('&Resume Current Log', self, statusTip='Resumes ' + \
                                   'current log', triggered=self.resume_log)
                                   
-        start_logging = qt.QAction('&Start New Log', self, statusTip='Starts'+\
-                                   ' a new data log.', triggered=self.start_log)
+        start_logging = QtGui.QAction('&Start New Log', self, statusTip='Starts'+\
+                                   ' a new data log', triggered=self.start_log)
         # Adds the options to the menu
-        log_menu = qt.QMenu(daysim_menu)
+        log_menu = QtGui.QMenu(daysim_menu)
         log_menu.setTitle('Log')
         log_list = [start_logging, stop_logging, resume_logging]
         for item in log_list:
@@ -148,15 +197,26 @@ class LayoutExample(qt.QMainWindow):
         self.new_log = StartNewLog()
     
     def stop_log(self):
-        stop_log()
+        if not stop_log():
+            self.statusBar().showMessage("Current Log Stopped", 2000)
+        else:
+            QtGui.QMessageBox.question(self, 'Error',
+                                   'No Daysimeter Found!', \
+                                   QtGui.QMessageBox.Ok)
+            
         
     def resume_log(self):
-        resume_log()
+        if not resume_log():
+            self.statusBar().showMessage("Current Log Resumed", 2000)
+        else:
+            QtGui.QMessageBox.question(self, 'Error',
+                                   'No Daysimeter Found!', \
+                                   QtGui.QMessageBox.Ok)
     
     def download_data(self):
         """Creates a widget to download data from the Daysimeter"""
         self.download = DownloadMake()
-        self.connect(self.download, SIGNAL('savename'), self.read_data)
+        self.connect(self.download, QtCore.SIGNAL('savename'), self.read_data)
         
     def read_data(self, file_name):
         """Reads the data from a txt or cdf and graphs it
@@ -178,7 +238,7 @@ class LayoutExample(qt.QMainWindow):
         
     def open_file(self):
         """Opens and read a cdf or txt file and pass its data"""
-        file_name = str(qt.QFileDialog.getOpenFileName(self,
+        file_name = str(QtGui.QFileDialog.getOpenFileName(self,
                                                        directory=self.init.get('Application Settings', 'savepath'),
                                                        filter="Data File (*.cdf *.txt)"))
         if not file_name:
@@ -276,11 +336,50 @@ class LayoutExample(qt.QMainWindow):
         # Ignores the first 2 fields
         new_names = names[2:]
         return data_array[new_names]
+        
+    def make_enabler(self):
+        self.enabler = EnableButtons(self)
+        self.enabler.connected.connect(self.enable_selection)
+        self.enabler.not_connected.connect(self.disable_selection)
+        self.enabler.start()
+        
+    def enable_selection(self):
+        self.make_download.setEnabled(True)
+        self.stop_logging.setEnabled(True)
+        self.resume_logging.setEnabled(True)
+        self.start_logging.setEnabled(True)
+
     
+    def disable_selection(self):
+        self.make_download.setEnabled(False)
+        self.stop_logging.setEnabled(False)
+        self.resume_logging.setEnabled(False)
+        self.start_logging.setEnabled(False)
+        self.statusBar().showMessage('No Daysimeter Found plugged into computer.',1000)
+        
     def run(self):
         """Runs the main window"""
         self.show()
         sys.exit(QT_APP.exec_())
+        
+class EnableButtons(QtCore.QThread):
+    connected = QtCore.pyqtSignal()
+    not_connected = QtCore.pyqtSignal()    
+    
+    def __init__(self, args, parent=None):
+        """Initializes Thread."""
+        QtCore.QThread.__init__(self, parent)
+        
+    def run(self):
+        while True:
+            if not find_daysimeter():
+                self.not_connected.emit()
+            else:
+                self.connected.emit()
+            time.sleep(1)
+    
+    
+        
 
 APP = LayoutExample()
 APP.run()
