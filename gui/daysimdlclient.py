@@ -159,7 +159,7 @@ class LayoutExample(qt.QMainWindow):
         self.connect(self.download, SIGNAL('savename'), self.read_data)
         
     def read_data(self, file_name):
-        """Reads the data from a txt of cdf and graphs it
+        """Reads the data from a txt or cdf and graphs it
         
         file_name - a string of the file name
         

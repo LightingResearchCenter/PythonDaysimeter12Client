@@ -80,7 +80,13 @@ class StartNewLog(QtGui.QWidget):
         self.start.pressed.connect(self.begin_log)
         self.cancel.pressed.connect(self.close)
         
-        self.show()
+        self.show_self()
+
+    def show_self(self):
+        if not find_daysimeter():        
+            self.close()
+        else:
+            self.show()
         
     def begin_log(self):
         """
