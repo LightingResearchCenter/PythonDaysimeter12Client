@@ -45,12 +45,31 @@ class LayoutExample(QtGui.QMainWindow):
         self.load_config()
         self.make_enabler()
         
+    def go_print(self):
+        printer = QtGui.QPrinter(QtGui.QPrinter.PrinterResolution)
+        printer.setOrientation(QtGui.QPrinter.Landscape)
+#        printer.setPageMargins(0.0, .5, .25, .5, QtGui.QPrinter.Inch)
+        printer.setResolution(300)
+        printer.setFullPage(True)
+        reply = QtGui.QPrintDialog(printer, self)
+        if reply.exec_() == QtGui.QDialog.Accepted:
+            to_print = self.main_widget.plot
+            painter = QtGui.QPainter(printer)
+            printerWidth = printer.pageRect().width()
+            printerHeight = printer.pageRect().height()
+            xscale = printerWidth/to_print.width()
+            yscale = printerHeight/to_print.height()
+            scale = min(xscale, yscale)
+            painter.scale(scale,scale)
+            to_print.render(painter)
+            painter.end() 
+        
+        
     def make_toolbar(self):
         self.top_toolbar = QtGui.QToolBar()
         self.top_toolbar.setAllowedAreas(QtCore.Qt.TopToolBarArea)
         self.top_toolbar.setMovable(False)
         
-        actions = []
         open_act = QtGui.QAction("&Open Processed File", 
                               self,
                               statusTip="Open a processed daysimeter file",
@@ -60,6 +79,10 @@ class LayoutExample(QtGui.QMainWindow):
                               self,
                               shortcut=QtGui.QKeySequence.Quit,
                               triggered=sys.exit)
+        print_act = QtGui.QAction("&Print", 
+                              self,
+                              statusTip="Print Graph",
+                              triggered=self.go_print)
                               
         set_savepath = QtGui.QAction("&Set Save Path", 
                                   self,
@@ -82,13 +105,17 @@ class LayoutExample(QtGui.QMainWindow):
         self.start_logging = QtGui.QAction('&Start New Log', self, statusTip='Starts'+\
                                    ' a new data log', triggered=self.start_log)
         # Adds the options to the menu
-        actions.extend([open_act, quit_act, set_savepath, self.make_download, self.start_logging, self.stop_logging, self.resume_logging])
+        file_actions = [open_act, quit_act, print_act, set_savepath]
+        daysimeter_actions = [self.make_download, self.start_logging, self.stop_logging, self.resume_logging]
         
         
-        for action in actions:
-            self.top_toolbar.addAction(action)
+        self.top_toolbar.addActions(file_actions)
+        self.top_toolbar.addSeparator()
+        self.top_toolbar.addActions(daysimeter_actions)
+            
             
         self.addToolBar(self.top_toolbar)
+        
         
     def load_config(self, update=None):
         """Loads the info from the ini file if it exists, otherwise creates it
@@ -355,7 +382,8 @@ class LayoutExample(QtGui.QMainWindow):
         self.stop_logging.setEnabled(False)
         self.resume_logging.setEnabled(False)
         self.start_logging.setEnabled(False)
-        self.statusBar().showMessage('No Daysimeter Found plugged into computer.',1000)
+        self.statusBar().showMessage('No Daysimeter plugged into computer.',\
+                                     1000)
         
     def run(self):
         """Runs the main window"""
