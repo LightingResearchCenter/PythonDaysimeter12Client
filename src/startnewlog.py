@@ -134,9 +134,12 @@ class StartNewLog(QtGui.QWidget):
             if len(info) == 17:
                 self.status.showMessage('Number of hours logged using current battery: ' + \
                                        str(info[4]))
-            else:
+            elif len(info) == 35:
                 self.status.showMessage('Number of hours logged using current battery: ' + \
                                        str(info[6]))
+            else:
+                self.status.showMessage('Daysimeter Header Corrupt')
+                self.start.setEnabled(False)
         
         
         
