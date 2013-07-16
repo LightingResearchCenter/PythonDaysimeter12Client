@@ -104,7 +104,7 @@ class DaysimeterData:
             minimum = self.data[name].min()
             self.ax_dict[name].set_ybound(lower=minimum)
             self.ax_dict[name].tick_params(axis='y', colors=color)
-        self.fig.legend(plots, names, loc='lower center', ncol=5)
+        self.fig.legend(plots, names, loc=(.05,.03), ncol=3)
         #self.fig.autofmt_xdate(rotation=0)
         self.fig.subplots_adjust(bottom=0.2)
         self.canvas = FigureCanvas(self.fig)

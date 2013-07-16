@@ -53,16 +53,21 @@ class LayoutExample(QtGui.QMainWindow):
         printer.setFullPage(True)
         reply = QtGui.QPrintDialog(printer, self)
         if reply.exec_() == QtGui.QDialog.Accepted:
-            to_print = self.main_widget.plot
             painter = QtGui.QPainter(printer)
             printerWidth = printer.pageRect().width()
             printerHeight = printer.pageRect().height()
-            xscale = printerWidth/to_print.width()
-            yscale = printerHeight/to_print.height()
-            scale = min(xscale, yscale)
-            painter.scale(scale,scale)
-            to_print.render(painter)
-            painter.end() 
+            self.print_widget = self.main_widget
+            reset_size = self.main_widget.size()
+            self.print_widget.resize(1200, 900)
+            xscale = printerWidth  / self.print_widget.plot.width()
+            yscale = printerHeight  / self.print_widget.plot.height()
+            painter.scale(xscale, yscale)
+            self.print_widget.plot.render(painter, QtCore.QPoint(0,0))
+            xoff = int(printer.pageRect().width() - self.print_widget.metadata.width() * xscale)/xscale
+            yoff = int(printer.pageRect().height() - self.print_widget.metadata.height() * yscale)/yscale
+            self.print_widget.metadata.render(painter, QtCore.QPoint(xoff, yoff))
+            painter.end()
+            self.print_widget.resize(reset_size)
         
         
     def make_toolbar(self):
