@@ -96,14 +96,14 @@ def read_raw():
     #Converts a time string into a float representing seconds
     #since epoch (UNIX)
     if not old_flag:
-        struct_time = time.strptime(info[4], "%m-%d-%y %H:%M")
+        struct_time = time.strptime(info[7], "%m-%d-%y %H:%M")
     else:
         struct_time = time.strptime(info[2], "%m-%d-%y %H:%M")
     epoch_time = datetime.fromtimestamp(time.mktime(struct_time))
     #log_interval is interval that the Daysimeter took measurements at.
     #Since python uses seconds since epoch, cast as int
     if not old_flag:
-        log_interval = int(info[5])
+        log_interval = int(info[8])
     else:
         log_interval = int(info[3])
     

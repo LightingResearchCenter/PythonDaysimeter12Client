@@ -36,7 +36,7 @@ def set_download_flag():
         #8 in firmware version 2.x, just add another elif statement
         #e.g. elif info[1][0:2] == '2.': info[8] ... you get the idea
         elif info[1][0:2] == '1.':
-            info[7] = '0\n'
+            info[5] = '0\n'
         #Return to top of file
         logfile_fp.seek(0)
         #Write everything to file

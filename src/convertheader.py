@@ -59,8 +59,12 @@ def convert_header_f1():
         else:
             logfile_fp.write('1.1\ndaysimeter12\n')
         #Shifts information down because firmware version is now on line 1
-        for x in range(2, 8):
-            logfile_fp.write(info[x-1])
+        logfile_fp.write(info[1])
+        logfile_fp.write(info[4])
+        logfile_fp.write(info[5])
+        logfile_fp.write(info[6])
+        logfile_fp.write(info[2])
+        logfile_fp.write(info[3])
         #Write calibration information to file. Woohoo for putting this
         #information in the header instead of doing crazy lookups.
         logfile_fp.write(str(calib_info[0]) + '\t' + str(calib_info[1]) + \
@@ -80,9 +84,13 @@ def convert_header_f1():
                 logfile_fp.write('Firmware Version Number (0.1 old, 1.x ' + \
                 'future e.g. 1.0) 1.1 = New Header, LSB of Activity is NOT' + \
                 ' a flag. 1.2 = New Header, LSB is a flag.\nDevice Model\n')
-            if x == len(info) - 1:
+            if x == 12:
+                logfile_fp.write(info[14])
+                logfile_fp.write(info[15])
                 logfile_fp.write(battery_string)
-                continue
+                logfile_fp.write(info[12])
+                logfile_fp.write(info[13])
+                break
             logfile_fp.write(info[x])
         logfile_fp.write('Calibration Factor (R,G,B)\nPhotopic Coefficient' + \
         ' (R,G,B)\nScotopic Coefficient  (R,G,B)\nMelanopsin Coefficient ' + \
@@ -124,19 +132,23 @@ def convert_header_f0():
         #Remove binary garbage and whitesapce, if applicable, and format
         #strings in array.
         info = [x.strip('\n \xff') + '\n' for x in info]
+        #Reference index for data to be moved about
+        ref_index = info.index(battery_string)
+        #Moves notes around
+        info[ref_index - 5] = info[ref_index - 3]
+        info[ref_index - 4] = info[ref_index + 1]
+        info[ref_index - 3] = info[ref_index + 2]
+        #Moves values around
+        info[1] = info[3]
+        info[2] = info[7]
+        info[3] = info[8]
         #magic_num is exactly that, magic
         magic_num = info.index(battery_string)
         difference = len(info) - magic_num - 1
         #Remove everything after the battery string (in notes)
         del info[magic_num+1:]
-        #Remove the inserted firmware version (in notes)
-        del info[magic_num-7]
-        del info[magic_num-6]
         #Remove everything after the battery string (in values)
-        del info[magic_num-difference-11:magic_num-11]
-        #Remove the interted firmware versoin (in notes)
-        del info[2]
-        del info[1]
+        del info[magic_num-difference-9:magic_num-9]
         #Close the file so we can open it again
         logfile_fp.close()
         #Open the file for writing

@@ -136,7 +136,7 @@ class StartNewLog(QtGui.QWidget):
                                        str(info[4]))
             elif len(info) == 35:
                 self.status.showMessage('Number of hours logged using current battery: ' + \
-                                       str(info[6]))
+                                       str(info[4]))
             else:
                 self.status.showMessage('Daysimeter Header Corrupt')
                 self.start.setEnabled(False)
@@ -189,10 +189,10 @@ class NewLogThread(QtCore.QThread):
                 info[5] = '1\n'
             else:
                 info[0] = '2\n'
-                info[4] = self.month + '-' + self.day + '-' + self.year + \
+                info[7] = self.month + '-' + self.day + '-' + self.year + \
                           ' ' + self.hour + ':' + self.minute + '\n'
-                info[5] = self.log_interval + '\n'
-                info[7] = '1\n'
+                info[8] = self.log_interval + '\n'
+                info[5] = '1\n'
             with open(path + log_filename, 'w') as log_fp:
                 for x in info:
                     log_fp.write(x)
