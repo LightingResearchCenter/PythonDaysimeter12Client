@@ -21,6 +21,7 @@ from src.logfunc import stop_log
 from src.logfunc import resume_log
 from src.finddaysimeter import find_daysimeter
 from src.startnewlog import StartNewLog
+from statuslight import StatusLight
 
 QT_APP = QtGui.QApplication(sys.argv) 
  
@@ -44,6 +45,7 @@ class LayoutExample(QtGui.QMainWindow):
 #        self.create_menus()
         self.load_config()
         self.make_enabler()
+        
         
     def go_print(self):
         printer = QtGui.QPrinter(QtGui.QPrinter.PrinterResolution)
@@ -116,8 +118,10 @@ class LayoutExample(QtGui.QMainWindow):
         
         self.top_toolbar.addActions(file_actions)
         self.top_toolbar.addSeparator()
+        self.status_light = StatusLight(self)
+        self.top_toolbar.addWidget(self.status_light)
+        self.top_toolbar.addSeparator()
         self.top_toolbar.addActions(daysimeter_actions)
-            
             
         self.addToolBar(self.top_toolbar)
         
@@ -388,7 +392,7 @@ class LayoutExample(QtGui.QMainWindow):
         self.resume_logging.setEnabled(False)
         self.start_logging.setEnabled(False)
         self.statusBar().showMessage('No Daysimeter plugged into computer.',\
-                                     1000)
+                                     500)
         
     def run(self):
         """Runs the main window"""
