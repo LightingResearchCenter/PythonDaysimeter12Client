@@ -115,12 +115,13 @@ class LayoutExample(QtGui.QMainWindow):
         file_actions = [open_act, quit_act, print_act, set_savepath]
         daysimeter_actions = [self.make_download, self.start_logging, self.stop_logging, self.resume_logging]
         
+        self.status_light = StatusLight(self)
+        self.top_toolbar.addWidget(self.status_light)
+        self.top_toolbar.addSeparator()        
         
         self.top_toolbar.addActions(file_actions)
         self.top_toolbar.addSeparator()
-        self.status_light = StatusLight(self)
-        self.top_toolbar.addWidget(self.status_light)
-        self.top_toolbar.addSeparator()
+       
         self.top_toolbar.addActions(daysimeter_actions)
             
         self.addToolBar(self.top_toolbar)
