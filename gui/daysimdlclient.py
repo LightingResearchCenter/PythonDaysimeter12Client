@@ -269,14 +269,19 @@ class LayoutExample(QtGui.QMainWindow):
             timestamps, daysim_data, filetype = self.read_txt_data(file_name)
         elif ext == '.cdf':
             timestamps, daysim_data, filetype = self.read_cdf_data(file_name)
-            
+        else:
+            return
         # Sets the data in the graphing widget
         self.main_widget.set_data(timestamps, daysim_data, filetype)
         
     def open_file(self):
         """Opens and read a cdf or txt file and pass its data"""
+        if self.init.get('Application Settings', 'savepath'):
+            def_dir = self.init.get('Application Settings', 'savepath')
+        else:
+            def_dir = './'
         file_name = str(QtGui.QFileDialog.getOpenFileName(self,
-                                                       directory=self.init.get('Application Settings', 'savepath'),
+                                                       directory=def_dir,
                                                        filter="Data File (*.cdf *.txt)"))
         if not file_name:
             return

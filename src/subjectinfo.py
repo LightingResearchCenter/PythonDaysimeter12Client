@@ -17,6 +17,7 @@ class SubjectInfo(QWidget):
     downloadmake.py
     """
     send_info_sig = QtCore.pyqtSignal(list)
+    
     def __init__(self, parent=None):
         super(SubjectInfo, self).__init__(parent)
         QMainWindow.__init__(self)
@@ -77,6 +78,7 @@ class SubjectInfo(QWidget):
         self.year_dob.currentIndexChanged.connect(self.enable_submit)
         self.subject_mass.textChanged.connect(self.enable_submit)
         
+        self.submit.setDefault(True)
         self.submit.pressed.connect(self.submit_info)
         self.cancel.pressed.connect(self.close)
         
@@ -100,15 +102,16 @@ class SubjectInfo(QWidget):
     def enable_submit(self):
         """ PURPOSE: Enables submit button once all fields are filled with
         valid info """
-        if  not self.subject_id.text() == '' and \
-            self.subject_sex.currentIndex() > 0 and \
-            self.day_dob.currentIndex() > 0 and \
-            self.month_dob.currentIndex() > 0 and \
-            self.year_dob.currentIndex() > 0 and \
-            float(self.subject_mass.text()) > 0.000:
+        if  not self.subject_id.text() == '':
             self.submit.setEnabled(True)
         else:
             self.submit.setEnabled(False)
+            
+    def keyPressEvent(self, qKeyEvent):
+        if qKeyEvent.key() == QtCore.Qt.Key_Return and self.submit.isEnabled(): 
+            self.submit_info()
+        else:
+            pass
 
 def main():
     """ PURPOSE: Creates app and runs widget """

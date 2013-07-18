@@ -26,7 +26,6 @@ import constants as constants_
 from spacepy import pycdf
 from getlocaloffset import get_local_offset_s
 from setdownloadflag import set_download_flag
-from accesssubjectinfo import read_subject_info
 from updateheader import update_header
 from convertheader import convert_header_f1
 from PyQt4 import QtGui, QtCore
@@ -38,6 +37,8 @@ class DownloadMake(QtGui.QWidget):
     """
     def __init__(self, parent=None):
         super(DownloadMake, self).__init__(parent)
+        dl_skip_shortcut = QtGui.QShortcut(QtGui.QKeySequence('SHIFT+CTRL+G'),\
+        self, self.skip_prog, self.skip_prog, QtCore.Qt.WidgetShortcut)
         self.initUI()
         
     def initUI(self):
@@ -46,16 +47,19 @@ class DownloadMake(QtGui.QWidget):
         self.pbar = QtGui.QProgressBar(self)
 
         self.start = QtGui.QPushButton('Start Download')
+        self.start.setFixedWidth(140)
         self.done = QtGui.QPushButton('Done')
+        self.done.setFixedWidth(140)
         self.start.pressed.connect(self.start_download)
         self.done.pressed.connect(self.close)
+        self.done.setEnabled(False)
 
         self.status_bar = QtGui.QStatusBar()      
         
         layout = QtGui.QVBoxLayout()
         layout.addWidget(self.pbar)
-        layout.addWidget(self.start)
-        layout.addWidget(self.done)
+        layout.addWidget(self.start, alignment=QtCore.Qt.AlignCenter)
+        layout.addWidget(self.done, alignment=QtCore.Qt.AlignCenter)
         layout.addWidget(self.status_bar)
         self.setLayout(layout)
         
@@ -81,9 +85,23 @@ class DownloadMake(QtGui.QWidget):
             self.status_bar.showMessage('No Daysimeter plugged into this' + \
             ' computer.')
         else:
+            path = find_daysimeter()
+            with open(path + constants_.LOG_FILENAME,'r') as log_fp:
+                info = log_fp.readlines()
+                if len(info) == 17:
+                    daysim_id = info[1].strip('\n')
+                elif len(info) == 35:
+                    daysim_id = info[3].strip('\n')
+                else:
+                    daysim_id = 'NULL'
+                now = str(datetime.now())
+                default_filename = daysim_id + '-' + now[:10] \
+                + '-' + now[11:13] + '-' + now[14:16] + '-' + now[17:19]
+            
+            default_name = os.path.join(self.savedir, default_filename)
             self.status_bar.showMessage('')
             self.filename = str(QtGui.QFileDialog.getSaveFileName(self, \
-            ('Save File'), self.savedir, ('CDF Files (*.cdf);; CSV Files (*.csv)')))
+            ('Save File'), default_name, ('CDF Files (*.cdf);; CSV Files (*.csv)')))
             if not str(self.filename) == '':
                 self.pbar.show()
                 self.start.setText('Downloading...')
@@ -114,11 +132,17 @@ class DownloadMake(QtGui.QWidget):
             self.status_bar.showMessage('Writing CSV File...')
             self.maker = MakeCSV(self, data, self.filename)
             self.connect(self.maker, QtCore.SIGNAL('update'), \
-            self.dupdate_progress)
+            self.update_progress)
             self.maker.start()
             
     def make_cdf(self, info):
         """ PURPOSE: Makes a CDF file. """
+        if info[1] == '-':
+            info[1] = 'None'
+        if info[2] == '- - -':
+            info[2] = 'None'
+        if info[3] == '000.000':
+            info[3] = 0
         self.status_bar.showMessage('Writing CDF File...')
         self.maker = MakeCDF(self, self.data, self.filename, info)
         self.connect(self.maker, QtCore.SIGNAL('update'), self.update_progress)
@@ -134,14 +158,17 @@ class DownloadMake(QtGui.QWidget):
         self.done.setText('Download Cancelled')
         self.start.hide()
         self.done.show()
-        self.status_bar.showMessage('No Subject information was entered. ' + \
-        'Download cancelled.')
+        self.status_bar.showMessage('Download cancelled.')
         
     def fake_progress(self):
         self.progresssim = ProgressSim()
         self.connect(self.progresssim, QtCore.SIGNAL('update'), \
         self.update_progress)
         self.progresssim.start()
+        
+    def skip_prog(self):
+        self.step = 99
+        self.update_progress()
     
         
     def update_progress(self):
@@ -169,8 +196,15 @@ class DownloadMake(QtGui.QWidget):
         self.status_bar.showMessage('Download Complete. It is now safe ' + \
         'to eject your daysimeter.')
         self.start.hide()
+        self.done.setEnabled(True)
         self.done.show()
         self.emit(QtCore.SIGNAL('savename'), self.filename)
+        
+    def keyPressEvent(self, qKeyEvent):
+        if qKeyEvent.key() == QtCore.Qt.Key_Return and self.done.isEnabled(): 
+            self.close()
+        else:
+            pass
         
 class ProgressSim(QtCore.QThread):
     """
@@ -239,6 +273,7 @@ class SubjectInfo(QtGui.QWidget):
         layout.addRow(button_layout)
         
         self.submit.setEnabled(False)
+        self.submit.setDefault(True)
         
         self.setLayout(layout)
         
@@ -293,16 +328,16 @@ class SubjectInfo(QtGui.QWidget):
         PURPOSE: Enables submit button once all fields are filled with
         valid info.
         """
-        if  not self.subject_id.text() == '' and \
-            self.subject_sex.currentIndex() > 0 and \
-            self.day_dob.currentIndex() > 0 and \
-            self.month_dob.currentIndex() > 0 and \
-            self.year_dob.currentIndex() > 0 and \
-            float(self.subject_mass.text()) > 0.000:
+        if  not self.subject_id.text() == '':
             self.submit.setEnabled(True)
         else:
             self.submit.setEnabled(False)
-
+            
+    def keyPressEvent(self, qKeyEvent):
+        if qKeyEvent.key() == QtCore.Qt.Key_Return and self.submit.isEnabled(): 
+            self.submit_info()
+        else:
+            pass
         
 class DownloadDaysimeter(QtCore.QThread):
     
@@ -591,8 +626,9 @@ class MakeCDF(QtCore.QThread):
     def run(self):
         """ PURPOSE: Makes a CDF file from data. """
         sub_info = self.info
-        struct_time = time.strptime(sub_info[2], '%d %B %Y')
-        sub_info[2] = datetime.fromtimestamp(time.mktime(struct_time))
+        if not sub_info[2] == 'None':
+            struct_time = time.strptime(sub_info[2], '%d %B %Y')
+            sub_info[2] = datetime.fromtimestamp(time.mktime(struct_time))
 
         filename = self.filename
 
@@ -615,6 +651,7 @@ class MakeCDF(QtCore.QThread):
             cdf_fp.attrs['subjectSex'] = sub_info[1]
             cdf_fp.attrs['subjectDateOfBirth'] = sub_info[2]
             cdf_fp.attrs['subjectMass'] = sub_info[3]
+            
             
             #Set variables
             cdf_fp['time'] = data[1][0]
@@ -789,12 +826,7 @@ class MakeCSV(QtCore.QThread):
         
     def run(self):
         """ PURPOSE: Makes a CSV file from data. """
-        if not os.path.exists(os.getcwd() + '/usr/data/subject info.txt'):
-            return False
-        sub_info = read_subject_info()
-        struct_time = time.strptime(sub_info[2], '%d %B %Y')
-        sub_info[2] = datetime.fromtimestamp(time.mktime(struct_time))
-
+    
         filename = self.filename
 
         with open(filename,'w') as csv_fp:
