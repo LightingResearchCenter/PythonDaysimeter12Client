@@ -420,9 +420,6 @@ class EnableButtons(QtCore.QThread):
             else:
                 self.connected.emit()
             time.sleep(1)
-    
-    
-        
 
 APP = LayoutExample()
 APP.run()
