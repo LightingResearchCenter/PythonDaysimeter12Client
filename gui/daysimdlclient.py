@@ -400,6 +400,11 @@ class LayoutExample(QtGui.QMainWindow):
         self.start_logging.setEnabled(False)
         self.statusBar().showMessage('No Daysimeter plugged into computer.',\
                                      500)
+                                     
+    def run(self):
+        """Runs the main window"""
+        self.show()
+        sys.exit(QT_APP.exec_())
 
         
 class EnableButtons(QtCore.QThread):
@@ -418,12 +423,5 @@ class EnableButtons(QtCore.QThread):
                 self.connected.emit()
             time.sleep(1)
 
-def main():
-    app = QtGui.QApplication(sys.argv)
-    # Create and show the form
-    session = LayoutExample()
-    # Run the main Qt loop
-    sys.exit(app.exec_())
-    
-if __name__ == '__main__':
-    main()
+APP = LayoutExample()
+APP.run()
