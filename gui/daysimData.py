@@ -6,8 +6,10 @@ Created on Mon Jun 17 10:43:13 2013
 """
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
+from matplotlib.font_manager import FontProperties
 from numpy import ones
 import lowpassfilter as lpf
+import string
 
 class DaysimeterData:
     """Takes in  Daysimeter data and creates plots for that data"""
@@ -28,6 +30,8 @@ class DaysimeterData:
         self.data = None
         self.attrs = None
         self.canvas = FigureCanvas(self.fig)
+        self.fontP = FontProperties()
+        self.fontP.set_size('medium')
         
     def show_plots(self, button_names):
         """Show the created plots
@@ -36,7 +40,6 @@ class DaysimeterData:
                        of the data values (e.g. Lux, CS, etc.)
                             
         """
-        print button_names
         # Only tries to show plots once the data and timestamps have been set
         if self.values_set:
             # Iterates through the buttons and gets their names
@@ -47,7 +50,8 @@ class DaysimeterData:
                     self.ax_dict[name].set_visible(True)
                 else:
                     self.ax_dict[name].set_visible(False)
-                    
+            
+            
     def get_plot(self):
         """Return the canvas for drawing"""
         return self.canvas
@@ -78,9 +82,33 @@ class DaysimeterData:
         colors = ('aqua', 'black', 'fuchsia', 'gray', 'lime', 'maroon', 
                   'navy', 'olive', 'orange', 'purple', 'silver', 'teal',
                   'white', 'yellow')
+        linear_y = {'CS', 'activity'}
         main_ax = None
         names = self.get_data_names()
-        plots = []
+        self.plots = []
+        
+        self.ordered_names = []
+        lower_names = []
+        if 'red' in names:
+            self.ordered_names.append('red')
+        if 'green' in names:
+            self.ordered_names.append('green')
+        if 'blue' in names:
+            self.ordered_names.append('blue')
+        if 'Lux' in names:
+            self.ordered_names.append('lux')
+        if 'CLA' in names:
+            self.ordered_names.append('CLA')
+        if 'CS' in names:
+            self.ordered_names.append('CS')
+        if 'activity' in names:
+            self.ordered_names.append('activity')
+        names.sort()
+        for name in self.ordered_names:
+            lower_names.append(string.lower(name))
+        for name in names:
+            if string.lower(name) not in lower_names:
+                self.ordered_names.append(name)
         
         main_ax = self.fig.add_subplot(111)
         main_ax.plot(self.timestamps, 
@@ -89,14 +117,17 @@ class DaysimeterData:
         # Iterates through the sets of values (lux, CS, CLA, etc.) and creates 
         # axes for them and stores the axes in a dictionary mapped with their 
         # name e.g. ax_dict['Lux'] returns the lux axis
-        for name, color in zip(names, colors):
-            if name in ['red', 'green', 'blue']:
+        for name, color in zip(self.ordered_names, colors):
+            if string.lower(name) in ['red', 'green', 'blue']:
                 color = name
             # Makes the rest of the values 'children' of the the main, using
             # the x axis of 'main, while creating thei own y axes
             self.ax_dict[name] = main_ax.twinx()
-            self.ax_dict[name].set_yscale('log')
-            plots.extend(self.ax_dict[name].plot(self.timestamps,
+            if name in linear_y:
+                self.ax_dict[name].set_yscale('linear')
+            else:
+                self.ax_dict[name].set_yscale('log')
+            self.plots.extend(self.ax_dict[name].plot(self.timestamps,
                          self.data[name], color=color, alpha=0.8,
                          label=name))
             # Finds the min of the data, then sets that as the the lower y
@@ -104,8 +135,7 @@ class DaysimeterData:
             minimum = self.data[name].min()
             self.ax_dict[name].set_ybound(lower=minimum)
             self.ax_dict[name].tick_params(axis='y', colors=color)
-        self.fig.legend(plots, names, loc=(.05,.03), ncol=3)
-        #self.fig.autofmt_xdate(rotation=0)
+        self.fig.legend(self.plots, self.ordered_names, loc='lower left', ncol=3, prop = self.fontP)
         self.fig.subplots_adjust(bottom=0.2)
         self.canvas = FigureCanvas(self.fig)
         

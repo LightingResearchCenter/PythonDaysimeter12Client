@@ -45,6 +45,7 @@ class LayoutExample(QtGui.QMainWindow):
 #        self.create_menus()
         self.load_config()
         self.make_enabler()
+        self.show()
         
         
     def go_print(self):
@@ -64,7 +65,7 @@ class LayoutExample(QtGui.QMainWindow):
             xscale = printerWidth  / self.print_widget.plot.width()
             yscale = printerHeight  / self.print_widget.plot.height()
             painter.scale(xscale, yscale)
-            self.print_widget.plot.render(painter, QtCore.QPoint(0,0))
+            self.print_widget.plot.render(painter, QtCore.QPoint((printer.paperRect().width() - printer.pageRect().width())/4,0))
             xoff = int(printer.pageRect().width() - self.print_widget.metadata.width() * xscale)/xscale
             yoff = int(printer.pageRect().height() - self.print_widget.metadata.height() * yscale)/yscale
             self.print_widget.metadata.render(painter, QtCore.QPoint(xoff, yoff))
@@ -112,7 +113,7 @@ class LayoutExample(QtGui.QMainWindow):
         self.start_logging = QtGui.QAction('&Start New Log', self, statusTip='Starts'+\
                                    ' a new data log', triggered=self.start_log)
         # Adds the options to the menu
-        file_actions = [open_act, quit_act, print_act, set_savepath]
+        file_actions = [open_act, set_savepath, print_act, quit_act]
         daysimeter_actions = [self.make_download, self.start_logging, self.stop_logging, self.resume_logging]
         
         self.status_light = StatusLight(self)
@@ -399,11 +400,7 @@ class LayoutExample(QtGui.QMainWindow):
         self.start_logging.setEnabled(False)
         self.statusBar().showMessage('No Daysimeter plugged into computer.',\
                                      500)
-        
-    def run(self):
-        """Runs the main window"""
-        self.show()
-        sys.exit(QT_APP.exec_())
+
         
 class EnableButtons(QtCore.QThread):
     connected = QtCore.pyqtSignal()
@@ -421,5 +418,12 @@ class EnableButtons(QtCore.QThread):
                 self.connected.emit()
             time.sleep(1)
 
-APP = LayoutExample()
-APP.run()
+def main():
+    app = QtGui.QApplication(sys.argv)
+    # Create and show the form
+    session = LayoutExample()
+    # Run the main Qt loop
+    sys.exit(app.exec_())
+    
+if __name__ == '__main__':
+    main()

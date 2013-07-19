@@ -5,8 +5,10 @@ Created on Tue Jun 25 16:27:54 2013
 @author: pentla
 """
 import PyQt4.QtGui as qt
+from PyQt4 import QtGui
 import daysimdata as dd
 from PyQt4.QtCore import Signal
+import string
 
 class GraphingWidget(qt.QWidget):
     """A graphing widget that contains a graph and a button box with radio 
@@ -20,6 +22,12 @@ class GraphingWidget(qt.QWidget):
         self.plot = self.data.get_plot()
         self.metadata = DisplayMetadata(self)
         
+        self.sel_all = QtGui.QPushButton('Select All')
+        self.sel_none = QtGui.QPushButton('Deselect All')
+        
+        self.sel_all.pressed.connect(self.select_all)
+        self.sel_none.pressed.connect(self.deselect_all)
+        
         self.hbox = qt.QHBoxLayout()
         self.hbox.addWidget(self.buttons)
         self.hbox.addWidget(self.metadata)
@@ -27,6 +35,16 @@ class GraphingWidget(qt.QWidget):
         self.layout.addWidget(self.plot)
         self.layout.addLayout(self.hbox)
         self.setLayout(self.layout)
+        
+    def select_all(self):
+        for button in self.buttons._button_group.buttons():
+            button.setChecked(True)
+        self.buttons.get_buttons_pressed()
+        
+    def deselect_all(self):
+        for button in self.buttons._button_group.buttons():
+            button.setChecked(False)
+        self.buttons.get_buttons_pressed()
         
     def set_data(self, timestamps, data, filetype):
         """Sets the data from the daysimeter and creates the plot and buttons
@@ -55,7 +73,16 @@ class GraphingWidget(qt.QWidget):
         # this widget
         self.buttons.deleteLater()
         self.buttons = ButtonBox(self).make_buttons(self.data.get_data_names())
-        self.hbox.addWidget(self.buttons)
+        
+        not_a_button_layout = qt.QHBoxLayout()
+        not_a_button_layout.addWidget(self.sel_all)
+        not_a_button_layout.addWidget(self.sel_none)
+        
+        radio_layout = QtGui.QVBoxLayout()
+        radio_layout.addWidget(self.buttons)
+        radio_layout.addLayout(not_a_button_layout)
+        
+        self.hbox.addLayout(radio_layout)
         
         # Deletes the current set of metadata, creates a new set, and adds it
         # to this widget
@@ -67,6 +94,7 @@ class GraphingWidget(qt.QWidget):
         self.layout.addLayout(self.hbox)
         # Shows the set of plots with their corresponding buttons checked
         self.buttons.buttonsChecked.connect(self.show_plots)
+        
     def show_plots(self, names):
         """Only shows the subplots listed in names
         
@@ -95,6 +123,29 @@ class ButtonBox(qt.QGroupBox):
                 should be made
         
         """
+        ordered_names = []
+        lower_names = []
+        if 'red' in names:
+            ordered_names.append('red')
+        if 'green' in names:
+            ordered_names.append('green')
+        if 'blue' in names:
+            ordered_names.append('blue')
+        if 'Lux' in names:
+            ordered_names.append('lux')
+        if 'CLA' in names:
+            ordered_names.append('CLA')
+        if 'CS' in names:
+            ordered_names.append('CS')
+        if 'activity' in names:
+            ordered_names.append('activity')
+        names.sort()
+        for name in ordered_names:
+            lower_names.append(string.lower(name))
+        for name in names:
+            if string.lower(name) not in lower_names:
+                ordered_names.append(name)
+
         self._button_group = qt.QButtonGroup()
         self._button_group.setExclusive(False)
         grid = qt.QGridLayout()
@@ -102,7 +153,7 @@ class ButtonBox(qt.QGroupBox):
         # to the button group (container for the objects) and the button box 
         # (container for the buttons in the GUI)
         col = row = 0
-        for name in names:
+        for name in ordered_names:
             button = qt.QRadioButton(name, self)
             self._button_group.addButton(button)
             # Only put 5 buttons per row, then make a new column
