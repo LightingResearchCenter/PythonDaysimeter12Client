@@ -20,6 +20,7 @@ def stop_log():
     with open(path + log_filename, 'w') as log_fp:
         for x in log:
             log_fp.write(x)
+    return True
             
 def resume_log():
     path = find_daysimeter()
@@ -33,4 +34,5 @@ def resume_log():
     log[0] = '4\n'
     with open(path + log_filename, 'w') as log_fp:
         for x in log:
-            log_fp.write(x)        
+            log_fp.write(x)
+    return True

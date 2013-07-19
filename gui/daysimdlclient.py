@@ -234,7 +234,7 @@ class LayoutExample(QtGui.QMainWindow):
         self.new_log = StartNewLog()
     
     def stop_log(self):
-        if not stop_log():
+        if stop_log():
             self.statusBar().showMessage("Current Log Stopped", 2000)
         else:
             QtGui.QMessageBox.question(self, 'Error',
@@ -243,7 +243,7 @@ class LayoutExample(QtGui.QMainWindow):
             
         
     def resume_log(self):
-        if not resume_log():
+        if resume_log():
             self.statusBar().showMessage("Current Log Resumed", 2000)
         else:
             QtGui.QMessageBox.question(self, 'Error',
