@@ -11,7 +11,7 @@ import logging
 from geterrlog import get_err_log
 import constants
 
-def get_constants ():  
+def get_constants():  
     """ PURPOSE: Get constants for calculations. """
     constants_filename = constants.CONSTANTS_FILENAME
     local_const_filename = constants.LOCAL_CONST_FILENAME
@@ -53,7 +53,7 @@ def get_constants ():
         #Catch IO exception, add to log and quit
         except IOError:
             logging.error('Could not open constants file locally')
-            sys.exit(1)
+            return False
         #Read data into lists
         else:
             #Trash handles header and/or empty lines in the file.

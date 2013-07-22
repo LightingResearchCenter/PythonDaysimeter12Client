@@ -108,6 +108,7 @@ class DownloadMake(QtGui.QWidget):
                 self.status_bar.showMessage('Processing Data...')
                 self.start.setEnabled(False)
                 self.downloader = DownloadDaysimeter(self)
+                self.downloader.error.connect(self.error)
                 self.connect(self.downloader, QtCore.SIGNAL('update'), \
                 self.update_progress)
                 self.connect(self.downloader, QtCore.SIGNAL('fprogress'), \
@@ -150,7 +151,7 @@ class DownloadMake(QtGui.QWidget):
         
     def cancelled(self):
         """
-        PURPOSE: Determines whether the download has been cancelled, this
+        PURPOSE: Sets status when the download has been cancelled, this
         usually occurs when no subject info was given.
         """
         #As a side note, the ceiling started leaking again...
@@ -159,6 +160,17 @@ class DownloadMake(QtGui.QWidget):
         self.start.hide()
         self.done.show()
         self.status_bar.showMessage('Download cancelled.')
+        
+    def error(self):
+        """
+        PURPOSE: Sets status when an error has occured.
+        """
+        #As a side note, the ceiling started leaking again...
+        self.pbar.hide()
+        self.done.setText('Close')
+        self.start.hide()
+        self.done.show()
+        self.status_bar.showMessage('An error occurred.')
         
     def fake_progress(self):
         self.progresssim = ProgressSim()
@@ -341,6 +353,8 @@ class SubjectInfo(QtGui.QWidget):
         
 class DownloadDaysimeter(QtCore.QThread):
     
+    error = QtCore.pyqtSignal()
+    
     def __init__(self, parent):
         QtCore.QThread.__init__(self, parent)
         
@@ -357,6 +371,7 @@ class DownloadDaysimeter(QtCore.QThread):
         #Create error log file named error.log on the desktop
         errlog_filename = get_err_log()
         if errlog_filename == '':
+            self.error.emit()
             sys.exit(1)
         logging.basicConfig(filename=errlog_filename, level=logging.DEBUG)
         
@@ -367,6 +382,7 @@ class DownloadDaysimeter(QtCore.QThread):
         #Catch IO exception (if present), add to log and quit
         except IOError:
             logging.error('Could not open logfile')
+            self.error.emit()
             sys.exit(1)
         else:
             #Read each line of the header and put it into a list
@@ -398,6 +414,10 @@ class DownloadDaysimeter(QtCore.QThread):
             [daysimeter_id, calib_const[0], calib_const[1], calib_const[2]]
         else:
             calib_info = get_calib_info(daysimeter_id)
+        
+        if not calib_info:
+            self.error.emit()
+            sys.exit(1)
         #Open binary data file for reading
         try:
             self.emit(QtCore.SIGNAL('fprogress'))
@@ -405,6 +425,7 @@ class DownloadDaysimeter(QtCore.QThread):
         #Catch IO exception (if present), add to log and quit
         except IOError:
             logging.error('Could not open datafile')
+            self.error.emit()
             sys.exit(1)
         else:
             #Read entire file into a string called data

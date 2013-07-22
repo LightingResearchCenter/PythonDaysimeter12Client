@@ -67,7 +67,7 @@ def get_calib_info(daysimeter_id):
             #Catch IO exception, add to log and quit
             except IOError:
                 logging.error('Could not open user defined calibration file')
-                sys.exit(1)
+                return False
             else:
                 #Read each line of the calibration file and put it 
                 #into a list called calib_info.
