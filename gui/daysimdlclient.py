@@ -22,6 +22,7 @@ from src.logfunc import resume_log
 from src.finddaysimeter import find_daysimeter
 from src.startnewlog import StartNewLog
 from statuslight import StatusLight
+from statuswidget import StatusWidget
 
 QT_APP = QtGui.QApplication(sys.argv) 
  
@@ -45,13 +46,19 @@ class LayoutExample(QtGui.QMainWindow):
 #        self.create_menus()
         self.load_config()
         self.make_enabler()
+#        self.daysimeter_status()
         self.show()
         
+#    def daysimeter_status(self):
+#        self.status_widget = StatusWidget(self)
+#        self.daysim_status = QtGui.QDockWidget('Status', self.status_widget)
+#        self.daysim_status.setAllowedAreas(QtCore.Qt.TopDockWidgetArea)
+#        self.daysim_status.setFeatures(QtGui.QDockWidget.NoDockWidgetFeatures)
+#        self.addDockWidget(QtCore.Qt.TopDockWidgetArea, self.daysim_status)
         
     def go_print(self):
         printer = QtGui.QPrinter(QtGui.QPrinter.PrinterResolution)
         printer.setOrientation(QtGui.QPrinter.Landscape)
-#        printer.setPageMargins(0.0, .5, .25, .5, QtGui.QPrinter.Inch)
         printer.setResolution(300)
         printer.setFullPage(True)
         reply = QtGui.QPrintDialog(printer, self)
@@ -118,7 +125,10 @@ class LayoutExample(QtGui.QMainWindow):
         
         self.status_light = StatusLight(self)
         self.top_toolbar.addWidget(self.status_light)
-        self.top_toolbar.addSeparator()        
+        self.top_toolbar.addSeparator()
+        self.status_widget = StatusWidget(self)
+        self.top_toolbar.addWidget(self.status_widget)
+        self.top_toolbar.addSeparator()
         
         self.top_toolbar.addActions(file_actions)
         self.top_toolbar.addSeparator()
