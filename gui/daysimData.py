@@ -95,8 +95,8 @@ class DaysimeterData:
             self.ordered_names.append('green')
         if 'blue' in names:
             self.ordered_names.append('blue')
-        if 'Lux' in names:
-            self.ordered_names.append('lux')
+        if 'illuminance' in names:
+            self.ordered_names.append('illuminance')
         if 'CLA' in names:
             self.ordered_names.append('CLA')
         if 'CS' in names:

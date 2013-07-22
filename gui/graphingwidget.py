@@ -131,8 +131,8 @@ class ButtonBox(qt.QGroupBox):
             ordered_names.append('green')
         if 'blue' in names:
             ordered_names.append('blue')
-        if 'Lux' in names:
-            ordered_names.append('lux')
+        if 'illuminance' in names:
+            ordered_names.append('illuminance')
         if 'CLA' in names:
             ordered_names.append('CLA')
         if 'CS' in names:
