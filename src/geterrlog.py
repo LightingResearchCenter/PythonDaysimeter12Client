@@ -9,12 +9,13 @@ OUTPUT: Location of error log
 import sys
 import os
 import pwd
+import getpass
 
 def get_err_log():
     """ PURPOSE: Returns the desktop directory to store the error log. """
     #If Windows, place on desktop
     if sys.platform == 'win32':
-        return 'C:/Program Files (x86)/Daysimeter Client/error.log'
+        return 'C:/Users/' + getpass.getuser() + '/Desktop/error.log'
     #Else if Mac OSX, place on desktop
     elif sys.platform == 'darwin':
         return '/Users/' + pwd.getpwuid(os.getuid())[0] + '/Desktop/error.log'

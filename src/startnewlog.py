@@ -16,7 +16,7 @@ class StartNewLog(QtGui.QWidget):
         """Initializes Widget."""
         super(StartNewLog, self).__init__(parent)
         self.setWindowTitle('Start New Log')
-        self.setFixedSize(350,150)
+        self.setFixedSize(360,180)
         
         self.day = QtGui.QComboBox()
         self.month = QtGui.QComboBox()
@@ -31,6 +31,9 @@ class StartNewLog(QtGui.QWidget):
         self.log_interval = QtGui.QComboBox()
         
         self.status = QtGui.QStatusBar()
+        self.status.setSizeGripEnabled(False)
+        self.info = QtGui.QStatusBar()
+        self.info.setSizeGripEnabled(False)
         
         self.day.addItems([str(x) for x in range(1,32)])
         self.month.addItems([str(x) for x in range(1,13)])
@@ -39,7 +42,7 @@ class StartNewLog(QtGui.QWidget):
         self.hour.addItems([str(x) for x in range(24)])
         self.minute.addItems([str(x) for x in range(60)])
         
-        self.log_interval.addItems(['030', '060', '090', '120', '150', '180'])
+        self.log_interval.addItems(['030', '060', '090', '120', '180'])
         
         current_time = datetime.now()
         
@@ -52,6 +55,7 @@ class StartNewLog(QtGui.QWidget):
         self.minute.setCurrentIndex(current_time.minute)
         
         self.log_interval.setCurrentIndex(1)
+        self.log_interval.currentIndexChanged.connect(self.log_duration)
         
         self.battery_hours()
         
@@ -69,17 +73,19 @@ class StartNewLog(QtGui.QWidget):
         button_layout.addWidget(self.cancel)
         
         layout = QtGui.QFormLayout()
-        layout.addRow('Date', dmy_layout)
+        layout.addRow('Date (DD-MM-YYYY)', dmy_layout)
         layout.addRow('Time', hm_layout)
         layout.addRow('Logging Interval', self.log_interval)
+        layout.addRow('Max Log Duration', self.info)
         layout.addRow(button_layout)
         layout.addRow(self.status)
         
-        self.setLayout(layout)
+        self.setLayout(layout)       
         
         self.start.pressed.connect(self.begin_log)
         self.cancel.pressed.connect(self.close)
         
+        self.log_duration()
         self.show_self()
 
     def show_self(self):
@@ -87,6 +93,19 @@ class StartNewLog(QtGui.QWidget):
             self.close()
         else:
             self.show()
+    
+    def log_duration(self):
+        interval = int(self.log_interval.currentText())
+        if interval == 30:
+            self.info.showMessage('5.5 days with currently selected interval')
+        if interval == 60:
+            self.info.showMessage('11 days with currently selected interval')
+        if interval == 90:
+            self.info.showMessage('16.5 days with currently selected interval')
+        if interval == 120:
+            self.info.showMessage('22 days with currently selected interval')
+        if interval == 180:
+            self.info.showMessage('33 days with currently selected interval')
         
     def begin_log(self):
         """
@@ -131,12 +150,14 @@ class StartNewLog(QtGui.QWidget):
         else:
             with open(path + log_filename,'r') as log_fp:
                 info = log_fp.readlines()
-            if len(info) == 17:
+            if len(info) == 17 or len(info) == 35:
                 self.status.showMessage('Number of hours logged using current battery: ' + \
-                                       str(info[4]))
-            elif len(info) == 35:
-                self.status.showMessage('Number of hours logged using current battery: ' + \
-                                       str(info[4]))
+                                       str(info[4]) + '/ 1680')
+                if int(info[4]) >= 1680:
+                    QtGui.QMessageBox.question(self, 'Message',
+                                               'Your daysimeter\'s battery' + \
+                                               ' should be changed soon.', \
+                                               QtGui.QMessageBox.Ok)
             else:
                 self.status.showMessage('Daysimeter Header Corrupt')
                 self.start.setEnabled(False)
