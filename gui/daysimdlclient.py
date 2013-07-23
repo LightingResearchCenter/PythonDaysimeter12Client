@@ -50,7 +50,10 @@ class LayoutExample(QtGui.QMainWindow):
         self.make_enabler()
 #        self.daysimeter_status()
         self.disconnected = True
+        self.make_shortcuts()
         self.show()
+        
+        
         
 #    def daysimeter_status(self):
 #        self.status_widget = StatusWidget(self)
@@ -81,7 +84,28 @@ class LayoutExample(QtGui.QMainWindow):
             self.print_widget.metadata.render(painter, QtCore.QPoint(xoff, yoff))
             painter.end()
             self.print_widget.resize(reset_size)
+            
+    def make_shortcuts(self):
+        download_shortcut = QtGui.QShortcut(QtGui.QKeySequence('CTRL+D'),\
+        self, self.download_data, self.download_data, QtCore.Qt.WidgetShortcut)
         
+        open_shortcut = QtGui.QShortcut(QtGui.QKeySequence('CTRL+O'),\
+        self, self.open_file, self.open_file, QtCore.Qt.WidgetShortcut)
+        
+        quit_shortcut = QtGui.QShortcut(QtGui.QKeySequence('CTRL+Q'),\
+        self, self.close, self.close, QtCore.Qt.WidgetShortcut)
+        
+        print_shortcut = QtGui.QShortcut(QtGui.QKeySequence('CTRL+P'),\
+        self, self.go_print, self.go_print, QtCore.Qt.WidgetShortcut)
+        
+        set_save_shortcut = QtGui.QShortcut(QtGui.QKeySequence('CTRL+S'),\
+        self, partial(self.load_config, update='savepath'), partial(self.load_config, update='savepath'), QtCore.Qt.WidgetShortcut)
+        
+        new_log_shortcut = QtGui.QShortcut(QtGui.QKeySequence('CTRL+N'),\
+        self, self.start_log, self.start_log, QtCore.Qt.WidgetShortcut)
+
+        reset_batt_shortcut = QtGui.QShortcut(QtGui.QKeySequence('CTRL+R'),\
+        self, self.reset_battery, self.reset_battery, QtCore.Qt.WidgetShortcut)
         
     def make_toolbar(self):
         self.top_toolbar = QtGui.QToolBar()
@@ -192,6 +216,7 @@ class LayoutExample(QtGui.QMainWindow):
         """Create the menus"""
         self.create_file_menu()
         self.create_daysimeter_menu()
+    
         
     def create_file_menu(self):
         """Creates the file menu"""
