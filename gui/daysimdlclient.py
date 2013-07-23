@@ -8,6 +8,7 @@ Created on Wed Jun 12 15:34:13 2013
 import sys, os
 sys.path.insert(0, os.pardir)
 import time
+import math
 from PyQt4 import QtGui, QtCore
 from numpy import genfromtxt, core
 from datetime import datetime 
@@ -21,6 +22,7 @@ from src.logfunc import stop_log
 from src.logfunc import resume_log
 from src.finddaysimeter import find_daysimeter
 from src.startnewlog import StartNewLog
+import src.constants as constants_
 from statuslight import StatusLight
 from statuswidget import StatusWidget
 
@@ -47,6 +49,7 @@ class LayoutExample(QtGui.QMainWindow):
         self.load_config()
         self.make_enabler()
 #        self.daysimeter_status()
+        self.disconnected = True
         self.show()
         
 #    def daysimeter_status(self):
@@ -119,9 +122,13 @@ class LayoutExample(QtGui.QMainWindow):
                                   
         self.start_logging = QtGui.QAction('&Start New Log', self, statusTip='Starts'+\
                                    ' a new data log', triggered=self.start_log)
+        
+        self.reset_batt = QtGui.QAction('&Reset Logged Hours', self, statusTip='Sets'+\
+                                   ' logged hours to 0', triggered=self.reset_battery)
+                                   
         # Adds the options to the menu
         file_actions = [open_act, set_savepath, print_act, quit_act]
-        daysimeter_actions = [self.make_download, self.start_logging, self.stop_logging, self.resume_logging]
+        daysimeter_actions = [self.make_download, self.start_logging, self.stop_logging, self.resume_logging, self.reset_batt]
         
         self.status_light = StatusLight(self)
         self.top_toolbar.addWidget(self.status_light)
@@ -240,6 +247,22 @@ class LayoutExample(QtGui.QMainWindow):
         for action in actions:
             daysim_menu.addAction(action)
         daysim_menu.addMenu(log_menu)
+        
+    def reset_battery(self):
+        path = find_daysimeter()
+        log_filename = constants_.LOG_FILENAME
+        if not path:
+            QtGui.QMessageBox.question(self, 'Error',
+                                   'No Daysimeter Found!', \
+                                   QtGui.QMessageBox.Ok)
+        else:
+            with open(path + log_filename, 'r') as log_fp:
+                info = log_fp.readlines()
+            info[4] = '0\n'
+            with open(path + log_filename, 'w') as log_fp:
+                for x in info:
+                    log_fp.write(x)
+            self.statusBar().showMessage('Logging hours reset', 2000)
     
     def start_log(self):
         self.new_log = StartNewLog()
@@ -254,13 +277,101 @@ class LayoutExample(QtGui.QMainWindow):
             
         
     def resume_log(self):
-        if resume_log():
-            self.statusBar().showMessage("Current Log Resumed", 2000)
-        else:
-            QtGui.QMessageBox.question(self, 'Error',
+        duration = datetime.now() - self.time_connected
+        print datetime.now(), self.time_connected, duration
+        duration = duration.total_seconds()
+        print duration
+        total_time = ''
+        
+        if math.floor(duration/(24*60*60)) > 0:
+            if math.floor(duration/(24*60*60)) > 1:
+                total_time = total_time + str(int(math.floor(duration/(24*60*60)))) + \
+                ' days'
+            else:
+                total_time = total_time + str(int(math.floor(duration/(24*60*60)))) + \
+                ' day'
+            duration = duration%(24*60*60)
+            
+            if math.floor(duration/(60*60)) > 0:
+                if math.floor(duration/(60*60)) > 1:
+                    if math.floor((duration%(60*60))/60) == 0:
+                        total_time = total_time + ' and ' + \
+                        str(int(math.floor(duration/(60*60)))) + ' hours'
+                    else: 
+                        total_time = total_time + ', ' + \
+                        str(int(math.floor(duration/(60*60)))) + ' hours and ' + \
+                        str(int(math.floor((duration%(60*60))/60))) + ' minutes'
+                else:
+                    if math.floor((duration%(60*60))/60) == 0:
+                        total_time = total_time + ' and ' + \
+                        str(int(math.floor(duration/(60*60)))) + ' hour'
+                    elif math.floor((duration%(60*60))/60) == 1: 
+                        total_time = total_time + ', ' + \
+                        str(int(math.floor(duration/(60*60)))) + ' hour and ' + \
+                        str(int(math.floor((duration%(60*60))/60))) + ' minute'
+                    else:
+                        total_time = total_time + ', ' + \
+                        str(int(math.floor(duration/(60*60)))) + ' hour and ' + \
+                        str(int(math.floor((duration%(60*60))/60))) + ' minutes'
+            elif math.floor((duration%(60*60))/60) > 0:
+                if math.floor((duration%(60*60))/60) > 1:
+                    total_time = total_time + ' and' + \
+                    str(int(math.floor((duration%(60*60))/60))) + ' minutes'
+                else:
+                    total_time = total_time + ' and' + \
+                    str(int(math.floor((duration%(60*60))/60))) + ' minute'
+        elif math.floor(duration/(60*60)):
+            if math.floor((duration%(60*60))/60) == 0:
+                if math.floor((duration%(60*60))/60) == 1:
+                    total_time = total_time + \
+                    str(int(math.floor(duration/(60*60)))) + ' hour'
+                else:
+                    total_time = total_time + \
+                    str(int(math.floor(duration/(60*60)))) + ' hours'
+            elif math.floor(duration/(60*60)) == 1 and math.floor((duration%(60*60))/60) == 1: 
+                total_time = total_time + \
+                str(int(math.floor(duration/(60*60)))) + ' hour and ' + \
+                str(int(math.floor((duration%(60*60))/60))) + ' minute'
+            elif math.floor(duration/(60*60)) == 1 and math.floor((duration%(60*60))/60) > 1: 
+                total_time = total_time + \
+                str(int(math.floor(duration/(60*60)))) + ' hour and ' + \
+                str(int(math.floor((duration%(60*60))/60))) + ' minutes'
+            elif math.floor(duration/(60*60)) > 1 and math.floor((duration%(60*60))/60) == 1: 
+                total_time = total_time + \
+                str(int(math.floor(duration/(60*60)))) + ' hours and ' + \
+                str(int(math.floor((duration%(60*60))/60))) + ' minute'   
+            else: 
+                total_time = total_time + \
+                str(int(math.floor(duration/(60*60)))) + ' hours and ' + \
+                str(int(math.floor((duration%(60*60))/60))) + ' minutes'
+        elif math.floor(duration/60) > 0:
+            if math.floor(duration/60) > 1:
+                total_time = total_time + str(int(math.floor(duration/60))) + ' minutes'
+            else:
+                total_time = total_time + str(int(math.floor(duration/60))) + ' minute'
+            
+        if total_time == '':
+            if resume_log():
+                self.statusBar().showMessage("Current Log Resumed", 2000)
+            else:
+                QtGui.QMessageBox.question(self, 'Error',
                                    'No Daysimeter Found!', \
                                    QtGui.QMessageBox.Ok)
-    
+            
+        else:
+            reply = QtGui.QMessageBox.question(self, 'Warning',
+                                       'Daysimeter has been plugged in for ' \
+                                       + total_time + '.\nAre you sure you want to resume current log?',
+                                       QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
+            
+            if reply == QtGui.QMessageBox.Yes:
+                if resume_log():
+                    self.statusBar().showMessage("Current Log Resumed", 2000)
+                else:
+                    QtGui.QMessageBox.question(self, 'Error',
+                                           'No Daysimeter Found!', \
+                                           QtGui.QMessageBox.Ok)
+
     def download_data(self):
         """Creates a widget to download data from the Daysimeter"""
         self.download = DownloadMake()
@@ -401,15 +512,20 @@ class LayoutExample(QtGui.QMainWindow):
         self.stop_logging.setEnabled(True)
         self.resume_logging.setEnabled(True)
         self.start_logging.setEnabled(True)
-
+        self.reset_batt.setEnabled(True)
+        if self.disconnected:
+            self.time_connected = datetime.now()
+            self.disconnected = False
     
     def disable_selection(self):
         self.make_download.setEnabled(False)
         self.stop_logging.setEnabled(False)
         self.resume_logging.setEnabled(False)
         self.start_logging.setEnabled(False)
+        self.reset_batt.setEnabled(False)
         self.statusBar().showMessage('No Daysimeter plugged into computer.',\
                                      500)
+        self.disconnected = True
                                      
     def run(self):
         """Runs the main window"""
