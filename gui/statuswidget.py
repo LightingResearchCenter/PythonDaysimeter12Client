@@ -81,23 +81,25 @@ class StatusWidget(QtGui.QWidget):
         self.status_watcher.start()
         
     def find_status(self):
+        lens = {17,35}
         if not find_daysimeter():
             self.set_not_found()
         else:
             path = find_daysimeter()
             filename = constants_.LOG_FILENAME
-        
-            with open(path + filename, 'r') as log_fp:
-                info = log_fp.readlines()
-            if int(info[0]) == 0:
-                self.set_standby()
-            elif int(info[0]) == 2:
-                self.set_new()
-            elif int(info[0]) == 4:
-                self.set_resume()
-            else:
-                self.set_corrupt()
-                print info[0]
+            if path:
+                with open(path + filename, 'r') as log_fp:
+                    info = log_fp.readlines()
+                if not len(info) in lens:
+                    self.set_corrupt()
+                elif int(info[0]) == 0:
+                    self.set_standby()
+                elif int(info[0]) == 2:
+                    self.set_new()
+                elif int(info[0]) == 4:
+                    self.set_resume()
+                else:
+                    self.set_corrupt()
             
         
 class StandbyStatus(QtGui.QWidget):

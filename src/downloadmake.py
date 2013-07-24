@@ -10,6 +10,7 @@ import struct
 import logging
 import time
 import math
+import shutil
 from ConfigParser import SafeConfigParser
 from datetime import datetime
 from datetime import timedelta
@@ -107,7 +108,8 @@ class DownloadMake(QtGui.QWidget):
                 self.start.setText('Downloading...')
                 self.status_bar.showMessage('Processing Data...')
                 self.start.setEnabled(False)
-                self.downloader = DownloadDaysimeter(self)
+                self.downloader = DownloadDaysimeter(self, [self.savedir, \
+                                                     self.filename])
                 self.downloader.error.connect(self.error)
                 self.connect(self.downloader, QtCore.SIGNAL('update'), \
                 self.update_progress)
@@ -116,6 +118,8 @@ class DownloadMake(QtGui.QWidget):
                 self.connect(self.downloader, QtCore.SIGNAL('make'), \
                 self.make)
                 self.downloader.start()
+                
+                
         
     def make(self, data):
         """
@@ -355,8 +359,10 @@ class DownloadDaysimeter(QtCore.QThread):
     
     error = QtCore.pyqtSignal()
     
-    def __init__(self, parent):
+    def __init__(self, parent, args):
         QtCore.QThread.__init__(self, parent)
+        self.savedir = args[0]
+        self.filename = args[1]
         
     def run(self):
         """
@@ -574,6 +580,17 @@ class DownloadDaysimeter(QtCore.QThread):
         self.emit(QtCore.SIGNAL('make'),([device_model, device_sn, \
         calib_info], [times, mat_times, red, green, blue, lux, cla, cs, \
         activity, resets]))
+        
+        shutil.copy(os.path.join(path, constants_.LOG_FILENAME), \
+                    self.savedir)
+        shutil.copy(os.path.join(path, constants_.DATA_FILENAME), \
+                    self.savedir)
+        os.rename(os.path.join(self.savedir, constants_.LOG_FILENAME), \
+                  os.path.join(self.savedir, self.filename + \
+                  '-LOG.txt'))
+        os.rename(os.path.join(self.savedir, constants_.DATA_FILENAME), \
+                  os.path.join(self.savedir, self.filename + \
+                  '-DATA.txt'))
         
     def calc_lux_cla(self, *args):
         """ PURPOSE: Calculates CS and CLA. """

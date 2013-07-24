@@ -89,7 +89,7 @@ class LayoutExample(QtGui.QMainWindow):
         download_shortcut = QtGui.QShortcut(QtGui.QKeySequence('CTRL+D'),\
         self, self.download_data, self.download_data, QtCore.Qt.WidgetShortcut)
         
-        open_shortcut = QtGui.QShortcut(QtGui.QKeySequence('CTRL+O'),\
+        open_shortcut = QtGui.QShortcut(QtGui.QKeySequence('CTRL+L'),\
         self, self.open_file, self.open_file, QtCore.Qt.WidgetShortcut)
         
         quit_shortcut = QtGui.QShortcut(QtGui.QKeySequence('CTRL+Q'),\
@@ -98,14 +98,17 @@ class LayoutExample(QtGui.QMainWindow):
         print_shortcut = QtGui.QShortcut(QtGui.QKeySequence('CTRL+P'),\
         self, self.go_print, self.go_print, QtCore.Qt.WidgetShortcut)
         
-        set_save_shortcut = QtGui.QShortcut(QtGui.QKeySequence('CTRL+S'),\
+        set_save_shortcut = QtGui.QShortcut(QtGui.QKeySequence('SHIFT+CTRL+S'),\
         self, partial(self.load_config, update='savepath'), partial(self.load_config, update='savepath'), QtCore.Qt.WidgetShortcut)
         
         new_log_shortcut = QtGui.QShortcut(QtGui.QKeySequence('CTRL+N'),\
         self, self.start_log, self.start_log, QtCore.Qt.WidgetShortcut)
 
-        reset_batt_shortcut = QtGui.QShortcut(QtGui.QKeySequence('CTRL+R'),\
+        reset_batt_shortcut = QtGui.QShortcut(QtGui.QKeySequence('SHIFT+CTRL+R'),\
         self, self.reset_battery, self.reset_battery, QtCore.Qt.WidgetShortcut)
+        
+        fix_head_shortcut = QtGui.QShortcut(QtGui.QKeySequence('SHIFT+CTRL+F'),\
+        self, self.fix_header, self.fix_header, QtCore.Qt.WidgetShortcut)
         
     def make_toolbar(self):
         self.top_toolbar = QtGui.QToolBar()
@@ -303,9 +306,7 @@ class LayoutExample(QtGui.QMainWindow):
         
     def resume_log(self):
         duration = datetime.now() - self.time_connected
-        print datetime.now(), self.time_connected, duration
         duration = duration.total_seconds()
-        print duration
         total_time = ''
         
         if math.floor(duration/(24*60*60)) > 0:
@@ -496,6 +497,25 @@ class LayoutExample(QtGui.QMainWindow):
         cdf_dict['attrs'] = attrs
         return cdf_dict
         
+    def fix_header(self):
+        lens = {17, 35}
+        path = find_daysimeter()
+        if path:
+            with open(path + constants_.LOG_FILENAME, 'r') as log_fp:
+                info = log_fp.readlines()
+            for x in info:
+                if x[:len(constants_.BATTERY_STRING)].strip(' ') + '\n' == constants_.BATTERY_STRING:
+                    index = info.index(x)
+                    break
+            temp = info[:index+1]
+            if len(temp) in lens:
+                info = temp
+                with open(path + constants_.LOG_FILENAME, 'w') as log_fp:
+                    for x in info:
+                        log_fp.write(x)
+            else:
+                self.statusBar().showMessage('Could not fix header file.', 2000)
+        
     def update_header(self, file_name):
         """Updates the header of the older daysimeter txt data files
         
@@ -533,14 +553,23 @@ class LayoutExample(QtGui.QMainWindow):
         self.enabler.start()
         
     def enable_selection(self):
-        self.make_download.setEnabled(True)
-        self.stop_logging.setEnabled(True)
-        self.resume_logging.setEnabled(True)
-        self.start_logging.setEnabled(True)
-        self.reset_batt.setEnabled(True)
-        if self.disconnected:
-            self.time_connected = datetime.now()
-            self.disconnected = False
+        if not self.status_widget.corrupt.isVisible():
+            self.make_download.setEnabled(True)
+            self.stop_logging.setEnabled(True)
+            self.resume_logging.setEnabled(True)
+            self.start_logging.setEnabled(True)
+            self.reset_batt.setEnabled(True)
+            self.status_light.set_green()
+            if self.disconnected:
+                self.time_connected = datetime.now()
+                self.disconnected = False
+        else:
+            self.status_light.set_yellow()
+            self.make_download.setEnabled(False)
+            self.stop_logging.setEnabled(False)
+            self.resume_logging.setEnabled(False)
+            self.start_logging.setEnabled(False)
+            self.reset_batt.setEnabled(False)
     
     def disable_selection(self):
         self.make_download.setEnabled(False)
@@ -548,6 +577,7 @@ class LayoutExample(QtGui.QMainWindow):
         self.resume_logging.setEnabled(False)
         self.start_logging.setEnabled(False)
         self.reset_batt.setEnabled(False)
+        self.status_light.set_red()
         self.statusBar().showMessage('No Daysimeter plugged into computer.',\
                                      500)
         self.disconnected = True

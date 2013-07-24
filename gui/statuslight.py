@@ -30,7 +30,7 @@ class StatusLight(QtGui.QWidget):
         self.green.hide()
         self.red.hide()
         
-        self.set_status()
+#        self.set_status()
         
     def set_status(self):
         self.status_watcher = SetStatus(self)
@@ -47,6 +47,11 @@ class StatusLight(QtGui.QWidget):
         self.yellow.hide()
         self.green.hide()
         self.red.show()
+    
+    def set_yellow(self):
+        self.green.hide()
+        self.red.hide()
+        self.yellow.show()
         
 class GreenLight(QtGui.QWidget):
     
@@ -69,7 +74,7 @@ class YellowLight(QtGui.QWidget):
     def __init__(self, parent=None):
         super(YellowLight, self).__init__(parent)
         self.setFixedSize(22,22)
-        self.yellow = QtGui.QColor(237, 242, 97)
+        self.yellow = QtGui.QColor(227, 227, 93)
         
     def paintEvent(self, e):
         painter = QtGui.QPainter()
