@@ -498,7 +498,6 @@ class LayoutExample(QtGui.QMainWindow):
         return cdf_dict
         
     def fix_header(self):
-        lens = {17, 35}
         path = find_daysimeter()
         if path:
             with open(path + constants_.LOG_FILENAME, 'r') as log_fp:
@@ -508,7 +507,7 @@ class LayoutExample(QtGui.QMainWindow):
                     index = info.index(x)
                     break
             temp = info[:index+1]
-            if len(temp) in lens:
+            if len(temp) == 17:
                 info = temp
                 with open(path + constants_.LOG_FILENAME, 'w') as log_fp:
                     for x in info:
