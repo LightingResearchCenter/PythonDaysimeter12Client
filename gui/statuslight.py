@@ -12,8 +12,11 @@ from src.finddaysimeter import find_daysimeter
 from PyQt4 import QtGui, QtCore
 
 class StatusLight(QtGui.QWidget):
-    
+    """
+    Status indicator light for daysimeter device.
+    """
     def __init__(self, parent=None):
+        """ Creates the "lights" and adds them to the layout. """
         super(StatusLight, self).__init__(parent)
 #        self.setFixedSize(22,22)
         
@@ -30,37 +33,43 @@ class StatusLight(QtGui.QWidget):
         self.green.hide()
         self.red.hide()
         
-#        self.set_status()
+        self.set_status()
         
     def set_status(self):
+        """ Creates a watcher to determine whether a daysimeter is attached """
         self.status_watcher = SetStatus(self)
         self.status_watcher.connected.connect(self.set_green)
         self.status_watcher.not_connected.connect(self.set_red)
         self.status_watcher.start()
         
     def set_green(self):
+        """ Sets the green light """
         self.yellow.hide()
         self.red.hide()
         self.green.show()
         
     def set_red(self):
+        """ sets the red light """
         self.yellow.hide()
         self.green.hide()
         self.red.show()
     
     def set_yellow(self):
+        """ sets the yellow light """
         self.green.hide()
         self.red.hide()
         self.yellow.show()
         
 class GreenLight(QtGui.QWidget):
-    
+    """ Creates a green circle """
     def __init__(self, parent=None):
+        """ Initializes circle with fixed size and color """
         super(GreenLight, self).__init__(parent)
-        self.setFixedSize(22,22)
+        self.setFixedSize(22, 22)
         self.green = QtGui.QColor(44, 173, 9)
         
     def paintEvent(self, e):
+        """ Draws the circle """
         painter = QtGui.QPainter()
         painter.begin(self)
         painter.setRenderHint(QtGui.QPainter.Antialiasing, True)        
@@ -70,13 +79,15 @@ class GreenLight(QtGui.QWidget):
         painter.end()
 
 class YellowLight(QtGui.QWidget):
-    
+    """ Creates a yellow circle """
     def __init__(self, parent=None):
+        """ Initializes circle with fixed size and color """
         super(YellowLight, self).__init__(parent)
-        self.setFixedSize(22,22)
+        self.setFixedSize(22, 22)
         self.yellow = QtGui.QColor(227, 227, 93)
         
     def paintEvent(self, e):
+        """ Draws the circle """
         painter = QtGui.QPainter()
         painter.begin(self)
         painter.setRenderHint(QtGui.QPainter.Antialiasing, True)        
@@ -87,13 +98,15 @@ class YellowLight(QtGui.QWidget):
         
         
 class RedLight(QtGui.QWidget):
-    
+    """ Creates a red circle """
     def __init__(self, parent=None):
+        """ Initializes circle with fixed size and color """
         super(RedLight, self).__init__(parent)
-        self.setFixedSize(22,22)
+        self.setFixedSize(22, 22)
         self.red = QtGui.QColor(184, 18, 27)
         
     def paintEvent(self, e):
+        """ Draws the circle """
         painter = QtGui.QPainter()
         painter.begin(self)
         painter.setRenderHint(QtGui.QPainter.Antialiasing, True)        
@@ -103,6 +116,7 @@ class RedLight(QtGui.QWidget):
         painter.end()
         
 class SetStatus(QtCore.QThread):
+    """ Determines whether a daysimeter is attached or not """
     connected = QtCore.pyqtSignal()
     not_connected = QtCore.pyqtSignal()    
     
@@ -111,6 +125,7 @@ class SetStatus(QtCore.QThread):
         QtCore.QThread.__init__(self, parent)
         
     def run(self):
+        """ runs the thread """
         while True:
             if not find_daysimeter():
                 self.not_connected.emit()
@@ -120,6 +135,7 @@ class SetStatus(QtCore.QThread):
     
         
 def main():
+    """ runs the status indicator """
     app = QtGui.QApplication(sys.argv)
     light = StatusLight()
     light.show()

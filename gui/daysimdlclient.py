@@ -13,7 +13,7 @@ from PyQt4 import QtGui, QtCore
 from numpy import genfromtxt, core
 from datetime import datetime 
 import graphingwidget as gw
-from ConfigParser import ConfigParser
+from ConfigParser import ConfigParser, SafeConfigParser
 from functools import partial
 from spacepy import pycdf
 from re import sub
@@ -51,6 +51,7 @@ class LayoutExample(QtGui.QMainWindow):
 #        self.daysimeter_status()
         self.disconnected = True
         self.make_shortcuts()
+        
         self.show()
         
         
@@ -63,6 +64,7 @@ class LayoutExample(QtGui.QMainWindow):
 #        self.addDockWidget(QtCore.Qt.TopDockWidgetArea, self.daysim_status)
         
     def go_print(self):
+        """ Prints the graph and metadata """
         printer = QtGui.QPrinter(QtGui.QPrinter.PrinterResolution)
         printer.setOrientation(QtGui.QPrinter.Landscape)
         printer.setResolution(300)
@@ -70,47 +72,57 @@ class LayoutExample(QtGui.QMainWindow):
         reply = QtGui.QPrintDialog(printer, self)
         if reply.exec_() == QtGui.QDialog.Accepted:
             painter = QtGui.QPainter(printer)
-            printerWidth = printer.pageRect().width()
-            printerHeight = printer.pageRect().height()
+            printer_width = printer.pageRect().width()
+            printer_height = printer.pageRect().height()
             self.print_widget = self.main_widget
             reset_size = self.main_widget.size()
             self.print_widget.resize(1200, 900)
-            xscale = printerWidth  / self.print_widget.plot.width()
-            yscale = printerHeight  / self.print_widget.plot.height()
+            xscale = printer_width  / self.print_widget.plot.width()
+            yscale = printer_height  / self.print_widget.plot.height()
             painter.scale(xscale, yscale)
-            self.print_widget.plot.render(painter, QtCore.QPoint((printer.paperRect().width() - printer.pageRect().width())/4,0))
-            xoff = int(printer.pageRect().width() - self.print_widget.metadata.width() * xscale)/xscale
-            yoff = int(printer.pageRect().height() - self.print_widget.metadata.height() * yscale)/yscale
-            self.print_widget.metadata.render(painter, QtCore.QPoint(xoff, yoff))
+            self.print_widget.plot.render(painter, QtCore.QPoint\
+            ((printer.paperRect().width() - printer.pageRect().width())/4,0))
+            xoff = int(printer.pageRect().width() - \
+                       self.print_widget.metadata.width() * xscale)/xscale
+            yoff = int(printer.pageRect().height() - \
+                       self.print_widget.metadata.height() * yscale)/yscale
+            self.print_widget.metadata.render(painter, \
+                                              QtCore.QPoint(xoff, yoff))
             painter.end()
             self.print_widget.resize(reset_size)
             
     def make_shortcuts(self):
-        download_shortcut = QtGui.QShortcut(QtGui.QKeySequence('CTRL+D'),\
+        """ Creates the keyboard shortcuts for the Daysimeter Client """
+        download_shortcut = QtGui.QShortcut(QtGui.QKeySequence('CTRL+D'), \
         self, self.download_data, self.download_data, QtCore.Qt.WidgetShortcut)
         
-        open_shortcut = QtGui.QShortcut(QtGui.QKeySequence('CTRL+L'),\
+        open_shortcut = QtGui.QShortcut(QtGui.QKeySequence('CTRL+L'), \
         self, self.open_file, self.open_file, QtCore.Qt.WidgetShortcut)
         
-        quit_shortcut = QtGui.QShortcut(QtGui.QKeySequence('CTRL+Q'),\
+        quit_shortcut = QtGui.QShortcut(QtGui.QKeySequence('CTRL+Q'), \
         self, self.close, self.close, QtCore.Qt.WidgetShortcut)
         
-        print_shortcut = QtGui.QShortcut(QtGui.QKeySequence('CTRL+P'),\
+        print_shortcut = QtGui.QShortcut(QtGui.QKeySequence('CTRL+P'), \
         self, self.go_print, self.go_print, QtCore.Qt.WidgetShortcut)
         
-        set_save_shortcut = QtGui.QShortcut(QtGui.QKeySequence('SHIFT+CTRL+S'),\
-        self, partial(self.load_config, update='savepath'), partial(self.load_config, update='savepath'), QtCore.Qt.WidgetShortcut)
+        set_save_shortcut = QtGui.QShortcut(QtGui.QKeySequence('SHIFT+CTRL+S'), \
+        self, partial(self.load_config, update='savepath'), \
+        partial(self.load_config, update='savepath'), QtCore.Qt.WidgetShortcut)
         
-        new_log_shortcut = QtGui.QShortcut(QtGui.QKeySequence('CTRL+N'),\
+        new_log_shortcut = QtGui.QShortcut(QtGui.QKeySequence('CTRL+N'), \
         self, self.start_log, self.start_log, QtCore.Qt.WidgetShortcut)
 
-        reset_batt_shortcut = QtGui.QShortcut(QtGui.QKeySequence('SHIFT+CTRL+R'),\
+        reset_batt_shortcut = QtGui.QShortcut(QtGui.QKeySequence('SHIFT+CTRL+R'), \
         self, self.reset_battery, self.reset_battery, QtCore.Qt.WidgetShortcut)
         
-        fix_head_shortcut = QtGui.QShortcut(QtGui.QKeySequence('SHIFT+CTRL+F'),\
+        fix_head_shortcut = QtGui.QShortcut(QtGui.QKeySequence('SHIFT+CTRL+F'), \
         self, self.fix_header, self.fix_header, QtCore.Qt.WidgetShortcut)
         
+        process_shortcut = QtGui.QShortcut(QtGui.QKeySequence('SHIFT+CTRL+P'), \
+        self, self.process_data, self.process_data, QtCore.Qt.WidgetShortcut)
+        
     def make_toolbar(self):
+        """ Creates the top toolbar where all the functions are located """
         self.top_toolbar = QtGui.QToolBar()
         self.top_toolbar.setAllowedAreas(QtCore.Qt.TopToolBarArea)
         self.top_toolbar.setMovable(False)
@@ -141,6 +153,11 @@ class LayoutExample(QtGui.QMainWindow):
                                   "and write to file",
                                   triggered=self.download_data)
                                   
+        self.data_process = QtGui.QAction("&Process Data", 
+                                  self,
+                                  statusTip="Processes downloaded Daysimeter files",
+                                  triggered=self.process_data)
+                                  
         self.stop_logging = QtGui.QAction('&Stop Current Log', self, statusTip='Stop ' + \
                                   'current log', triggered=self.stop_log)
                                   
@@ -154,8 +171,10 @@ class LayoutExample(QtGui.QMainWindow):
                                    ' logged hours to 0', triggered=self.reset_battery)
                                    
         # Adds the options to the menu
-        file_actions = [open_act, set_savepath, print_act, quit_act]
-        daysimeter_actions = [self.make_download, self.start_logging, self.stop_logging, self.resume_logging, self.reset_batt]
+        file_actions = [open_act, set_savepath, self.data_process, print_act, quit_act]
+        daysimeter_actions = [self.make_download, self.start_logging, \
+                              self.stop_logging, self.resume_logging, \
+                              self.reset_batt]
         
         self.status_light = StatusLight(self)
         self.top_toolbar.addWidget(self.status_light)
@@ -202,7 +221,8 @@ class LayoutExample(QtGui.QMainWindow):
         """Create a dialog to set the savepath and set it in the ini file"""
         if self.init.has_section("Application Settings"):
             dir_name = str(QtGui.QFileDialog.getExistingDirectory(self,
-                       directory=self.init.get('Application Settings', 'savepath')))
+                       directory=self.init.get('Application Settings', \
+                                               'savepath')))
         else:
             dir_name = str(QtGui.QFileDialog.getExistingDirectory(self,
                        directory=os.getcwd()))
@@ -277,6 +297,7 @@ class LayoutExample(QtGui.QMainWindow):
         daysim_menu.addMenu(log_menu)
         
     def reset_battery(self):
+        """ Resets the "number of logged hours" line in a Daysimeter's Header """
         path = find_daysimeter()
         log_filename = constants_.LOG_FILENAME
         if not path:
@@ -293,9 +314,11 @@ class LayoutExample(QtGui.QMainWindow):
             self.statusBar().showMessage('Logging hours reset', 2000)
     
     def start_log(self):
+        """ Starts a new log on the Daysimeter """
         self.new_log = StartNewLog()
     
     def stop_log(self):
+        """ Stops current log """
         if stop_log():
             self.statusBar().showMessage("Current Log Stopped", 2000)
         else:
@@ -305,6 +328,7 @@ class LayoutExample(QtGui.QMainWindow):
             
         
     def resume_log(self):
+        """ Resumes teh current log from where it left off """
         duration = datetime.now() - self.time_connected
         duration = duration.total_seconds()
         total_time = ''
@@ -316,7 +340,7 @@ class LayoutExample(QtGui.QMainWindow):
             else:
                 total_time = total_time + str(int(math.floor(duration/(24*60*60)))) + \
                 ' day'
-            duration = duration%(24*60*60)
+            duration = duration % (24 * 60 * 60)
             
             if math.floor(duration/(60*60)) > 0:
                 if math.floor(duration/(60*60)) > 1:
@@ -354,15 +378,18 @@ class LayoutExample(QtGui.QMainWindow):
                 else:
                     total_time = total_time + \
                     str(int(math.floor(duration/(60*60)))) + ' hours'
-            elif math.floor(duration/(60*60)) == 1 and math.floor((duration%(60*60))/60) == 1: 
+            elif math.floor(duration/(60*60)) == 1 and \
+                 math.floor((duration%(60*60))/60) == 1: 
                 total_time = total_time + \
                 str(int(math.floor(duration/(60*60)))) + ' hour and ' + \
                 str(int(math.floor((duration%(60*60))/60))) + ' minute'
-            elif math.floor(duration/(60*60)) == 1 and math.floor((duration%(60*60))/60) > 1: 
+            elif math.floor(duration/(60*60)) == 1 and \
+                 math.floor((duration%(60*60))/60) > 1: 
                 total_time = total_time + \
                 str(int(math.floor(duration/(60*60)))) + ' hour and ' + \
                 str(int(math.floor((duration%(60*60))/60))) + ' minutes'
-            elif math.floor(duration/(60*60)) > 1 and math.floor((duration%(60*60))/60) == 1: 
+            elif math.floor(duration/(60*60)) > 1 and \
+                 math.floor((duration%(60*60))/60) == 1: 
                 total_time = total_time + \
                 str(int(math.floor(duration/(60*60)))) + ' hours and ' + \
                 str(int(math.floor((duration%(60*60))/60))) + ' minute'   
@@ -372,9 +399,11 @@ class LayoutExample(QtGui.QMainWindow):
                 str(int(math.floor((duration%(60*60))/60))) + ' minutes'
         elif math.floor(duration/60) > 0:
             if math.floor(duration/60) > 1:
-                total_time = total_time + str(int(math.floor(duration/60))) + ' minutes'
+                total_time = total_time + \
+                             str(int(math.floor(duration/60))) + ' minutes'
             else:
-                total_time = total_time + str(int(math.floor(duration/60))) + ' minute'
+                total_time = total_time + \
+                             str(int(math.floor(duration/60))) + ' minute'
             
         if total_time == '':
             if resume_log():
@@ -401,6 +430,26 @@ class LayoutExample(QtGui.QMainWindow):
     def download_data(self):
         """Creates a widget to download data from the Daysimeter"""
         self.download = DownloadMake()
+        self.connect(self.download, QtCore.SIGNAL('savename'), self.read_data)
+        
+    def process_data(self):
+        """ Process already downloaded daysimeter files """
+        self.parser = SafeConfigParser()
+        if not self.parser.read('daysimeter.ini') == []:
+            if self.parser.has_section('Application Settings'):
+                self.savedir = self.parser.get('Application Settings', 'savepath')
+            else:
+                self.savedir = os.getcwd()
+        else:
+            self.savedir = os.getcwd()
+            
+        log_filename = QtGui.QFileDialog.getOpenFileName(self, \
+        'Select Header File', self.savedir, ('Text Files (*.txt)'))
+        
+        data_filename = QtGui.QFileDialog.getOpenFileName(self, \
+        'Select Data File', self.savedir, ('Text Files (*.txt)'))
+        
+        self.download = DownloadMake(args=[log_filename, data_filename])
         self.connect(self.download, QtCore.SIGNAL('savename'), self.read_data)
         
     def read_data(self, file_name):
@@ -498,6 +547,9 @@ class LayoutExample(QtGui.QMainWindow):
         return cdf_dict
         
     def fix_header(self):
+        """
+        Attempts to fix header file. If unable displays status informing user 
+        """
         path = find_daysimeter()
         if path:
             with open(path + constants_.LOG_FILENAME, 'r') as log_fp:
@@ -546,12 +598,22 @@ class LayoutExample(QtGui.QMainWindow):
         return data_array[new_names]
         
     def make_enabler(self):
+        """
+        Makes an enabler to determine whether daysimeter functions should be
+        enabled or disabled.
+        
+        enabler - thread that constantly checks to see if a Daysimeter is
+        attached to computer
+        """
         self.enabler = EnableButtons(self)
         self.enabler.connected.connect(self.enable_selection)
         self.enabler.not_connected.connect(self.disable_selection)
         self.enabler.start()
         
     def enable_selection(self):
+        """
+        Enables daysimeter functions
+        """
         if not self.status_widget.corrupt.isVisible():
             self.make_download.setEnabled(True)
             self.stop_logging.setEnabled(True)
@@ -571,13 +633,16 @@ class LayoutExample(QtGui.QMainWindow):
             self.reset_batt.setEnabled(False)
     
     def disable_selection(self):
+        """
+        Disables Daysimeter functions.
+        """
         self.make_download.setEnabled(False)
         self.stop_logging.setEnabled(False)
         self.resume_logging.setEnabled(False)
         self.start_logging.setEnabled(False)
         self.reset_batt.setEnabled(False)
         self.status_light.set_red()
-        self.statusBar().showMessage('No Daysimeter plugged into computer.',\
+        self.statusBar().showMessage('No Daysimeter plugged into computer.', \
                                      500)
         self.disconnected = True
                                      
@@ -588,14 +653,18 @@ class LayoutExample(QtGui.QMainWindow):
 
         
 class EnableButtons(QtCore.QThread):
+    """
+    Constantly checks to see if a Daysimeter is attached to the computer
+    """
     connected = QtCore.pyqtSignal()
     not_connected = QtCore.pyqtSignal()    
     
-    def __init__(self, args, parent=None):
+    def __init__(self, parent=None):
         """Initializes Thread."""
         QtCore.QThread.__init__(self, parent)
         
     def run(self):
+        """ Runs the thread """
         while True:
             if not find_daysimeter():
                 self.not_connected.emit()

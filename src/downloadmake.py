@@ -36,11 +36,25 @@ class DownloadMake(QtGui.QWidget):
     PURPOSE: Widget that manages downloading daysimeter data and making CDF 
     or CSV files. 
     """
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, args=None):
         super(DownloadMake, self).__init__(parent)
         dl_skip_shortcut = QtGui.QShortcut(QtGui.QKeySequence('SHIFT+CTRL+G'),\
         self, self.skip_prog, self.skip_prog, QtCore.Qt.WidgetShortcut)
+        if not args:
+            path = find_daysimeter()
+            if path:
+                self.log_filename = os.path.join(path, constants_.LOG_FILENAME)
+                self.data_filename = os.path.join(path, constants_.DATA_FILENAME)
+                self.download_make = True
+            else:
+                sys.exit(1)
+        else:
+            self.log_filename = args[0]
+            self.data_filename = args[1]
+            self.download_make = False
+        
         self.initUI()
+        
         
     def initUI(self):
         """ PURPOSE: Initialize the GUI """
@@ -69,7 +83,7 @@ class DownloadMake(QtGui.QWidget):
         self.pbar.setValue(self.step)
         self.pbar.hide()
         self.done.hide()        
-        self.show()
+        
         
         self.parser = SafeConfigParser()
         if not self.parser.read('daysimeter.ini') == []:
@@ -79,6 +93,10 @@ class DownloadMake(QtGui.QWidget):
                 self.savedir = os.getcwd()
         else:
             self.savedir = os.getcwd()
+            
+        self.start.hide()
+        self.start_download()   
+        self.show()
         
     def start_download(self):
         """ PURPOSE: Starts and manages download of data """
@@ -86,8 +104,7 @@ class DownloadMake(QtGui.QWidget):
             self.status_bar.showMessage('No Daysimeter plugged into this' + \
             ' computer.')
         else:
-            path = find_daysimeter()
-            with open(path + constants_.LOG_FILENAME,'r') as log_fp:
+            with open(self.log_filename,'r') as log_fp:
                 info = log_fp.readlines()
                 if len(info) == 17:
                     daysim_id = info[1].strip('\n')
@@ -109,7 +126,10 @@ class DownloadMake(QtGui.QWidget):
                 self.status_bar.showMessage('Processing Data...')
                 self.start.setEnabled(False)
                 self.downloader = DownloadDaysimeter(self, [self.savedir, \
-                                                     self.filename])
+                                                     self.filename, \
+                                                     self.log_filename, \
+                                                     self.data_filename, \
+                                                     self.download_make])
                 self.downloader.error.connect(self.error)
                 self.connect(self.downloader, QtCore.SIGNAL('update'), \
                 self.update_progress)
@@ -118,6 +138,8 @@ class DownloadMake(QtGui.QWidget):
                 self.connect(self.downloader, QtCore.SIGNAL('make'), \
                 self.make)
                 self.downloader.start()
+            else:
+                self.cancelled()
                 
                 
         
@@ -162,6 +184,8 @@ class DownloadMake(QtGui.QWidget):
         self.pbar.hide()
         self.done.setText('Download Cancelled')
         self.start.hide()
+        self.done.setEnabled(True)
+        self.done.setText('Close')
         self.done.show()
         self.status_bar.showMessage('Download cancelled.')
         
@@ -174,6 +198,7 @@ class DownloadMake(QtGui.QWidget):
         self.done.setText('Close')
         self.start.hide()
         self.done.show()
+        self.done.setEnabled(True)
         self.status_bar.showMessage('An error occurred.')
         
     def fake_progress(self):
@@ -363,14 +388,17 @@ class DownloadDaysimeter(QtCore.QThread):
         QtCore.QThread.__init__(self, parent)
         self.savedir = args[0]
         self.filename = args[1]
+        self.log_filename = args[2]
+        self.data_filename = args[3]
+        self.move = args[4]
         
     def run(self):
         """
         PURPOSE: Reads raw binary data, processed and packages it.
         """
         
-        log_filename = constants_.LOG_FILENAME
-        data_filename = constants_.DATA_FILENAME
+        log_filename = self.log_filename
+        data_filename = self.data_filename
         adj_active_flag_ = constants_.ADJ_ACTIVE_FLAG
         old_flag = constants_.OLD_FLAG
         adj_active_firm = constants_.ADJ_ACTIVE_FIRM
@@ -384,7 +412,7 @@ class DownloadDaysimeter(QtCore.QThread):
         path = find_daysimeter()
         #Open header file for reading
         try:
-            logfile_fp = open(path + log_filename,'r')
+            logfile_fp = open(log_filename,'r')
         #Catch IO exception (if present), add to log and quit
         except IOError:
             logging.error('Could not open logfile')
@@ -427,7 +455,7 @@ class DownloadDaysimeter(QtCore.QThread):
         #Open binary data file for reading
         try:
             self.emit(QtCore.SIGNAL('fprogress'))
-            datafile_fp = open(path + data_filename,'rb')
+            datafile_fp = open(data_filename,'rb')
         #Catch IO exception (if present), add to log and quit
         except IOError:
             logging.error('Could not open datafile')
@@ -581,16 +609,17 @@ class DownloadDaysimeter(QtCore.QThread):
         calib_info], [times, mat_times, red, green, blue, lux, cla, cs, \
         activity, resets]))
         
-        shutil.copy(os.path.join(path, constants_.LOG_FILENAME), \
-                    self.savedir)
-        shutil.copy(os.path.join(path, constants_.DATA_FILENAME), \
-                    self.savedir)
-        os.rename(os.path.join(self.savedir, constants_.LOG_FILENAME), \
-                  os.path.join(self.savedir, self.filename + \
-                  '-LOG.txt'))
-        os.rename(os.path.join(self.savedir, constants_.DATA_FILENAME), \
-                  os.path.join(self.savedir, self.filename + \
-                  '-DATA.txt'))
+        if self.move:
+            shutil.copy(os.path.join(path, constants_.LOG_FILENAME), \
+                        self.savedir)
+            shutil.copy(os.path.join(path, constants_.DATA_FILENAME), \
+                        self.savedir)
+            os.rename(os.path.join(self.savedir, constants_.LOG_FILENAME), \
+                      os.path.join(self.savedir, self.filename + \
+                      '-LOG.txt'))
+            os.rename(os.path.join(self.savedir, constants_.DATA_FILENAME), \
+                      os.path.join(self.savedir, self.filename + \
+                      '-DATA.txt'))
         
     def calc_lux_cla(self, *args):
         """ PURPOSE: Calculates CS and CLA. """
