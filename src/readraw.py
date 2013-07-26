@@ -158,7 +158,7 @@ def read_raw():
             continue
         resets[x] = y
         x += 1
-    
+
     #If there were resets, R,G,B,A are now shorter than resets,
     #so we shall resize it.
     del resets[len(red):]
@@ -172,7 +172,7 @@ def read_raw():
             adj_active_flag_ = True
     elif float(info[1]) in adj_active_firm:
         adj_active_flag_ = True
-    
+
     #If we are using the firmware version where the LSB of
     #activity is actually a monitor for RGB values rolling over
     #we need to adjust the values accordingly.
@@ -182,7 +182,7 @@ def read_raw():
         red = adjusted_rgb[0]
         green = adjusted_rgb[1]
         blue = adjusted_rgb[2]
-        
+    
     #Create list for time called times (because time is
     #a python module)
     times = [-1] * len(red)
@@ -219,14 +219,14 @@ def read_raw():
     #Unpack lux and cla
     lux = temp[0]
     cla = temp[1]
-
+    
     del(temp)
     #Apply a zero phase shift filter to cla and activity
     cla = lowpass_filter(cla, log_interval)
     activity = lowpass_filter(activity, log_interval)
     #Calculate cs
     cs = calc_cs(cla)
-
+    
     #Return a tuple of lists of mixed lists. The first list in the tuple is
     #global attributes, and the second is variable data
     return ([device_model, device_sn, calib_info], \
