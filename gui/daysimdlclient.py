@@ -298,20 +298,27 @@ class LayoutExample(QtGui.QMainWindow):
         
     def reset_battery(self):
         """ Resets the "number of logged hours" line in a Daysimeter's Header """
-        path = find_daysimeter()
-        log_filename = constants_.LOG_FILENAME
-        if not path:
-            QtGui.QMessageBox.question(self, 'Error',
-                                   'No Daysimeter Found!', \
-                                   QtGui.QMessageBox.Ok)
+        reply = QtGui.QMessageBox.question(self, 'Message',
+                                   'Confirm Battery Reset.', \
+                                   QtGui.QMessageBox.Ok, QtGui.QMessageBox.Cancel)        
+        
+        if reply == QtGui.QMessageBox.Ok:
+            path = find_daysimeter()
+            log_filename = constants_.LOG_FILENAME
+            if not path:
+                QtGui.QMessageBox.question(self, 'Error',
+                                       'No Daysimeter Found!', \
+                                       QtGui.QMessageBox.Ok)
+            else:
+                with open(path + log_filename, 'r') as log_fp:
+                    info = log_fp.readlines()
+                info[4] = '0\n'
+                with open(path + log_filename, 'w') as log_fp:
+                    for x in info:
+                        log_fp.write(x)
+                self.statusBar().showMessage('Logging hours reset.', 2000)
         else:
-            with open(path + log_filename, 'r') as log_fp:
-                info = log_fp.readlines()
-            info[4] = '0\n'
-            with open(path + log_filename, 'w') as log_fp:
-                for x in info:
-                    log_fp.write(x)
-            self.statusBar().showMessage('Logging hours reset', 2000)
+            self.statusBar().showMessage('Reset Cancelled.', 2000)
     
     def start_log(self):
         """ Starts a new log on the Daysimeter """
@@ -446,11 +453,18 @@ class LayoutExample(QtGui.QMainWindow):
         log_filename = QtGui.QFileDialog.getOpenFileName(self, \
         'Select Header File', self.savedir, ('Text Files (*.txt)'))
         
-        data_filename = QtGui.QFileDialog.getOpenFileName(self, \
-        'Select Data File', self.savedir, ('Text Files (*.txt)'))
+        for x in reversed(range(len(log_filename))):
+            if log_filename[x] == '/':
+                samedir = log_filename[:x+1]
+                break
         
-        self.download = DownloadMake(args=[log_filename, data_filename])
-        self.connect(self.download, QtCore.SIGNAL('savename'), self.read_data)
+        if log_filename:
+            data_filename = QtGui.QFileDialog.getOpenFileName(self, \
+            'Select Data File', samedir, ('Text Files (*.txt)'))
+            
+            if data_filename:
+                self.download = DownloadMake(args=[log_filename, data_filename])
+                self.connect(self.download, QtCore.SIGNAL('savename'), self.read_data)
         
     def read_data(self, file_name):
         """Reads the data from a txt or cdf and graphs it
@@ -555,7 +569,7 @@ class LayoutExample(QtGui.QMainWindow):
             with open(path + constants_.LOG_FILENAME, 'r') as log_fp:
                 info = log_fp.readlines()
             for x in info:
-                if x[:len(constants_.BATTERY_STRING)].strip(' ') + '\n' == constants_.BATTERY_STRING:
+                if x[:len(constants_.BATTERY_STRING)] == constants_.BATTERY_STRING:
                     index = info.index(x)
                     break
             temp = info[:index+1]

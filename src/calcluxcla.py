@@ -18,6 +18,7 @@ def calc_lux_cla(*args):
     NOTE: A modified version of this exists in downloadmake.py and this version
     is no logner called.    
     """
+    
     error_log_filename = get_err_log()
     logging.basicConfig(filename=error_log_filename, level=logging.DEBUG)
     
@@ -35,7 +36,7 @@ def calc_lux_cla(*args):
     else:
         logging.warning('Invalid usage of calc_lux_cla')
         sys.exit(1)
-        
+      
     loop_max = num_entries = len(red)
     
     #Create lux list and allocate space
@@ -44,7 +45,7 @@ def calc_lux_cla(*args):
     for x in range(0, loop_max):
         lux[x] = constants[4][0]*red[x] + constants[4][1]*green[x] + \
         constants[4][2]*blue[x]
-        
+     
     #Create lists and allocate space for each list
     scone_macula = [-1] * num_entries
     v_lamda_macula =  [-1] * num_entries
@@ -74,6 +75,6 @@ def calc_lux_cla(*args):
             cla[x] = melanopsin[x]
             
         cla[x] *= constants[5][3]
-        cla = [0 if x < 0 else x for x in cla]
+    cla = [0 if x < 0 else x for x in cla]
     #Pack lux and cla into a single list & return
     return [lux, cla]

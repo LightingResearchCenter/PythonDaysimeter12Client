@@ -33,7 +33,7 @@ class StatusLight(QtGui.QWidget):
         self.green.hide()
         self.red.hide()
         
-        self.set_status()
+#        self.set_status()
         
     def set_status(self):
         """ Creates a watcher to determine whether a daysimeter is attached """

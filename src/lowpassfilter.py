@@ -24,4 +24,7 @@ def lowpass_filter(data, s_sample_rate):
     h_sample_rate = 1.0/s_sample_rate
     window_size = int(floor(minutes * 60 * h_sample_rate))
     b = ones(window_size)/window_size
-    return filtfilt(b, [1], data, padlen=0)
+    if s_sample_rate > 150:
+        return data
+    else:
+        return filtfilt(b, [1], data, padlen=0)

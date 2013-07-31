@@ -143,6 +143,8 @@ class ButtonBox(qt.QGroupBox):
         for name in ordered_names:
             lower_names.append(string.lower(name))
         for name in names:
+            if name == 'logicalArray':
+                continue
             if string.lower(name) not in lower_names:
                 ordered_names.append(name)
 

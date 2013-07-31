@@ -12,8 +12,7 @@ import time
 import math
 import shutil
 from ConfigParser import SafeConfigParser
-from datetime import datetime
-from datetime import timedelta
+from datetime import datetime, timedelta
 from geterrlog import get_err_log
 from adjactiveflag import adj_active_flag
 from getcalibinfo import get_calib_info
@@ -44,7 +43,8 @@ class DownloadMake(QtGui.QWidget):
             path = find_daysimeter()
             if path:
                 self.log_filename = os.path.join(path, constants_.LOG_FILENAME)
-                self.data_filename = os.path.join(path, constants_.DATA_FILENAME)
+                self.data_filename = os.path.join(path, \
+                                                  constants_.DATA_FILENAME)
                 self.download_make = True
             else:
                 sys.exit(1)
@@ -88,7 +88,8 @@ class DownloadMake(QtGui.QWidget):
         self.parser = SafeConfigParser()
         if not self.parser.read('daysimeter.ini') == []:
             if self.parser.has_section('Application Settings'):
-                self.savedir = self.parser.get('Application Settings', 'savepath')
+                self.savedir = self.parser.get('Application Settings', \
+                                               'savepath')
             else:
                 self.savedir = os.getcwd()
         else:
@@ -100,7 +101,7 @@ class DownloadMake(QtGui.QWidget):
         
     def start_download(self):
         """ PURPOSE: Starts and manages download of data """
-        if not find_daysimeter():
+        if not find_daysimeter() and self.download_make:
             self.status_bar.showMessage('No Daysimeter plugged into this' + \
             ' computer.')
         else:
@@ -121,6 +122,7 @@ class DownloadMake(QtGui.QWidget):
             self.filename = str(QtGui.QFileDialog.getSaveFileName(self, \
             ('Save File'), default_name, ('CDF Files (*.cdf);; CSV Files (*.csv)')))
             if not str(self.filename) == '':
+                
                 self.pbar.show()
                 self.start.setText('Downloading...')
                 self.status_bar.showMessage('Processing Data...')
@@ -149,7 +151,8 @@ class DownloadMake(QtGui.QWidget):
         that actually writes data to file.
         """
         if self.filename[len(self.filename)-4:] == '.cdf':
-            self.subjectinfo = SubjectInfo()
+            self.subjectinfo = SubjectInfo([data[1][0][0], \
+                                            data[1][0][len(data[1][0]) - 1]])
             self.connect(self.subjectinfo, QtCore.SIGNAL('sendinfo'), \
             self.make_cdf)
             self.connect(self.subjectinfo, QtCore.SIGNAL('cancelled'), \
@@ -217,7 +220,7 @@ class DownloadMake(QtGui.QWidget):
         #it kind fakes it until it makes it
         self.step += 1
         self.pbar.setValue(self.step)
-        if self.step == 100:
+        if self.step == 100 and self.download_make:
             if update_header():
                 reply = QtGui.QMessageBox.question(self, 'Message',
             'Your daysimeter\'s header is out of date.\n' + \
@@ -231,6 +234,8 @@ class DownloadMake(QtGui.QWidget):
                     self.download_done()
             else:
                 self.download_done()
+        elif self.step == 100:
+            self.download_done()
         
     def download_done(self):
         """ PURPOSE: Displays done message when download is complete """
@@ -265,10 +270,14 @@ class ProgressSim(QtCore.QThread):
 class SubjectInfo(QtGui.QWidget):
     """ PURPOSE: Creates a widget for a user to enter subject information """
     send_info_sig = QtCore.pyqtSignal(list)
-    def __init__(self, parent=None):
+    def __init__(self, args, parent=None):
         super(SubjectInfo, self).__init__(parent)
+        QtGui.QMainWindow.__init__(self)
         self.setWindowTitle('Enter Subject Information')
-        self.setFixedSize(300, 160)
+        
+        self.start_time = str(args[0])
+        self.end_time = str(args[1])
+        
         self.subject_id = QtGui.QLineEdit()
         self.subject_sex = QtGui.QComboBox()
         self.subject_mass = QtGui.QLineEdit()
@@ -278,6 +287,18 @@ class SubjectInfo(QtGui.QWidget):
         self.day_dob = QtGui.QComboBox()
         self.month_dob = QtGui.QComboBox()
         self.year_dob = QtGui.QComboBox()
+        
+        self.day_start = QtGui.QComboBox()
+        self.month_start = QtGui.QComboBox()
+        self.year_start = QtGui.QComboBox()
+        self.hour_start = QtGui.QComboBox()
+        self.minute_start = QtGui.QComboBox()
+        
+        self.day_end = QtGui.QComboBox()
+        self.month_end = QtGui.QComboBox()
+        self.year_end = QtGui.QComboBox()
+        self.hour_end = QtGui.QComboBox()
+        self.minute_end = QtGui.QComboBox()
         
         self.subject_sex.addItems(['-', 'Male', 'Female', 'Other'])
         
@@ -291,10 +312,37 @@ class SubjectInfo(QtGui.QWidget):
         ['November', 'December'])
         self.year_dob.addItems([str(x) for x in reversed(range(1900, 2021))])
         
+        self.day_start.addItems([str(x) for x in range(1, 32)])
+        self.month_start.addItems([str(x) for x in range(1,13)])
+        self.year_start.addItems([str(x) for x in range(2013, 2021)])
+        self.hour_start.addItems([str(x) for x in range(24)])
+        self.minute_start.addItems([str(x) for x in range(60)])
+        
+        self.day_end.addItems([str(x) for x in range(1, 32)])
+        self.month_end.addItems([str(x) for x in range(1,13)])
+        self.year_end.addItems([str(x) for x in range(2013, 2021)])
+        self.hour_end.addItems([str(x) for x in range(24)])
+        self.minute_end.addItems([str(x) for x in range(60)])
+        
         self.layout_dob = QtGui.QHBoxLayout()
         self.layout_dob.addWidget(self.day_dob)
         self.layout_dob.addWidget(self.month_dob)
         self.layout_dob.addWidget(self.year_dob)
+        
+        
+        self.layout_start = QtGui.QHBoxLayout()
+        self.layout_start.addWidget(self.day_start)
+        self.layout_start.addWidget(self.month_start)
+        self.layout_start.addWidget(self.year_start)
+        self.layout_start.addWidget(self.hour_start)
+        self.layout_start.addWidget(self.minute_start)
+        
+        self.layout_end = QtGui.QHBoxLayout()
+        self.layout_end.addWidget(self.day_end)
+        self.layout_end.addWidget(self.month_end)
+        self.layout_end.addWidget(self.year_end)
+        self.layout_end.addWidget(self.hour_end)
+        self.layout_end.addWidget(self.minute_end)
         
         self.subject_mass.setInputMask('000.000')
         self.subject_mass.setText('000.000')
@@ -311,6 +359,8 @@ class SubjectInfo(QtGui.QWidget):
         layout.addRow('Sex', self.subject_sex)
         layout.addRow('Date of Birth', self.layout_dob)
         layout.addRow('Mass (in kg)', self.subject_mass)
+        layout.addRow('Start Date (DD/MM/YYYY HH:MM)', self.layout_start)
+        layout.addRow('End Date (DD/MM/YYYY HH:MM)', self.layout_end)
         layout.addRow(button_layout)
         
         self.submit.setEnabled(False)
@@ -318,11 +368,33 @@ class SubjectInfo(QtGui.QWidget):
         
         self.setLayout(layout)
         
+        self.day_start.setCurrentIndex(int(self.start_time[8:10]) - 1)
+        self.month_start.setCurrentIndex(int(self.start_time[5:7]) - 1)
+        self.year_start.setCurrentIndex(int(self.start_time[2:4]) - 13)
+        self.hour_start.setCurrentIndex(int(self.start_time[11:13]))
+        self.minute_start.setCurrentIndex(int(self.start_time[14:16]))
+        
+        self.day_end.setCurrentIndex(int(self.end_time[8:10]) - 1)
+        self.month_end.setCurrentIndex(int(self.end_time[5:7]) - 1)
+        self.year_end.setCurrentIndex(int(self.end_time[2:4]) - 13)
+        self.hour_end.setCurrentIndex(int(self.end_time[11:13]))
+        self.minute_end.setCurrentIndex(int(self.end_time[14:16]))
+        
         self.subject_id.textChanged.connect(self.enable_submit)
         self.subject_sex.currentIndexChanged.connect(self.enable_submit)
         self.day_dob.currentIndexChanged.connect(self.enable_submit)
         self.month_dob.currentIndexChanged.connect(self.enable_submit)
         self.year_dob.currentIndexChanged.connect(self.enable_submit)
+        self.day_start.currentIndexChanged.connect(self.enable_submit)
+        self.month_start.currentIndexChanged.connect(self.enable_submit)
+        self.year_start.currentIndexChanged.connect(self.enable_submit)
+        self.hour_start.currentIndexChanged.connect(self.enable_submit)
+        self.minute_start.currentIndexChanged.connect(self.enable_submit)
+        self.day_end.currentIndexChanged.connect(self.enable_submit)
+        self.month_end.currentIndexChanged.connect(self.enable_submit)
+        self.year_end.currentIndexChanged.connect(self.enable_submit)
+        self.hour_end.currentIndexChanged.connect(self.enable_submit)
+        self.minute_end.currentIndexChanged.connect(self.enable_submit)
         self.subject_mass.textChanged.connect(self.enable_submit)
         
         
@@ -358,9 +430,62 @@ class SubjectInfo(QtGui.QWidget):
             str(self.month_dob.currentText()) + ' ' + \
             str(self.year_dob.currentText())
         sub_mass = str(self.subject_mass.text())
+        
+        start_time = ''
+        if len(self.year_start.currentText()) == 1:
+            start_time = start_time + '0' + str(self.year_start.currentText())\
+            + '-'
+        else:
+            start_time = start_time + str(self.year_start.currentText()) + '-'
+        if len(self.month_start.currentText()) == 1:
+            start_time = start_time + '0' + str(self.month_start.currentText())\
+            + '-'
+        else:
+            start_time = start_time + str(self.month_start.currentText()) + '-'
+        if len(self.day_start) == 1:
+            start_time = start_time + '0' + str(self.day_start.currentText())\
+            + ' '
+        else:
+            start_time = start_time + str(self.day_start.currentText()) + ' '
+        if len(self.hour_start) == 1:
+            start_time = start_time + '0' + str(self.hour_start.currentText())\
+            + ':'
+        else:
+            start_time = start_time + str(self.hour_start.currentText()) + ':'
+        if len(self.minute_start) == 1:
+            start_time = start_time + '0' + str(self.minute_start.currentText())
+        else:
+            start_time = start_time + str(self.minute_start.currentText())
+
+        end_time = ''
+        if len(self.year_end.currentText()) == 1:
+            end_time = end_time + '0' + str(self.year_end.currentText())\
+            + '-'
+        else:
+            end_time = end_time + str(self.year_end.currentText()) + '-'
+        if len(self.month_end.currentText()) == 1:
+            end_time = end_time + '0' + str(self.month_end.currentText())\
+            + '-'
+        else:
+            end_time = end_time + str(self.month_end.currentText()) + '-'
+        if len(self.day_end) == 1:
+            end_time = end_time + '0' + str(self.day_end.currentText())\
+            + ' '
+        else:
+            end_time = end_time + str(self.day_end.currentText()) + ' '
+        if len(self.hour_end) == 1:
+            end_time = end_time + '0' + str(self.hour_end.currentText())\
+            + ':'
+        else:
+            end_time = end_time + str(self.hour_end.currentText()) + ':'
+        if len(self.minute_end) == 1:
+            end_time = end_time + '0' + str(self.minute_end.currentText())
+        else:
+            end_time = end_time + str(self.minute_end.currentText())
+
         self.success = True
         self.emit(QtCore.SIGNAL('sendinfo'), [sub_id, sub_sex, sub_dob, \
-        sub_mass])
+        sub_mass, start_time, end_time])
         self.close()
     
    
@@ -369,10 +494,76 @@ class SubjectInfo(QtGui.QWidget):
         PURPOSE: Enables submit button once all fields are filled with
         valid info.
         """
-        if  not self.subject_id.text() == '':
+        if  not self.subject_id.text() == '' and self.in_range():
             self.submit.setEnabled(True)
         else:
             self.submit.setEnabled(False)
+            
+    def in_range(self):
+        
+        start_time = ''
+        if len(self.year_start.currentText()) == 1:
+            start_time = start_time + '0' + str(self.year_start.currentText())\
+            + '-'
+        else:
+            start_time = start_time + str(self.year_start.currentText()) + '-'
+        if len(self.month_start.currentText()) == 1:
+            start_time = start_time + '0' + str(self.month_start.currentText())\
+            + '-'
+        else:
+            start_time = start_time + str(self.month_start.currentText()) + '-'
+        if len(self.day_start) == 1:
+            start_time = start_time + '0' + str(self.day_start.currentText())\
+            + ' '
+        else:
+            start_time = start_time + str(self.day_start.currentText()) + ' '
+        if len(self.hour_start) == 1:
+            start_time = start_time + '0' + str(self.hour_start.currentText())\
+            + ':'
+        else:
+            start_time = start_time + str(self.hour_start.currentText()) + ':'
+        if len(self.minute_start) == 1:
+            start_time = start_time + '0' + str(self.minute_start.currentText())
+        else:
+            start_time = start_time + str(self.minute_start.currentText())
+
+        end_time = ''
+        if len(self.year_end.currentText()) == 1:
+            end_time = end_time + '0' + str(self.year_end.currentText())\
+            + '-'
+        else:
+            end_time = end_time + str(self.year_end.currentText()) + '-'
+        if len(self.month_end.currentText()) == 1:
+            end_time = end_time + '0' + str(self.month_end.currentText())\
+            + '-'
+        else:
+            end_time = end_time + str(self.month_end.currentText()) + '-'
+        if len(self.day_end) == 1:
+            end_time = end_time + '0' + str(self.day_end.currentText())\
+            + ' '
+        else:
+            end_time = end_time + str(self.day_end.currentText()) + ' '
+        if len(self.hour_end) == 1:
+            end_time = end_time + '0' + str(self.hour_end.currentText())\
+            + ':'
+        else:
+            end_time = end_time + str(self.hour_end.currentText()) + ':'
+        if len(self.minute_end) == 1:
+            end_time = end_time + '0' + str(self.minute_end.currentText())
+        else:
+            end_time = end_time + str(self.minute_end.currentText())
+            
+        start_dt = datetime.strptime(start_time, '%Y-%m-%d %H:%M')
+        end_dt = datetime.strptime(end_time, '%Y-%m-%d %H:%M')
+        
+        start_dt_data = datetime.strptime(self.start_time, '%Y-%m-%d %H:%M:%S')
+        end_dt_data = datetime.strptime(self.end_time, '%Y-%m-%d %H:%M:%S')
+                
+        if (start_dt - start_dt_data) >= timedelta(minutes = 0) and \
+           (end_dt_data - end_dt) >= timedelta(minutes = 0):
+            return True
+        else:
+            return False
             
     def keyPressEvent(self, qKeyEvent):
         if qKeyEvent.key() == QtCore.Qt.Key_Return and self.submit.isEnabled(): 
@@ -440,7 +631,6 @@ class DownloadDaysimeter(QtCore.QThread):
             daysimeter_id = int(info[3])
             device_model = info[2]
             device_sn = info[2].lstrip('abcdefghijklmnopqrstuvwxyz') + info[3]
-        
         #Get calibration info
         if not old_flag:
             calib_const = [float(x) for x in info[9].strip('\n').split('\t')]
@@ -518,7 +708,7 @@ class DownloadDaysimeter(QtCore.QThread):
             green[x] = struct.unpack('>H', data[x*8+2:x*8+4])[0]
             blue[x] = struct.unpack('>H', data[x*8+4:x*8+6])[0]
             activity[x] = struct.unpack('>H', data[x*8+6:x*8+8])[0]
-            
+
         #Create array to keep track of resets; resets[x] = y means
         #there have been y resets before point x.
         resets = [-1] * len(red)
@@ -615,11 +805,11 @@ class DownloadDaysimeter(QtCore.QThread):
             shutil.copy(os.path.join(path, constants_.DATA_FILENAME), \
                         self.savedir)
             os.rename(os.path.join(self.savedir, constants_.LOG_FILENAME), \
-                      os.path.join(self.savedir, self.filename + \
-                      '-LOG.txt'))
+                      os.path.join(self.savedir, \
+                      self.filename[:len(self.filename) - 4] + '-LOG.txt'))
             os.rename(os.path.join(self.savedir, constants_.DATA_FILENAME), \
-                      os.path.join(self.savedir, self.filename + \
-                      '-DATA.txt'))
+                      os.path.join(self.savedir, \
+                      self.filename[:len(self.filename) - 4] + '-DATA.txt'))
         
     def calc_lux_cla(self, *args):
         """ PURPOSE: Calculates CS and CLA. """
@@ -689,9 +879,22 @@ class MakeCDF(QtCore.QThread):
         self.data = data
         self.filename = filename
         self.info = info
+        self.logical_array(info[4], info[5])
+        
+    def logical_array(self, start, end):
+        start_dt = datetime.strptime(start, '%Y-%m-%d %H:%M')
+        end_dt = datetime.strptime(end, '%Y-%m-%d %H:%M')
+        start_index = self.data[1][0].index(start_dt)
+        end_index = self.data[1][0].index(end_dt)
+        
+        self.logical_arr = [0] * len(self.data[1][0])
+        
+        for x in range(start_index, end_index):
+            self.logical_arr[x] = 1
         
     def run(self):
         """ PURPOSE: Makes a CDF file from data. """
+        
         sub_info = self.info
         if not sub_info[2] == 'None':
             struct_time = time.strptime(sub_info[2], '%d %B %Y')
@@ -722,10 +925,11 @@ class MakeCDF(QtCore.QThread):
             
             #Set variables
             cdf_fp['time'] = data[1][0]
-            cdf_fp.new('matTime', type=pycdf.const.CDF_REAL8)
-            cdf_fp['matTime'] = data[1][1]
+#            cdf_fp.new('matTime', type=pycdf.const.CDF_REAL8)
+#            cdf_fp['matTime'] = data[1][1]
             cdf_fp.new('timeOffset', get_local_offset_s(), \
             pycdf.const.CDF_INT4, False)
+            cdf_fp['logicalArray'] = self.logical_arr
             cdf_fp['red'] = data[1][2]
             cdf_fp['green'] = data[1][3]
             cdf_fp['blue'] = data[1][4]
@@ -752,12 +956,12 @@ class MakeCDF(QtCore.QThread):
             cdf_fp['time'].attrs['otherAttributes'] = ''
             
             #Set variable attributes for matTime
-            cdf_fp['matTime'].attrs['description'] = 'UTC in MATLAB serial' + \
-            ' date format, days since 1-Jan-0000'
-            cdf_fp['matTime'].attrs['unitPrefix'] = ''
-            cdf_fp['matTime'].attrs['baseUnit'] = 'days'
-            cdf_fp['matTime'].attrs['unitType'] = 'nonSI'
-            cdf_fp['matTime'].attrs['otherAttributes'] = ''
+#            cdf_fp['matTime'].attrs['description'] = 'UTC in MATLAB serial' + \
+#            ' date format, days since 1-Jan-0000'
+#            cdf_fp['matTime'].attrs['unitPrefix'] = ''
+#            cdf_fp['matTime'].attrs['baseUnit'] = 'days'
+#            cdf_fp['matTime'].attrs['unitType'] = 'nonSI'
+#            cdf_fp['matTime'].attrs['otherAttributes'] = ''
             
             #Set variable attributes for timeOffset
             cdf_fp['timeOffset'].attrs['description'] = 'Localized offset ' + \
@@ -766,6 +970,13 @@ class MakeCDF(QtCore.QThread):
             cdf_fp['timeOffset'].attrs['baseUnit'] = 's'
             cdf_fp['timeOffset'].attrs['unitType'] = 'baseSI'
             cdf_fp['timeOffset'].attrs['otherAttributes'] = ''
+            
+            #Set variable attributes for logical array
+            cdf_fp['logicalArray'].attrs['description'] = ''
+            cdf_fp['logicalArray'].attrs['unitPrefix'] = ''
+            cdf_fp['logicalArray'].attrs['baseUnit'] = ''
+            cdf_fp['logicalArray'].attrs['unitType'] = ''
+            cdf_fp['logicalArray'].attrs['otherAttributes'] = ''
             
             #Set variable attributes for red
             cdf_fp['red'].attrs['description'] = ''
@@ -880,7 +1091,10 @@ class MakeCDF(QtCore.QThread):
     #        cdf_fp['event'].attrs['otherAttributes'] = 'event code definition'
             
         #Set download flag to true (0)
-        set_download_flag()
+        if not find_daysimeter():
+            pass
+        else:
+            set_download_flag()
         
         self.emit(QtCore.SIGNAL('update'))
 
