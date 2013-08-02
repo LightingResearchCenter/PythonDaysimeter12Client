@@ -89,6 +89,7 @@ def get_calib_info(daysimeter_id):
         finally:
             calibration_fp.close()
             
+    
         #Create a list of the calibration info
         calib_info = \
         [float(x) for x in calib_info[daysimeter_id].split('\t') if x.strip()]
@@ -99,5 +100,4 @@ def get_calib_info(daysimeter_id):
     if calib_info[1] == 1.0 and calib_info[2] == 2.0 and calib_info[3] == 3.0:
         logging.warning('There is no calibration info for device')
 #        sys.exit(1)
-        
     return calib_info

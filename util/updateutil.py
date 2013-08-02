@@ -124,6 +124,7 @@ class UpdateHeaderF1(QtCore.QThread):
             #called info.
             info = logfile_fp.readlines()
             calib_info = get_calib_info(int(info[1]))
+            del(calib_info[0])
             a_constants = get_constants()
             #Remove binary garbage and whitesapce, if applicable, and format
             #strings in array.

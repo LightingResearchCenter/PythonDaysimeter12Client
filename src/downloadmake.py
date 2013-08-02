@@ -910,9 +910,9 @@ class MakeCDF(QtCore.QThread):
             cdf_fp.attrs['creationDate'] = datetime.now()
             cdf_fp.attrs['deviceModel'] = data[0][0]
             cdf_fp.attrs['deviceSN'] = data[0][1]
-            cdf_fp.attrs['redCalibration'] = data[0][2][0]
-            cdf_fp.attrs['greenCalibration'] = data[0][2][1]
-            cdf_fp.attrs['blueCalibration'] = data[0][2][2]
+            cdf_fp.attrs['redCalibration'] = data[0][2][1]
+            cdf_fp.attrs['greenCalibration'] = data[0][2][2]
+            cdf_fp.attrs['blueCalibration'] = data[0][2][3]
     #########The following global attributes either do not exist yet, or
     #########have no available source to pull the information from
     #        cdf_fp.attrs['uvCalibration'] = 
