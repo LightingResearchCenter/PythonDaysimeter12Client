@@ -4,7 +4,7 @@ Author: Jed Kundl
 Creation Date: 08.07.2013
 """
 
-import sys
+import sys, os
 from PyQt4 import QtGui, QtCore
 from datetime import datetime
 from finddaysimeter import find_daysimeter
@@ -130,9 +130,30 @@ class StartNewLog(QtGui.QWidget):
                                      str(self.hour.currentText()), \
                                      str(self.minute.currentText()), \
                                      str(self.log_interval.currentText())])
-        self.logthread.done_sig.connect(self.close)
+        self.logthread.done_sig.connect(self.close_self)
         self.logthread.no_daysim_sig.connect(self.disp_error)
         self.logthread.start()
+        
+    def close_self(self, log):
+        #I'm aware that the first time this is run, the same value will be
+        #recorded twice. This is fine, don't worry about it. If it keeps you
+        #up at night, come find me and I will tell you why, but in person only.
+        if not os.path.exists('start_log.txt'):
+            data = []
+        else:
+            with open('start_log.txt','r') as fp:
+                data = fp.readlines()
+                
+        if len(data) > 98:
+            del(data[98:])
+        
+        with open('start_log.txt','w') as fp:
+            fp.write(log[0] + '\t' + log[1] + '\t' + log[2] + '\n')
+            for x in data:
+                fp.write(x)
+                
+        self.close()
+        
         
     def disp_error(self):
         """PURPOSE: Displays an error if no Daysimeter is found."""
@@ -166,7 +187,7 @@ class StartNewLog(QtGui.QWidget):
         
 class NewLogThread(QtCore.QThread):
     """PURPOSE: Thread to handle starting a new log."""
-    done_sig = QtCore.pyqtSignal()
+    done_sig = QtCore.pyqtSignal(list)
     no_daysim_sig = QtCore.pyqtSignal()
     
     def __init__(self, args, parent=None):
@@ -208,17 +229,21 @@ class NewLogThread(QtCore.QThread):
                           ' ' + self.hour + ':' + self.minute + '\n'
                 info[3] = self.log_interval + '\n'
                 info[5] = '1\n'
+                daysimeter_id = info[1]
+                daysimeter_start = info[2]
             else:
                 info[0] = '2\n'
                 info[7] = self.month + '-' + self.day + '-' + self.year + \
                           ' ' + self.hour + ':' + self.minute + '\n'
                 info[8] = self.log_interval + '\n'
                 info[5] = '1\n'
+                daysimeter_id = info[3].strip('\n')
+                daysimeter_start = info[7].strip('\n')
             with open(path + log_filename, 'w') as log_fp:
                 for x in info:
                     log_fp.write(x)
                     
-            self.done_sig.emit()
+            self.done_sig.emit([daysimeter_id, daysimeter_start, self.log_interval])
 
 
 def main():

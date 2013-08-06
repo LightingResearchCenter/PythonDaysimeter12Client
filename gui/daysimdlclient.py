@@ -25,6 +25,7 @@ from src.startnewlog import StartNewLog
 import src.constants as constants_
 from statuslight import StatusLight
 from statuswidget import StatusWidget
+from startloginfo import StartLogInfo
 
 QT_APP = QtGui.QApplication(sys.argv) 
  
@@ -120,6 +121,10 @@ class LayoutExample(QtGui.QMainWindow):
         
         process_shortcut = QtGui.QShortcut(QtGui.QKeySequence('SHIFT+CTRL+P'), \
         self, self.process_data, self.process_data, QtCore.Qt.WidgetShortcut)
+        
+        start_log_shortcut = QtGui.QShortcut(QtGui.QKeySequence('SHIFT+CTRL+L'), \
+        self, self.get_start_log, self.get_start_log, QtCore.Qt.WidgetShortcut)
+        
         
     def make_toolbar(self):
         """ Creates the top toolbar where all the functions are located """
@@ -438,6 +443,13 @@ class LayoutExample(QtGui.QMainWindow):
         """Creates a widget to download data from the Daysimeter"""
         self.download = DownloadMake()
         self.connect(self.download, QtCore.SIGNAL('savename'), self.read_data)
+        
+    def get_start_log(self):
+        """
+        Creates a widget that allows a user to search the start log for the
+        time and date it was started, and the log interval used.
+        """
+        self.start_log = StartLogInfo()
         
     def process_data(self):
         """ Process already downloaded daysimeter files """
