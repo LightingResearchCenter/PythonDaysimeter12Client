@@ -20,33 +20,32 @@ def get_constants():
     errlog_filename = get_err_log()
     logging.basicConfig(filename=errlog_filename, level=logging.DEBUG)
     
-    if True:
-        #Open constants file and get data
-        try:
-            constants_fp = open(constants_filename,"r")
-        #Catch IO exception, add to log and continue
-        except IOError:
-            logging.error('Could not open constants file from server')
-        #Read data into lists
-        else:
-            #Trash handles header and/or empty lines in the file.
-            #This unfortunately means that the file structure
-            #cannot be changed.
-            trash = constants_fp.readline()
-            scone_macula = constants_fp.readline()
-            v_lamda_macula = constants_fp.readline()
-            melanopsin = constants_fp.readline()
-            v_prime = constants_fp.readline()
-            v_lamda = constants_fp.readline()
-            trash = constants_fp.readline()
-            trash = constants_fp.readline()
-            cla = constants_fp.readline()
-            del(trash)
-        #Close the file
-        finally:
-            constants_fp.close()
-            
+    found = False
+    
+    #Open constants file and get data
+    try:
+        constants_fp = open(constants_filename,"r")
+    #Catch IO exception, add to log and continue
+    except IOError:
+        logging.error('Could not open constants file from server')
+    #Read data into lists
     else:
+        #Trash handles header and/or empty lines in the file.
+        #This unfortunately means that the file structure
+        #cannot be changed.
+        trash = constants_fp.readline()
+        scone_macula = constants_fp.readline()
+        v_lamda_macula = constants_fp.readline()
+        melanopsin = constants_fp.readline()
+        v_prime = constants_fp.readline()
+        v_lamda = constants_fp.readline()
+        trash = constants_fp.readline()
+        trash = constants_fp.readline()
+        cla = constants_fp.readline()
+        del(trash)
+        found = True
+            
+    if not found:
         #Open constants file and get data
         try:
             constants_fp = open(local_const_filename,"r")
@@ -69,9 +68,6 @@ def get_constants():
             trash = constants_fp.readline()
             cla = constants_fp.readline()
             del(trash)
-        #Close the file
-        finally:
-            constants_fp.close()
             
     #Process data by eliminating tabs, newlines, and leading/trailing
     #spaces. Then, it deletes the first element of each list (the name)
@@ -100,4 +96,6 @@ def get_constants():
     cla = [float(x) for x in cla]
     
     #Pack constants into a single list & return
+    constants_fp.close()
+    
     return [scone_macula, v_lamda_macula, melanopsin, v_prime, v_lamda, cla]

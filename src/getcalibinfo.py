@@ -41,13 +41,6 @@ def get_calib_info(daysimeter_id):
         #into a list called calib_info.
         calib_info = calibration_fp.readlines()
         calib_data = 1
-    #Close the calibration file
-    finally:
-        calibration_fp.close()
-        
-    #Create a list of the calibration info
-    calib_info = \
-    [float(x) for x in calib_info[daysimeter_id].split('\t') if x.strip()]
     
     #If nowhere else, calibration data should be local
     if calib_data == 0:
@@ -60,8 +53,8 @@ def get_calib_info(daysimeter_id):
             #If we cannot find the file locally, we ask the user to 
             #tell the program where to find it
             Tk().withdraw()
-            user_def_filename = askopenfilename(title='Please selected a \
-            properly formatted Calibration file.')
+            user_def_filename = askopenfilename(title='Please selected a ' + \
+            'properly formatted Calibration file.')
             try:
                 calibration_fp = open(user_def_filename,"r")
             #Catch IO exception, add to log and quit
@@ -74,8 +67,6 @@ def get_calib_info(daysimeter_id):
                 calib_info = calibration_fp.readlines()
                 calib_data = 2
             #Close the calibration file
-            finally:
-                calibration_fp.close()
                 
             #Create a list of the calibration info
             calib_info = [float(x) for x in \
@@ -85,9 +76,7 @@ def get_calib_info(daysimeter_id):
             #into a list called calib_info.
             calib_info = calibration_fp.readlines()
             calib_data = 2
-        #Close the calibration file
-        finally:
-            calibration_fp.close()
+
             
     
         #Create a list of the calibration info
@@ -100,4 +89,6 @@ def get_calib_info(daysimeter_id):
     if calib_info[1] == 1.0 and calib_info[2] == 2.0 and calib_info[3] == 3.0:
         logging.warning('There is no calibration info for device')
 #        sys.exit(1)
+    calibration_fp.close()
+
     return calib_info

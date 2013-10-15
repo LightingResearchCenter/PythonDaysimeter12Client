@@ -144,8 +144,8 @@ class StartNewLog(QtGui.QWidget):
             with open('start_log.txt','r') as fp:
                 data = fp.readlines()
                 
-        if len(data) > 98:
-            del(data[98:])
+        if len(data) > 998:
+            del(data[998:])
         
         with open('start_log.txt','w') as fp:
             fp.write(log[0] + '\t' + log[1] + '\t' + log[2] + '\n')

@@ -70,14 +70,15 @@ class StartLogInfo(QtGui.QWidget):
     def find_val(self):
         self.val_index = []
         self.val_index_index = 0
-        val = self.input.text()
+        val = int(self.input.text())
         
         for x in range(len(self.data)):
-            if self.data[x][0] == val:
+            if int(self.data[x][0]) == val:
                 self.val_index.append(x)
         
         if len(self.val_index) > 0:
-            self.status.showMessage('')
+            self.status.showMessage('Log ' + str(self.val_index_index + 1) + \
+                                    ' of ' + str(len(self.val_index)))
             self.daysimeter_id.showMessage(self.data[0][0])
             self.start_date.showMessage(self.data[0][1])
             self.log_interval.showMessage(self.data[0][2])
@@ -102,6 +103,9 @@ class StartLogInfo(QtGui.QWidget):
         
         self.find_prev.setEnabled(True)
         
+        self.status.showMessage('Log ' + str(self.val_index_index + 1) + \
+                                    ' of ' + str(len(self.val_index)))
+        
         if self.val_index_index == len(self.val_index) - 1:
             self.find_next.setEnabled(False)
         
@@ -113,6 +117,9 @@ class StartLogInfo(QtGui.QWidget):
         self.log_interval.showMessage(self.data[self.val_index[self.val_index_index]][2])
         
         self.find_next.setEnabled(True)
+        
+        self.status.showMessage('Log ' + str(self.val_index_index + 1) + \
+                                    ' of ' + str(len(self.val_index)))
         
         if self.val_index_index == 0:
             self.find_prev.setEnabled(False)
