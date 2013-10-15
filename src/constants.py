@@ -23,7 +23,7 @@ CALIBRATION_FILENAME = '//root/projects/DaysimeterAndDimesimeterReference' \
 #LOCAL_CALIB_FILENAME is the name of the calibration file to be found
 #locally.
 LOCAL_CALIB_FILENAME = 'C:/Program Files (x86)/Daysimeter Client/' \
-    + 'daysimdlclient/Day12 RGB Values.txt'
+    + 'Day12 RGB Values.txt'
 #CONSTANTS_FILENAME is the name of the constants stored
 #on the LRC's server. Will be obsolete when calibration is located
 #in the header files.
@@ -32,7 +32,7 @@ CONSTANTS_FILENAME = '//root/projects/DaysimeterAndDimesimeterReference' \
 #LOCAL_CONST_FILENAME is the name of the constants file to be found
 #locally.
 LOCAL_CONST_FILENAME = 'C:/Program Files (x86)/Daysimeter Client/' \
-    + 'daysimdlclient/Day12 Cal Values.txt'
+    + 'Day12 Cal Values.txt'
 #MINUTES relates to the lowpassfilter.py and is the window the filter
 #uses when smoothing out data.
 MINUTES = 5

@@ -19,7 +19,6 @@ def get_calib_info(daysimeter_id):
     calibration_filename = constants.CALIBRATION_FILENAME
     local_calib_filename = constants.LOCAL_CALIB_FILENAME
 
-    
     #Create error log file named error.log on the desktop
     errlog_filename = get_err_log()
     logging.basicConfig(filename=errlog_filename, level=logging.DEBUG)
@@ -41,6 +40,9 @@ def get_calib_info(daysimeter_id):
         #into a list called calib_info.
         calib_info = calibration_fp.readlines()
         calib_data = 1
+        #Create a list of the calibration info
+        calib_info = \
+        [float(x) for x in calib_info[daysimeter_id].split('\t') if x.strip()]
     
     #If nowhere else, calibration data should be local
     if calib_data == 0:
@@ -76,12 +78,13 @@ def get_calib_info(daysimeter_id):
             #into a list called calib_info.
             calib_info = calibration_fp.readlines()
             calib_data = 2
+            #Create a list of the calibration info
+            calib_info = \
+            [float(x) for x in calib_info[daysimeter_id].split('\t') if x.strip()]
 
             
     
-        #Create a list of the calibration info
-        calib_info = \
-        [float(x) for x in calib_info[daysimeter_id].split('\t') if x.strip()]
+
         
     #The default values for calibration are 1, 2, and 3. Although it
     #is possible that a device actually might have those calibration
