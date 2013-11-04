@@ -10,7 +10,7 @@ NOTE: calc_lux_cla either takes 3 or 4 arguments. Usage: red, green, blue, [cons
 import sys
 import logging
 from getconstants import get_constants
-from geterrlog import get_err_log
+from getlogs import get_err_log, get_daysim_log, setup_logger
 
 def calc_lux_cla(*args): 
     """
@@ -19,8 +19,13 @@ def calc_lux_cla(*args):
     is no logner called.    
     """
     
-    error_log_filename = get_err_log()
-    logging.basicConfig(filename=error_log_filename, level=logging.DEBUG)
+    errlog_filename = get_err_log()
+    setup_logger('errlog', errlog_filename)
+    errlog = logging.getLogger('errlog')
+    
+    daysimlog_filename = get_daysim_log()
+    setup_logger('daysimlog', daysimlog_filename)
+    daysimlog = logging.getLogger('daysimlog')
     
     if len(args) == 3:
         red = args[0]
@@ -34,7 +39,7 @@ def calc_lux_cla(*args):
         blue = args[2]
         constants = args[3]
     else:
-        logging.warning('Invalid usage of calc_lux_cla')
+        errlog.warning('Invalid usage of calc_lux_cla')
         sys.exit(1)
       
     loop_max = num_entries = len(red)

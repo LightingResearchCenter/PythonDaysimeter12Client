@@ -26,6 +26,8 @@ import src.constants as constants_
 from statuslight import StatusLight
 from statuswidget import StatusWidget
 from startloginfo import StartLogInfo
+from src.getlogs import get_err_log, get_daysim_log, setup_logger
+import logging
 
 QT_APP = QtGui.QApplication(sys.argv) 
  
@@ -53,6 +55,13 @@ class LayoutExample(QtGui.QMainWindow):
         self.disconnected = True
         self.make_shortcuts()
         
+        setup_logger('daysim_log', get_daysim_log())
+        self.daysim_log = logging.getLogger('daysim_log')
+
+        setup_logger('err_log', get_err_log())
+        self.err_log = logging.getLogger('err_log')
+        
+        
         self.show()
         
         
@@ -64,8 +73,12 @@ class LayoutExample(QtGui.QMainWindow):
 #        self.daysim_status.setFeatures(QtGui.QDockWidget.NoDockWidgetFeatures)
 #        self.addDockWidget(QtCore.Qt.TopDockWidgetArea, self.daysim_status)
         
+    def get_daysim_log(self):
+        return self.daysim_log
+        
     def go_print(self):
         """ Prints the graph and metadata """
+        self.daysim_log.info('Initializing printer')
         printer = QtGui.QPrinter(QtGui.QPrinter.PrinterResolution)
         printer.setOrientation(QtGui.QPrinter.Landscape)
         printer.setResolution(300)
@@ -91,6 +104,7 @@ class LayoutExample(QtGui.QMainWindow):
                                               QtCore.QPoint(xoff, yoff))
             painter.end()
             self.print_widget.resize(reset_size)
+        self.daysim_log.info('Job ready to be printed')
             
     def make_shortcuts(self):
         """ Creates the keyboard shortcuts for the Daysimeter Client """
@@ -441,6 +455,7 @@ class LayoutExample(QtGui.QMainWindow):
 
     def download_data(self):
         """Creates a widget to download data from the Daysimeter"""
+        self.daysim_log.info('Creating download wdiget')
         self.download = DownloadMake()
         self.connect(self.download, QtCore.SIGNAL('savename'), self.read_data)
         
@@ -453,6 +468,7 @@ class LayoutExample(QtGui.QMainWindow):
         
     def process_data(self):
         """ Process already downloaded daysimeter files """
+        self.daysim_log.info('Initizling data processor')
         self.parser = SafeConfigParser()
         if not self.parser.read('daysimeter.ini') == []:
             if self.parser.has_section('Application Settings'):

@@ -10,7 +10,7 @@ import logging
 import sys
 from Tkinter import Tk
 from tkFileDialog import askopenfilename
-from geterrlog import get_err_log
+from getlogs import get_err_log, get_daysim_log, setup_logger
 import constants
 
 def get_calib_info(daysimeter_id):
@@ -21,7 +21,12 @@ def get_calib_info(daysimeter_id):
 
     #Create error log file named error.log on the desktop
     errlog_filename = get_err_log()
-    logging.basicConfig(filename=errlog_filename, level=logging.DEBUG)
+    setup_logger('errlog', errlog_filename)
+    errlog = logging.getLogger('errlog')
+    
+    daysimlog_filename = get_daysim_log()
+    setup_logger('daysimlog', daysimlog_filename)
+    daysimlog = logging.getLogger('daysimlog')
        
     #calib_data gives the source of the calibration information
     #0 = not set, 1 = server, 2 = local
@@ -34,7 +39,7 @@ def get_calib_info(daysimeter_id):
         calibration_fp = open(calibration_filename,"r")
     #Catch IO exception, add to log and continue
     except IOError:
-        logging.error('Could not open calibration file from server')
+        errlog.error('Could not open calibration file from server')
     else:
         #Read each line of the calibration file and put it 
         #into a list called calib_info.
@@ -51,7 +56,7 @@ def get_calib_info(daysimeter_id):
             calibration_fp = open(local_calib_filename,"r")
         #Catch IO exception, add to log and quit
         except IOError:
-            logging.error('Could not open calibration file locally')
+            errlog.error('Could not open calibration file locally')
             #If we cannot find the file locally, we ask the user to 
             #tell the program where to find it
             Tk().withdraw()
@@ -61,7 +66,7 @@ def get_calib_info(daysimeter_id):
                 calibration_fp = open(user_def_filename,"r")
             #Catch IO exception, add to log and quit
             except IOError:
-                logging.error('Could not open user defined calibration file')
+                errlog.error('Could not open user defined calibration file')
                 return False
             else:
                 #Read each line of the calibration file and put it 
@@ -90,7 +95,7 @@ def get_calib_info(daysimeter_id):
     #is possible that a device actually might have those calibration
     #constants, it is assumed that there is no calibration info in such a case.
     if calib_info[1] == 1.0 and calib_info[2] == 2.0 and calib_info[3] == 3.0:
-        logging.warning('There is no calibration info for device')
+        errlog.warning('There is no calibration info for device')
 #        sys.exit(1)
     calibration_fp.close()
 

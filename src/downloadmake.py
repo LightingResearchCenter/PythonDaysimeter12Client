@@ -13,7 +13,7 @@ import math
 import shutil
 from ConfigParser import SafeConfigParser
 from datetime import datetime, timedelta
-from geterrlog import get_err_log
+from getlogs import get_err_log
 from adjactiveflag import adj_active_flag
 from getcalibinfo import get_calib_info
 from processconstants import process_constants
@@ -29,6 +29,7 @@ from setdownloadflag import set_download_flag
 from updateheader import update_header
 from convertheader import convert_header_f1
 from PyQt4 import QtGui, QtCore
+
     
 class DownloadMake(QtGui.QWidget):
     """
@@ -52,6 +53,11 @@ class DownloadMake(QtGui.QWidget):
             self.log_filename = args[0]
             self.data_filename = args[1]
             self.download_make = False
+        
+        
+        
+        self.daysim_log = logging.getLogger('daysim_log')
+        self.err_log = logging.getLogger('err_log')
         
         self.initUI()
         
@@ -101,6 +107,7 @@ class DownloadMake(QtGui.QWidget):
         
     def start_download(self):
         """ PURPOSE: Starts and manages download of data """
+        self.daysim_log.info('Initializing download')
         if not find_daysimeter() and self.download_make:
             self.status_bar.showMessage('No Daysimeter plugged into this' + \
             ' computer.')
@@ -139,6 +146,7 @@ class DownloadMake(QtGui.QWidget):
                 self.fake_progress)
                 self.connect(self.downloader, QtCore.SIGNAL('make'), \
                 self.make)
+                self.daysim_log.info('Starting download')
                 self.downloader.start()
             else:
                 self.cancelled()
@@ -167,6 +175,7 @@ class DownloadMake(QtGui.QWidget):
             
     def make_cdf(self, info):
         """ PURPOSE: Makes a CDF file. """
+        self.daysim_log.info('Initializing CDF file')
         if info[1] == '-':
             info[1] = 'None'
         if info[2] == '- - -':
@@ -239,6 +248,7 @@ class DownloadMake(QtGui.QWidget):
         
     def download_done(self):
         """ PURPOSE: Displays done message when download is complete """
+        self.daysim_log.info('Download complete')
         self.status_bar.showMessage('Download Complete. It is now safe ' + \
         'to eject your daysimeter.')
         self.start.hide()
@@ -401,6 +411,10 @@ class SubjectInfo(QtGui.QWidget):
         self.submit.pressed.connect(self.submit_info)
         self.cancel.pressed.connect(self.closeself)
         self.success = False
+        
+        self.daysim_log = logging.getLogger('daysim_log')
+
+        self.err_log = logging.getLogger('err_log')
         
         self.show()
     
@@ -583,11 +597,14 @@ class DownloadDaysimeter(QtCore.QThread):
         self.data_filename = args[3]
         self.move = args[4]
         
+        self.daysim_log = logging.getLogger('daysim_log')
+        
+        self.err_log = logging.getLogger('err_log')
+        
     def run(self):
         """
         PURPOSE: Reads raw binary data, processed and packages it.
         """
-        
         log_filename = self.log_filename
         data_filename = self.data_filename
         adj_active_flag_ = constants_.ADJ_ACTIVE_FLAG
@@ -598,15 +615,16 @@ class DownloadDaysimeter(QtCore.QThread):
         if errlog_filename == '':
             self.error.emit()
             sys.exit(1)
-        logging.basicConfig(filename=errlog_filename, level=logging.DEBUG)
-        
+        errlog = self.err_log
+
         path = find_daysimeter()
         #Open header file for reading
+        self.daysim_log.info('Trying to read header file')
         try:
             logfile_fp = open(log_filename,'r')
         #Catch IO exception (if present), add to log and quit
         except IOError:
-            logging.error('Could not open logfile')
+            errlog.error('Could not open logfile')
             self.error.emit()
             sys.exit(1)
         else:
@@ -617,7 +635,7 @@ class DownloadDaysimeter(QtCore.QThread):
         #Close the logfile
         finally:
             logfile_fp.close()
-        
+        self.daysim_log.info('Header file read')
         #If we are using an old format, set flag to True
         if len(info) > 17:
             old_flag = False
@@ -640,15 +658,18 @@ class DownloadDaysimeter(QtCore.QThread):
             calib_info = get_calib_info(daysimeter_id)
         
         if not calib_info:
+            self.err_log.error('Calibration infromation was not found')
             self.error.emit()
             sys.exit(1)
+            
+        self.daysim_log.info('Trying to read data file')
         #Open binary data file for reading
         try:
             self.emit(QtCore.SIGNAL('fprogress'))
             datafile_fp = open(data_filename,'rb')
         #Catch IO exception (if present), add to log and quit
         except IOError:
-            logging.error('Could not open datafile')
+            errlog.error('Could not open datafile')
             self.error.emit()
             sys.exit(1)
         else:
@@ -657,6 +678,8 @@ class DownloadDaysimeter(QtCore.QThread):
         #Close the datafile
         finally:
             datafile_fp.close()
+            
+        self.daysim_log.info('Data file read')
     
     #####It is assumed that time is formatted correctly, if not this
         #part of the code will not work. Time format is as follows:
@@ -691,6 +714,7 @@ class DownloadDaysimeter(QtCore.QThread):
         #struct.unpack unpacks binary data given a format.
         #>H is an unsigned short (16 bit unsigned integer) in big
         #endian notation.
+        self.daysim_log.info('Unpacking binary data')
         for x in range(0, num_entries):
             #If value is 65278 the daysimeter reset, skip and leave
             #the value at -1
@@ -708,7 +732,8 @@ class DownloadDaysimeter(QtCore.QThread):
             green[x] = struct.unpack('>H', data[x*8+2:x*8+4])[0]
             blue[x] = struct.unpack('>H', data[x*8+4:x*8+6])[0]
             activity[x] = struct.unpack('>H', data[x*8+6:x*8+8])[0]
-
+        
+        self.daysim_log.info('Finished upacking data')
         #Create array to keep track of resets; resets[x] = y means
         #there have been y resets before point x.
         resets = [-1] * len(red)
@@ -716,6 +741,7 @@ class DownloadDaysimeter(QtCore.QThread):
         #Remove reamining -1s (reset entires) from raw R,G,B,A
         #Note: calling len(red) 100,000 times runs this portion
         #of the code in a fraction of a second.
+        self.daysim_log.info('Removing resets')
         x = y = 0
         while x < len(red):
             if red[x] == -1:
@@ -727,6 +753,7 @@ class DownloadDaysimeter(QtCore.QThread):
                 continue
             resets[x] = y
             x += 1
+        self.daysim_log.info('Resets removed')
         
         #If there were resets, R,G,B,A are now shorter than resets,
         #so we shall resize it.
@@ -771,12 +798,14 @@ class DownloadDaysimeter(QtCore.QThread):
         #storage space in the EEPROM, and we 'un-shift' it.
         activity = [math.sqrt(x)*.0039*4 for x in activity]
         
+        self.daysim_log.info('Adjusting raw data based on calibration information')
         #Apply calibration constants to raw data
         red = [x*calib_info[1] for x in red]
         green = [x*calib_info[2] for x in green]
         blue = [x*calib_info[3] for x in blue]
         #If new fireware, find constants in the header, process them, and
         #calculate lux and cla
+        self.daysim_log.info('Calculating Luc and CLA')
         if not old_flag:
             constants = process_constants(info[14], info[13], info[12], \
             info[11], info[10], info[15])
@@ -791,15 +820,19 @@ class DownloadDaysimeter(QtCore.QThread):
     
         del(temp)
         #Apply a zero phase shift filter to cla and activity
+        self.daysim_log.info('Applying zero phase shift filter to data')
         cla = lowpass_filter(cla, log_interval)
         activity = lowpass_filter(activity, log_interval)
         #Calculate cs
         cs = calc_cs(cla)
+        self.daysim_log.info('Readying data to be written to file')
         self.emit(QtCore.SIGNAL('make'),([device_model, device_sn, \
         calib_info], [times, mat_times, red, green, blue, lux, cla, cs, \
         activity, resets]))
         
+        
         if self.move:
+            self.daysim_log.info('Backing up raw data from daysimeter')
             shutil.copy(os.path.join(path, constants_.LOG_FILENAME), \
                         self.savedir)
             shutil.copy(os.path.join(path, constants_.DATA_FILENAME), \
@@ -813,8 +846,6 @@ class DownloadDaysimeter(QtCore.QThread):
         
     def calc_lux_cla(self, *args):
         """ PURPOSE: Calculates CS and CLA. """
-        error_log_filename = get_err_log()
-        logging.basicConfig(filename=error_log_filename, level=logging.DEBUG)
         
         if len(args) == 3:
             red = args[0]
@@ -828,7 +859,7 @@ class DownloadDaysimeter(QtCore.QThread):
             blue = args[2]
             constants = args[3]
         else:
-            logging.warning('Invalid usage of calc_lux_cla')
+            errlog.warning('Invalid usage of calc_lux_cla')
             sys.exit(1)
             
         loop_max = num_entries = len(red)
@@ -881,6 +912,10 @@ class MakeCDF(QtCore.QThread):
         self.info = info
         self.logical_array(info[4], info[5])
         
+        self.daysim_log = logging.getLogger('daysim_log')
+
+        self.err_log = logging.getLogger('err_log')
+        
     def logical_array(self, start, end):
         start_dt = datetime.strptime(start, '%Y-%m-%d %H:%M')
         end_dt = datetime.strptime(end, '%Y-%m-%d %H:%M')
@@ -905,6 +940,7 @@ class MakeCDF(QtCore.QThread):
         if os.path.isfile(filename):
             os.remove(filename)
         data = self.data
+        self.daysim_log.info('Writing data to CDF file')
         with pycdf.CDF(filename,'') as cdf_fp:
             #Set global attributes
             cdf_fp.attrs['creationDate'] = datetime.now()
@@ -1091,6 +1127,7 @@ class MakeCDF(QtCore.QThread):
     #        cdf_fp['event'].attrs['otherAttributes'] = 'event code definition'
             
         #Set download flag to true (0)
+        self.daysim_log.info('All data written to CDF file')
         if not find_daysimeter():
             pass
         else:
@@ -1104,12 +1141,16 @@ class MakeCSV(QtCore.QThread):
         QtCore.QThread.__init__(self, parent)
         self.data = data
         self.filename = filename
+
+        self.daysim_log = logging.getLogger('daysim_log')
+
+        self.err_log = logging.getLogger('err_log')
         
     def run(self):
         """ PURPOSE: Makes a CSV file from data. """
     
         filename = self.filename
-
+        self.daysim_log.info('Writing data to CSV file')
         with open(filename,'w') as csv_fp:
             csv_fp.write('time,red,green,blue,lux,CLA,activity,resets\n')
             for x in range(len(self.data[1][0])):
@@ -1119,6 +1160,7 @@ class MakeCSV(QtCore.QThread):
                  ',' +  str(self.data[1][6][x]) + ',' + \
                  str(self.data[1][8][x]) + ',' + str(self.data[1][9][x]) + '\n')
         set_download_flag()
+        self.daysim_log.info('All data written to CSV file')
         self.emit(QtCore.SIGNAL('update'))
 
 def main():

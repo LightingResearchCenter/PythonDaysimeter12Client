@@ -6,9 +6,8 @@ INPUT:
 OUTPUT: Constants to calculate cla and lux
 """
 
-import sys
 import logging
-from geterrlog import get_err_log
+from getlogs import get_err_log, get_daysim_log, setup_logger
 import constants
 
 def get_constants():  
@@ -18,7 +17,12 @@ def get_constants():
 
     #Create error log file named error.log on the desktop
     errlog_filename = get_err_log()
-    logging.basicConfig(filename=errlog_filename, level=logging.DEBUG)
+    setup_logger('errlog', errlog_filename)
+    errlog = logging.getLogger('errlog')
+    
+    daysimlog_filename = get_daysim_log()
+    setup_logger('daysimlog', daysimlog_filename)
+    daysimlog = logging.getLogger('daysimlog')
     
     found = False
     
@@ -27,7 +31,7 @@ def get_constants():
         constants_fp = open(constants_filename,"r")
     #Catch IO exception, add to log and continue
     except IOError:
-        logging.error('Could not open constants file from server')
+        errlog.error('Could not open constants file from server')
     #Read data into lists
     else:
         #Trash handles header and/or empty lines in the file.
@@ -51,7 +55,7 @@ def get_constants():
             constants_fp = open(local_const_filename,"r")
         #Catch IO exception, add to log and quit
         except IOError:
-            logging.error('Could not open constants file locally')
+            errlog.error('Could not open constants file locally')
             return False
         #Read data into lists
         else:

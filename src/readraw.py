@@ -13,7 +13,7 @@ import time
 import math
 from datetime import datetime
 from datetime import timedelta
-from geterrlog import get_err_log
+from getlogs import get_err_log, get_daysim_log, setup_logger
 from adjactiveflag import adj_active_flag
 from getcalibinfo import get_calib_info
 from processconstants import process_constants
@@ -36,9 +36,12 @@ def read_raw():
     
     #Create error log file named error.log on the desktop
     errlog_filename = get_err_log()
-    if errlog_filename == '':
-        sys.exit(1)
-    logging.basicConfig(filename=errlog_filename, level=logging.DEBUG)
+    setup_logger('errlog', errlog_filename)
+    errlog = logging.getLogger('errlog')
+    
+    daysimlog_filename = get_daysim_log()
+    setup_logger('daysimlog', daysimlog_filename)
+    daysimlog = logging.getLogger('daysimlog')
     
     path = find_daysimeter()
     #Open header file for reading
@@ -46,7 +49,7 @@ def read_raw():
         logfile_fp = open(path + log_filename,'r')
     #Catch IO exception (if present), add to log and quit
     except IOError:
-        logging.error('Could not open logfile')
+        errlog.error('Could not open logfile')
         sys.exit(1)
     else:
         #Read each line of the header and put it into a list
@@ -84,7 +87,7 @@ def read_raw():
         datafile_fp = open(path + data_filename,"rb")
     #Catch IO exception (if present), add to log and quit
     except IOError:
-        logging.error('Could not open datafile')
+        errlog.error('Could not open datafile')
         sys.exit(1)
     else:
         #Read entire file into a string called data
