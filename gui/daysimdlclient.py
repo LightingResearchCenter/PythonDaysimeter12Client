@@ -22,6 +22,7 @@ from src.logfunc import stop_log
 from src.logfunc import resume_log
 from src.finddaysimeter import find_daysimeter
 from src.startnewlog import StartNewLog
+from src.getversion import get_current_version
 import src.constants as constants_
 from statuslight import StatusLight
 from statuswidget import StatusWidget
@@ -50,6 +51,7 @@ class LayoutExample(QtGui.QMainWindow):
         self.make_toolbar()
 #        self.create_menus()
         self.load_config()
+        self.update_check()
         self.make_enabler()
 #        self.daysimeter_status()
         self.disconnected = True
@@ -72,6 +74,7 @@ class LayoutExample(QtGui.QMainWindow):
 #        self.daysim_status.setAllowedAreas(QtCore.Qt.TopDockWidgetArea)
 #        self.daysim_status.setFeatures(QtGui.QDockWidget.NoDockWidgetFeatures)
 #        self.addDockWidget(QtCore.Qt.TopDockWidgetArea, self.daysim_status)
+
         
     def get_daysim_log(self):
         return self.daysim_log
@@ -138,6 +141,9 @@ class LayoutExample(QtGui.QMainWindow):
         
         start_log_shortcut = QtGui.QShortcut(QtGui.QKeySequence('SHIFT+CTRL+L'), \
         self, self.get_start_log, self.get_start_log, QtCore.Qt.WidgetShortcut)
+        
+        toggle_show_shortcut = QtGui.QShortcut(QtGui.QKeySequence('SHIFT+CTRL+T'), \
+        self, self.toggle_show, self.toggle_show, QtCore.Qt.WidgetShortcut)
         
         
     def make_toolbar(self):
@@ -608,6 +614,36 @@ class LayoutExample(QtGui.QMainWindow):
                         log_fp.write(x)
             else:
                 self.statusBar().showMessage('Could not fix header file.', 2000)
+                
+    def update_check(self):
+        if self.init.has_section('Version Settings'):
+            if not self.init.get('Version Settings', 'show') == 'false':
+                version = self.init.get('Version Settings', 'version')
+                if not get_current_version(version) == version:
+                    QtGui.QMessageBox.question(self, 'Message',
+                                               'There is a newer version of the' + \
+                                               ' daysimeter client available.', \
+                                               QtGui.QMessageBox.Ok)
+                                               
+    def toggle_show(self):
+        if self.init.has_section('Version Settings'):
+            show_status = self.init.get('Version Settings', 'show')
+            if show_status == 'true':
+                self.init.set('Version Settings', 'show', 'false')
+                self.statusBar().showMessage('Version pop-up disabled.', 2000)
+                self.update_config()
+            elif show_status == 'false':
+                self.init.set('Version Settings', 'show', 'true')
+                self.statusBar().showMessage('Version pop-up enabled.', 2000)
+                self.update_config()
+                
+    def update_config(self):
+        dir_path = os.getcwd()
+        file_path = os.path.join(dir_path, 'daysimeter.ini')
+        if os.path.isfile(file_path):
+            init_file = open(file_path, mode='w')
+            self.init.write(init_file)
+            init_file.close()
         
     def update_header(self, file_name):
         """Updates the header of the older daysimeter txt data files

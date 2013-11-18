@@ -58,3 +58,6 @@ DEVICE_MODEL = 'daysimeter12'
 #DEVICE_VERSION is related to DEVICE_MODEL and is basically just
 #here so concatenation of deviceSN is more dynamic.
 DEVICE_VERSION = '12'
+#LATEST_URL is the url which redirects to the latest version of the slient on
+#GitHub. It is used to determine latest client version.
+LATEST_URL = 'https://github.com/LightingResearchCenter/PythonDaysimeter12Client/releases/latest'
