@@ -1152,13 +1152,14 @@ class MakeCSV(QtCore.QThread):
         filename = self.filename
         self.daysim_log.info('Writing data to CSV file')
         with open(filename,'w') as csv_fp:
-            csv_fp.write('time,red,green,blue,lux,CLA,activity,resets\n')
+            csv_fp.write('time,red,green,blue,lux,CLA,CS,activity,resets\n')
             for x in range(len(self.data[1][0])):
                 csv_fp.write(str(self.data[1][0][x]) + ',' + \
                 str(self.data[1][2][x]) + ',' + str(self.data[1][3][x]) + ',' \
                 + str(self.data[1][4][x]) + ',' +  str(self.data[1][5][x]) + \
                  ',' +  str(self.data[1][6][x]) + ',' + \
-                 str(self.data[1][8][x]) + ',' + str(self.data[1][9][x]) + '\n')
+                 str(self.data[1][7][x]) + ',' + str(self.data[1][8][x]) + \
+                 ',' + str(self.data[1][9][x]) + '\n')
         set_download_flag()
         self.daysim_log.info('All data written to CSV file')
         self.emit(QtCore.SIGNAL('update'))
