@@ -27,7 +27,7 @@ from spacepy import pycdf
 from getlocaloffset import get_local_offset_s
 from setdownloadflag import set_download_flag
 from updateheader import update_header
-from convertheader import convert_header_f1
+from convertheader import convert_header
 from PyQt4 import QtGui, QtCore
 
     
@@ -117,7 +117,11 @@ class DownloadMake(QtGui.QWidget):
                 if len(info) == 17:
                     daysim_id = info[1].strip('\n')
                 elif len(info) == 35:
-                    daysim_id = info[3].strip('\n')
+                    if info[27] == 'ID number(Do Not Change)':
+                        convert_header('h2')
+                        log_fp.seek(0)
+                        info = log_fp.readlines()
+                    daysim_id = info[8].strip('\n')
                 else:
                     daysim_id = 'NULL'
                 now = str(datetime.now())
@@ -237,7 +241,7 @@ class DownloadMake(QtGui.QWidget):
             QtGui.QMessageBox.No)
 
                 if reply == QtGui.QMessageBox.Yes:
-                    convert_header_f1()
+                    convert_header('h2')
                     self.download_done()
                 else:
                     self.download_done()
@@ -572,7 +576,7 @@ class SubjectInfo(QtGui.QWidget):
         
         start_dt_data = datetime.strptime(self.start_time, '%Y-%m-%d %H:%M:%S')
         end_dt_data = datetime.strptime(self.end_time, '%Y-%m-%d %H:%M:%S')
-                
+        
         if (start_dt - start_dt_data) >= timedelta(minutes = 0) and \
            (end_dt_data - end_dt) >= timedelta(minutes = 0):
             return True
@@ -646,9 +650,9 @@ class DownloadDaysimeter(QtCore.QThread):
             device_model = constants_.DEVICE_MODEL
             device_sn = constants_.DEVICE_VERSION + info[1]
         else:
-            daysimeter_id = int(info[3])
+            daysimeter_id = int(info[8])
             device_model = info[2]
-            device_sn = info[2].lstrip('abcdefghijklmnopqrstuvwxyz') + info[3]
+            device_sn = info[2].lstrip('abcdefghijklmnopqrstuvwxyz') + info[8]
         #Get calibration info
         if not old_flag:
             calib_const = [float(x) for x in info[9].strip('\n').split('\t')]
@@ -694,10 +698,7 @@ class DownloadDaysimeter(QtCore.QThread):
         epoch_time = datetime.fromtimestamp(time.mktime(struct_time))
         #log_interval is interval that the Daysimeter took measurements at.
         #Since python uses seconds since epoch, cast as int
-        if not old_flag:
-            log_interval = int(info[8])
-        else:
-            log_interval = int(info[3])
+        log_interval = int(info[3])
         
         #Determine the number of of logged entries. Why divded by 8?
         #I'm glad you asked! There are 4 things that are logged, and

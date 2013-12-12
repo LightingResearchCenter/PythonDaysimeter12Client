@@ -18,4 +18,6 @@ def update_header():
         info = log_fp.readlines()
         if len(info) == 17:
             return True
+        elif info[27] == 'ID number(Do Not Change)':
+            return True
     return False

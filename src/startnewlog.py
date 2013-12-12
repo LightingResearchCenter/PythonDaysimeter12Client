@@ -235,9 +235,9 @@ class NewLogThread(QtCore.QThread):
                 info[0] = '2\n'
                 info[7] = self.month + '-' + self.day + '-' + self.year + \
                           ' ' + self.hour + ':' + self.minute + '\n'
-                info[8] = self.log_interval + '\n'
+                info[3] = self.log_interval + '\n'
                 info[5] = '1\n'
-                daysimeter_id = info[3].strip('\n')
+                daysimeter_id = info[8].strip('\n')
                 daysimeter_start = info[7].strip('\n')
             with open(path + log_filename, 'w') as log_fp:
                 for x in info:

@@ -70,9 +70,9 @@ def read_raw():
         device_model = constants_.DEVICE_MODEL
         device_sn = constants_.DEVICE_VERSION + info[1]
     else:
-        daysimeter_id = int(info[3])
+        daysimeter_id = int(info[8])
         device_model = info[2]
-        device_sn = info[2].lstrip('abcdefghijklmnopqrstuvwxyz') + info[3]
+        device_sn = info[2].lstrip('abcdefghijklmnopqrstuvwxyz') + info[8]
     
     #Get calibration info
     if not old_flag:
@@ -105,10 +105,7 @@ def read_raw():
     epoch_time = datetime.fromtimestamp(time.mktime(struct_time))
     #log_interval is interval that the Daysimeter took measurements at.
     #Since python uses seconds since epoch, cast as int
-    if not old_flag:
-        log_interval = int(info[8])
-    else:
-        log_interval = int(info[3])
+    log_interval = int(info[3])
     
     #Determine the number of of logged entries. Why divded by 8?
     #I'm glad you asked! There are 4 things that are logged, and

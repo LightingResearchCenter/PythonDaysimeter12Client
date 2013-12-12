@@ -15,7 +15,7 @@ def get_err_log():
     """ PURPOSE: Returns the desktop directory to store the error log. """
     #If Windows, place in program files
     if sys.platform == 'win32':
-        return 'C:\Program Files (x86)\Daysimeter Client\error.log'
+        return 'C:\Daysimeter Client\error.log'
     #Else if Mac OSX, place on desktop
     elif sys.platform == 'darwin':
         return '/Users/' + pwd.getpwuid(os.getuid())[0] + '/Desktop/error.log'
@@ -32,7 +32,7 @@ def get_daysim_log():
     """ PURPOSE: Returns the  directory to store the daysimeter log. """
     #If Windows, place in program files
     if sys.platform == 'win32':
-        return 'C:\Program Files (x86)\Daysimeter Client\daysimeter.log'
+        return 'C:\Daysimeter Client\daysimeter.log'
     #Else if Mac OSX, place on desktop
     elif sys.platform == 'darwin':
         return '/Users/' + pwd.getpwuid(os.getuid())[0] + '/Desktop/daysimeter.log'

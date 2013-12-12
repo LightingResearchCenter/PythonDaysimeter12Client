@@ -42,6 +42,13 @@ class LayoutExample(QtGui.QMainWindow):
         ini file        
         """
         QtGui.QMainWindow.__init__(self)
+        
+        setup_logger('daysim_log', get_daysim_log())
+        self.daysim_log = logging.getLogger('daysim_log')
+
+        setup_logger('err_log', get_err_log())
+        self.err_log = logging.getLogger('err_log')
+        
         self.setWindowTitle('Daysimeter Download Client')
         self.setMinimumSize(600, 400)
         self.main_widget = gw.GraphingWidget(self)
@@ -57,11 +64,7 @@ class LayoutExample(QtGui.QMainWindow):
         self.disconnected = True
         self.make_shortcuts()
         
-        setup_logger('daysim_log', get_daysim_log())
-        self.daysim_log = logging.getLogger('daysim_log')
 
-        setup_logger('err_log', get_err_log())
-        self.err_log = logging.getLogger('err_log')
         
         
         self.show()
@@ -750,5 +753,7 @@ class EnableButtons(QtCore.QThread):
                 self.connected.emit()
             time.sleep(1)
 
-APP = LayoutExample()
-APP.run()
+if __name__ == '__main__':    
+
+    APP = LayoutExample()
+    APP.run()

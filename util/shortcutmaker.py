@@ -11,9 +11,9 @@ from win32com.client import Dispatch
 def main(): 
     desktop = winshell.desktop()
     path = os.path.join(desktop, "Daysimeter Client.lnk")
-    target = r"C:/Program Files (x86)/Daysimeter Client/daysimdlclient/daysimdlclient.exe"
-    wDir = r"C:/Program Files (x86)/Daysimeter Client/daysimdlclient"
-    icon = r"C:/Program Files (x86)/Daysimeter Client/daysimdlclient/daysimdlclient.exe"
+    target = r"C:/Daysimeter Client/daysimdlclient/daysimdlclient.exe"
+    wDir = r"C:/Daysimeter Client/daysimdlclient"
+    icon = r"C:/Daysimeter Client/daysimdlclient/daysimdlclient.exe"
      
     shell = Dispatch('WScript.Shell')
     shortcut = shell.CreateShortCut(path)

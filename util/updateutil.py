@@ -8,7 +8,7 @@ import sys, os
 sys.path.insert(0, os.pardir)
 from PyQt4 import QtGui, QtCore
 import logging
-from src.geterrlog import get_err_log
+from src.getlogs import get_err_log, get_daysim_log, setup_logger
 from src.getcalibinfo import get_calib_info
 from src.getconstants import get_constants
 from src.finddaysimeter import find_daysimeter
@@ -106,7 +106,6 @@ class UpdateHeaderF1(QtCore.QThread):
         firm_12 = constants.FIRM12
         
         #Create error log file named error.log on the desktop
-        errlog_filename = get_err_log()
         errlog_filename = get_err_log()
         setup_logger('errlog', errlog_filename)
         errlog = logging.getLogger('errlog')
