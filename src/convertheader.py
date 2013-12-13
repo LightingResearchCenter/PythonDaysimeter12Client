@@ -34,7 +34,7 @@ def convert_header(version):
             
     else:
         if info[1] in {'1.1', '1.2'}:
-            if info[27] == 'ID number(Do Not Change)':
+            if not len(info[3]) == 3:
                 current_version = 'h1'
             else:
                 current_version = 'h2'
@@ -62,7 +62,6 @@ def convert_header_h2():
     An example F1 header is available at //root/Public/bierma2 from within
     The LRC's network as of 20.06.2013
     """
-    print 'here'
     log_filename = constants.LOG_FILENAME
     battery_string = constants.BATTERY_STRING
     firm_12 = constants.FIRM12
@@ -105,13 +104,11 @@ def convert_header_h2():
         else:
             logfile_fp.write('1.1\ndaysimeter12\n')
         #Shifts information down because firmware version is now on line 1
-        print info[3]
         logfile_fp.write(info[3])
         logfile_fp.write(info[4])
         logfile_fp.write(info[5])
         logfile_fp.write(info[6])
         logfile_fp.write(info[2])
-        print info[1]
         logfile_fp.write(info[1])
         
         #Write calibration information to file. Woohoo for putting this
@@ -133,14 +130,12 @@ def convert_header_h2():
                 logfile_fp.write('Firmware Version Number (0.1 old, 1.x ' + \
                 'future e.g. 1.0) 1.1 = New Header, LSB of Activity is NOT' + \
                 ' a flag. 1.2 = New Header, LSB is a flag.\nDevice Model\n')
-                logfile_fp.write(info[13])
-                continue
             if x == 12:
                 logfile_fp.write(info[14])
                 logfile_fp.write(info[15])
                 logfile_fp.write(battery_string)
                 logfile_fp.write(info[12])
-                logfile_fp.write(info[11])
+                logfile_fp.write(info[13])
                 break
             logfile_fp.write(info[x])
         logfile_fp.write('Calibration Factor (R,G,B)\nPhotopic Coefficient' + \
@@ -356,7 +351,7 @@ def convert_header_h01():
         info[ref_index - 5] = info[ref_index - 3]
         info[ref_index - 4] = info[ref_index + 1]
         info[ref_index - 3] = info[ref_index + 2]
-        #Moves values around
+        #Moves values around        
         info[1] = info[3]
         info[2] = info[7]
         info[3] = info[8]
