@@ -307,12 +307,14 @@ class SubjectInfo(QtGui.QWidget):
         self.year_start = QtGui.QComboBox()
         self.hour_start = QtGui.QComboBox()
         self.minute_start = QtGui.QComboBox()
+        self.second_start = QtGui.QComboBox()
         
         self.day_end = QtGui.QComboBox()
         self.month_end = QtGui.QComboBox()
         self.year_end = QtGui.QComboBox()
         self.hour_end = QtGui.QComboBox()
         self.minute_end = QtGui.QComboBox()
+        self.second_end = QtGui.QComboBox()
         
         self.subject_sex.addItems(['-', 'Male', 'Female', 'Other'])
         
@@ -331,12 +333,15 @@ class SubjectInfo(QtGui.QWidget):
         self.year_start.addItems([str(x) for x in range(2013, 2021)])
         self.hour_start.addItems([str(x) for x in range(24)])
         self.minute_start.addItems([str(x) for x in range(60)])
+        self.second_start.addItems(['00','30'])
+        
         
         self.day_end.addItems([str(x) for x in range(1, 32)])
         self.month_end.addItems([str(x) for x in range(1,13)])
         self.year_end.addItems([str(x) for x in range(2013, 2021)])
         self.hour_end.addItems([str(x) for x in range(24)])
         self.minute_end.addItems([str(x) for x in range(60)])
+        self.second_end.addItems(['00','30'])
         
         self.layout_dob = QtGui.QHBoxLayout()
         self.layout_dob.addWidget(self.day_dob)
@@ -350,6 +355,7 @@ class SubjectInfo(QtGui.QWidget):
         self.layout_start.addWidget(self.year_start)
         self.layout_start.addWidget(self.hour_start)
         self.layout_start.addWidget(self.minute_start)
+        self.layout_start.addWidget(self.second_start)
         
         self.layout_end = QtGui.QHBoxLayout()
         self.layout_end.addWidget(self.day_end)
@@ -357,6 +363,7 @@ class SubjectInfo(QtGui.QWidget):
         self.layout_end.addWidget(self.year_end)
         self.layout_end.addWidget(self.hour_end)
         self.layout_end.addWidget(self.minute_end)
+        self.layout_end.addWidget(self.second_end)
         
         self.subject_mass.setInputMask('000.000')
         self.subject_mass.setText('000.000')
@@ -373,8 +380,8 @@ class SubjectInfo(QtGui.QWidget):
         layout.addRow('Sex', self.subject_sex)
         layout.addRow('Date of Birth', self.layout_dob)
         layout.addRow('Mass (in kg)', self.subject_mass)
-        layout.addRow('Start Date (DD/MM/YYYY HH:MM)', self.layout_start)
-        layout.addRow('End Date (DD/MM/YYYY HH:MM)', self.layout_end)
+        layout.addRow('Start Date (DD/MM/YYYY HH:MM:SS)', self.layout_start)
+        layout.addRow('End Date (DD/MM/YYYY HH:MM:SS)', self.layout_end)
         layout.addRow(button_layout)
         
         self.submit.setEnabled(False)
@@ -387,12 +394,14 @@ class SubjectInfo(QtGui.QWidget):
         self.year_start.setCurrentIndex(int(self.start_time[2:4]) - 13)
         self.hour_start.setCurrentIndex(int(self.start_time[11:13]))
         self.minute_start.setCurrentIndex(int(self.start_time[14:16]))
+        self.second_start.setCurrentIndex(0 if self.start_time[17:19] == '00' else 1)
         
         self.day_end.setCurrentIndex(int(self.end_time[8:10]) - 1)
         self.month_end.setCurrentIndex(int(self.end_time[5:7]) - 1)
         self.year_end.setCurrentIndex(int(self.end_time[2:4]) - 13)
         self.hour_end.setCurrentIndex(int(self.end_time[11:13]))
         self.minute_end.setCurrentIndex(int(self.end_time[14:16]))
+        self.second_end.setCurrentIndex(0 if self.end_time[17:19] == '00' else 1)
         
         self.subject_id.textChanged.connect(self.enable_submit)
         self.subject_sex.currentIndexChanged.connect(self.enable_submit)
@@ -404,11 +413,13 @@ class SubjectInfo(QtGui.QWidget):
         self.year_start.currentIndexChanged.connect(self.enable_submit)
         self.hour_start.currentIndexChanged.connect(self.enable_submit)
         self.minute_start.currentIndexChanged.connect(self.enable_submit)
+        self.second_start.currentIndexChanged.connect(self.enable_submit)
         self.day_end.currentIndexChanged.connect(self.enable_submit)
         self.month_end.currentIndexChanged.connect(self.enable_submit)
         self.year_end.currentIndexChanged.connect(self.enable_submit)
         self.hour_end.currentIndexChanged.connect(self.enable_submit)
         self.minute_end.currentIndexChanged.connect(self.enable_submit)
+        self.second_end.currentIndexChanged.connect(self.enable_submit)
         self.subject_mass.textChanged.connect(self.enable_submit)
         
         
@@ -471,9 +482,14 @@ class SubjectInfo(QtGui.QWidget):
         else:
             start_time = start_time + str(self.hour_start.currentText()) + ':'
         if len(self.minute_start) == 1:
-            start_time = start_time + '0' + str(self.minute_start.currentText())
+            start_time = start_time + '0' + str(self.minute_start.currentText()) + ':'
         else:
-            start_time = start_time + str(self.minute_start.currentText())
+            start_time = start_time + str(self.minute_start.currentText()) + ':'
+        if len(self.second_start) == 1:
+            start_time = start_time + '0' + str(self.second_start.currentText())
+        else:
+            start_time = start_time + str(self.second_start.currentText())
+        
 
         end_time = ''
         if len(self.year_end.currentText()) == 1:
@@ -497,9 +513,13 @@ class SubjectInfo(QtGui.QWidget):
         else:
             end_time = end_time + str(self.hour_end.currentText()) + ':'
         if len(self.minute_end) == 1:
-            end_time = end_time + '0' + str(self.minute_end.currentText())
+            end_time = end_time + '0' + str(self.minute_end.currentText()) + ':'
         else:
-            end_time = end_time + str(self.minute_end.currentText())
+            end_time = end_time + str(self.minute_end.currentText()) + ':'
+        if len(self.second_end) == 1:
+            end_time = end_time + '0' + str(self.second_end.currentText())
+        else:
+            end_time = end_time + str(self.second_end.currentText())
 
         self.success = True
         self.emit(QtCore.SIGNAL('sendinfo'), [sub_id, sub_sex, sub_dob, \
@@ -541,9 +561,13 @@ class SubjectInfo(QtGui.QWidget):
         else:
             start_time = start_time + str(self.hour_start.currentText()) + ':'
         if len(self.minute_start) == 1:
-            start_time = start_time + '0' + str(self.minute_start.currentText())
+            start_time = start_time + '0' + str(self.minute_start.currentText()) + ':'
         else:
-            start_time = start_time + str(self.minute_start.currentText())
+            start_time = start_time + str(self.minute_start.currentText()) + ':'
+        if len(self.second_start) == 1:
+            start_time = start_time + '0' + str(self.second_start.currentText())
+        else:
+            start_time = start_time + str(self.second_start.currentText())
 
         end_time = ''
         if len(self.year_end.currentText()) == 1:
@@ -567,12 +591,16 @@ class SubjectInfo(QtGui.QWidget):
         else:
             end_time = end_time + str(self.hour_end.currentText()) + ':'
         if len(self.minute_end) == 1:
-            end_time = end_time + '0' + str(self.minute_end.currentText())
+            end_time = end_time + '0' + str(self.minute_end.currentText()) + ':'
         else:
-            end_time = end_time + str(self.minute_end.currentText())
+            end_time = end_time + str(self.minute_end.currentText()) + ':'
+        if len(self.second_end) == 1:
+            end_time = end_time + '0' + str(self.second_end.currentText())
+        else:
+            end_time = end_time + str(self.second_end.currentText())
             
-        start_dt = datetime.strptime(start_time, '%Y-%m-%d %H:%M')
-        end_dt = datetime.strptime(end_time, '%Y-%m-%d %H:%M')
+        start_dt = datetime.strptime(start_time, '%Y-%m-%d %H:%M:%S')
+        end_dt = datetime.strptime(end_time, '%Y-%m-%d %H:%M:%S')
         
         start_dt_data = datetime.strptime(self.start_time, '%Y-%m-%d %H:%M:%S')
         end_dt_data = datetime.strptime(self.end_time, '%Y-%m-%d %H:%M:%S')
@@ -860,7 +888,7 @@ class DownloadDaysimeter(QtCore.QThread):
             blue = args[2]
             constants = args[3]
         else:
-            errlog.warning('Invalid usage of calc_lux_cla')
+            self.err_log.warning('Invalid usage of calc_lux_cla')
             sys.exit(1)
             
         loop_max = num_entries = len(red)
@@ -913,13 +941,14 @@ class MakeCDF(QtCore.QThread):
         self.info = info
         self.logical_array(info[4], info[5])
         
+        
         self.daysim_log = logging.getLogger('daysim_log')
 
         self.err_log = logging.getLogger('err_log')
         
     def logical_array(self, start, end):
-        start_dt = datetime.strptime(start, '%Y-%m-%d %H:%M')
-        end_dt = datetime.strptime(end, '%Y-%m-%d %H:%M')
+        start_dt = datetime.strptime(start, '%Y-%m-%d %H:%M:%S')
+        end_dt = datetime.strptime(end, '%Y-%m-%d %H:%M:%S')
         start_index = self.data[1][0].index(start_dt)
         end_index = self.data[1][0].index(end_dt)
         
