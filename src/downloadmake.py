@@ -164,7 +164,8 @@ class DownloadMake(QtGui.QWidget):
         """
         if self.filename[len(self.filename)-4:] == '.cdf':
             self.subjectinfo = SubjectInfo([data[1][0][0], \
-                                            data[1][0][len(data[1][0]) - 1]])
+                                            data[1][0][len(data[1][0]) - 1], \
+                                            data[0][3]])
             self.connect(self.subjectinfo, QtCore.SIGNAL('sendinfo'), \
             self.make_cdf)
             self.connect(self.subjectinfo, QtCore.SIGNAL('cancelled'), \
@@ -291,6 +292,10 @@ class SubjectInfo(QtGui.QWidget):
         
         self.start_time = str(args[0])
         self.end_time = str(args[1])
+        
+        self.start_dt = datetime.strptime(self.start_time, '%Y-%m-%d %H:%M:%S')
+        self.end_dt = datetime.strptime(self.end_time, '%Y-%m-%d %H:%M:%S')
+        self.log_interval = int(args[2])
         
         self.subject_id = QtGui.QLineEdit()
         self.subject_sex = QtGui.QComboBox()
@@ -448,6 +453,98 @@ class SubjectInfo(QtGui.QWidget):
         self.emit(QtCore.SIGNAL('cancelled'))
         self.close()
         
+    def validate_date(self):
+        start_time = ''
+        if len(self.year_start.currentText()) == 1:
+            start_time = start_time + '0' + str(self.year_start.currentText())\
+            + '-'
+        else:
+            start_time = start_time + str(self.year_start.currentText()) + '-'
+        if len(self.month_start.currentText()) == 1:
+            start_time = start_time + '0' + str(self.month_start.currentText())\
+            + '-'
+        else:
+            start_time = start_time + str(self.month_start.currentText()) + '-'
+        if len(self.day_start) == 1:
+            start_time = start_time + '0' + str(self.day_start.currentText())\
+            + ' '
+        else:
+            start_time = start_time + str(self.day_start.currentText()) + ' '
+        if len(self.hour_start) == 1:
+            start_time = start_time + '0' + str(self.hour_start.currentText())\
+            + ':'
+        else:
+            start_time = start_time + str(self.hour_start.currentText()) + ':'
+        if len(self.minute_start) == 1:
+            start_time = start_time + '0' + str(self.minute_start.currentText()) + ':'
+        else:
+            start_time = start_time + str(self.minute_start.currentText()) + ':'
+        if len(self.second_start) == 1:
+            start_time = start_time + '0' + str(self.second_start.currentText())
+        else:
+            start_time = start_time + str(self.second_start.currentText())
+        
+
+        end_time = ''
+        if len(self.year_end.currentText()) == 1:
+            end_time = end_time + '0' + str(self.year_end.currentText())\
+            + '-'
+        else:
+            end_time = end_time + str(self.year_end.currentText()) + '-'
+        if len(self.month_end.currentText()) == 1:
+            end_time = end_time + '0' + str(self.month_end.currentText())\
+            + '-'
+        else:
+            end_time = end_time + str(self.month_end.currentText()) + '-'
+        if len(self.day_end) == 1:
+            end_time = end_time + '0' + str(self.day_end.currentText())\
+            + ' '
+        else:
+            end_time = end_time + str(self.day_end.currentText()) + ' '
+        if len(self.hour_end) == 1:
+            end_time = end_time + '0' + str(self.hour_end.currentText())\
+            + ':'
+        else:
+            end_time = end_time + str(self.hour_end.currentText()) + ':'
+        if len(self.minute_end) == 1:
+            end_time = end_time + '0' + str(self.minute_end.currentText()) + ':'
+        else:
+            end_time = end_time + str(self.minute_end.currentText()) + ':'
+        if len(self.second_end) == 1:
+            end_time = end_time + '0' + str(self.second_end.currentText())
+        else:
+            end_time = end_time + str(self.second_end.currentText())
+            
+        start_dt = datetime.strptime(start_time, '%Y-%m-%d %H:%M:%S')
+        end_dt = datetime.strptime(end_time, '%Y-%m-%d %H:%M:%S')
+        
+        start_diff = (start_dt - self.start_dt).total_seconds()
+        end_diff = (self.end_dt - end_dt).total_seconds()
+
+        if not start_diff % self.log_interval == 0:
+            start_diff = (self.log_interval - (start_diff % self.log_interval))
+            
+        if not end_diff % self.log_interval == 0:
+            end_diff = (self.log_interval - (end_diff % self.log_interval))
+            
+        bound_start = start_dt + timedelta(seconds = start_diff)
+        bound_end = end_dt - timedelta(seconds = end_diff)
+        
+        self.day_start.setCurrentIndex(bound_start.day - 1)
+        self.month_start.setCurrentIndex(bound_start.month - 1)
+        self.year_start.setCurrentIndex(bound_start.year - 2013)
+        self.hour_start.setCurrentIndex(bound_start.hour)
+        self.minute_start.setCurrentIndex(bound_start.minute)
+        self.second_start.setCurrentIndex(0 if bound_start.second == 0 else 1)
+        
+        self.day_end.setCurrentIndex(bound_end.day - 1)
+        self.month_end.setCurrentIndex(bound_end.month - 1)
+        self.year_end.setCurrentIndex(bound_end.year - 2013)
+        self.hour_end.setCurrentIndex(bound_end.hour)
+        self.minute_end.setCurrentIndex(bound_end.minute)
+        self.second_end.setCurrentIndex(0 if bound_end.second == 0 else 1)
+
+        
     def submit_info(self):
         """
         PURPOSE: Take user given infomation and pass it back to the main widget
@@ -459,6 +556,8 @@ class SubjectInfo(QtGui.QWidget):
             str(self.month_dob.currentText()) + ' ' + \
             str(self.year_dob.currentText())
         sub_mass = str(self.subject_mass.text())
+        
+        self.validate_date()
         
         start_time = ''
         if len(self.year_start.currentText()) == 1:
@@ -856,8 +955,8 @@ class DownloadDaysimeter(QtCore.QThread):
         cs = calc_cs(cla)
         self.daysim_log.info('Readying data to be written to file')
         self.emit(QtCore.SIGNAL('make'),([device_model, device_sn, \
-        calib_info], [times, mat_times, red, green, blue, lux, cla, cs, \
-        activity, resets]))
+        calib_info, log_interval], [times, mat_times, red, green, blue, lux, \
+        cla, cs, activity, resets]))
         
         
         if self.move:
