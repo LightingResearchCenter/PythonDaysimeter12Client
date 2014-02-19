@@ -523,12 +523,16 @@ class SubjectInfo(QtGui.QWidget):
 
         if not start_diff % self.log_interval == 0:
             start_diff = (self.log_interval - (start_diff % self.log_interval))
+        else:
+            start_diff = 0
             
         if not end_diff % self.log_interval == 0:
             end_diff = (self.log_interval - (end_diff % self.log_interval))
+        else:
+            end_diff = 0
             
         bound_start = start_dt + timedelta(seconds = start_diff)
-        bound_end = end_dt - timedelta(seconds = end_diff)
+        bound_end = end_dt + timedelta(seconds = end_diff)
         
         self.day_start.setCurrentIndex(bound_start.day - 1)
         self.month_start.setCurrentIndex(bound_start.month - 1)
@@ -543,7 +547,6 @@ class SubjectInfo(QtGui.QWidget):
         self.hour_end.setCurrentIndex(bound_end.hour)
         self.minute_end.setCurrentIndex(bound_end.minute)
         self.second_end.setCurrentIndex(0 if bound_end.second == 0 else 1)
-
         
     def submit_info(self):
         """
@@ -1051,10 +1054,10 @@ class MakeCDF(QtCore.QThread):
         start_index = self.data[1][0].index(start_dt)
         end_index = self.data[1][0].index(end_dt)
         
-        self.logical_arr = [0] * len(self.data[1][0])
+        self.logical_arr = [False] * len(self.data[1][0])
         
         for x in range(start_index, end_index):
-            self.logical_arr[x] = 1
+            self.logical_arr[x] = True
         
     def run(self):
         """ PURPOSE: Makes a CDF file from data. """
