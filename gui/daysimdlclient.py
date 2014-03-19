@@ -10,7 +10,7 @@ sys.path.insert(0, os.pardir)
 import time
 import math
 from PyQt4 import QtGui, QtCore
-from numpy import genfromtxt, core
+from numpy import genfromtxt, core, asscalar
 from datetime import datetime 
 import graphingwidget as gw
 from ConfigParser import ConfigParser, SafeConfigParser
@@ -574,10 +574,36 @@ class LayoutExample(QtGui.QMainWindow):
         # Opens and parses the cdf file 
         with pycdf.CDF(file_name) as daysim_data:
             daysim_data = daysim_data.copy()
-            timestamps = daysim_data['time']
+            timestamps = [daysim_data['time'][x] for x in \
+                          range(len(daysim_data['time'])) if \
+                          daysim_data['logicalArray'][x] == True]
             # Removes any data in the cdf related to time
             daysim_data = self.slicedict(daysim_data, 'time')
+            daysim_data = self.trim_data(daysim_data)
         return timestamps, daysim_data, 'cdf'
+        
+    def trim_data(self, cdf_dict):
+        """ Trims data using the logical array """
+        omit = {'time', 'timeOffset', 'matTime', 'attrs'}
+        list_dict = {}        
+        
+        for key in cdf_dict.keys():
+            if key in omit:
+                pass
+            else:
+                list_dict[key] = [asscalar(x) for x in cdf_dict[key]]
+            
+        for key in list_dict.keys():
+            if key == 'logicalArray':
+                pass
+            else:
+                list_dict[key] = [list_dict[key][x] for x in \
+                                  range(len(list_dict[key])) if \
+                                  list_dict['logicalArray'][x] == True]
+
+        list_dict['attrs'] = cdf_dict['attrs']
+            
+        return list_dict
         
     def slicedict(self, cdf_dict, substr):
         """Removes the keys containing substr from cdf_dict
