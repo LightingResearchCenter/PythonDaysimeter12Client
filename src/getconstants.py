@@ -26,6 +26,7 @@ def get_constants():
     
     found = False
     
+    daysimlog.info('getconstants.py func get_constants: Opening constants file')
     #Open constants file and get data
     try:
         constants_fp = open(constants_filename,"r")
@@ -48,6 +49,7 @@ def get_constants():
         cla = constants_fp.readline()
         del(trash)
         found = True
+        daysimlog.info('getconstants.py func get_constants: Constants read from server')
             
     if not found:
         #Open constants file and get data
@@ -72,7 +74,9 @@ def get_constants():
             trash = constants_fp.readline()
             cla = constants_fp.readline()
             del(trash)
-            
+            daysimlog.info('getconstants.py func get_constants: Constants read from local file')
+    
+    daysimlog.info('getconstants.py func get_constants: Processing constants')
     #Process data by eliminating tabs, newlines, and leading/trailing
     #spaces. Then, it deletes the first element of each list (the name)
     #and converts the reaming elements to floats.

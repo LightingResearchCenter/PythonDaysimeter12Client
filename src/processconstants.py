@@ -6,6 +6,8 @@ INPUT: scone_macula, v_lamda_macula, melanopsin, v_prime, v_lamda, cla
 OUTPUT: Constants to calculate cla and lux
 """
 
+import logging
+
 def process_constants(scone_macula, v_lamda_macula, melanopsin, \
 v_prime, v_lamda, cla):
     """
@@ -13,6 +15,9 @@ v_prime, v_lamda, cla):
     spaces. Then, it deletes the first element of each list (the name) and 
     converts the reaming elements to floats.
     """
+    info_log = logging.getLogger('daysim_log')    
+    info_log.info('processconstants.py func process_constants: Processing constants')
+    
     scone_macula = \
     [x.strip('\n') for x in scone_macula.split('\t') if x.strip()]
     v_lamda_macula = \

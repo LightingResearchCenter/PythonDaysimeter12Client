@@ -8,7 +8,7 @@ import sys, os
 from PyQt4 import QtGui, QtCore
 from datetime import datetime
 from finddaysimeter import find_daysimeter
-import constants
+import constants, logging
 
 class StartNewLog(QtGui.QWidget):
     """PURPOSE: Starts a new Daysimeter log."""
@@ -17,6 +17,8 @@ class StartNewLog(QtGui.QWidget):
         super(StartNewLog, self).__init__(parent)
         self.setWindowTitle('Start New Log')
         self.setFixedSize(360,180)
+        
+        self.info_log = logging.getLogger('daysim_log')
         
         self.day = QtGui.QComboBox()
         self.month = QtGui.QComboBox()
@@ -87,14 +89,19 @@ class StartNewLog(QtGui.QWidget):
         
         self.log_duration()
         self.show_self()
+        
+        self.info_log.info('startnewlog.py class StartNewLog func __init__: GUI initialized')
 
     def show_self(self):
-        if not find_daysimeter():        
+        if not find_daysimeter():    
+            self.info_log.info('startnewlog.py class StartNewLog func show_self: Daysimeter not found, closing widget')
             self.close()
         else:
+            self.info_log.info('startnewlog.py class StartNewLog func show_self: Daysimeter found, showing widget')
             self.show()
     
     def log_duration(self):
+        self.info_log.info('startnewlog.py class StartNewLog func log_interval: Updated log interval message')
         interval = int(self.log_interval.currentText())
         if interval == 30:
             self.info.showMessage('5.5 days with currently selected interval')
@@ -112,17 +119,21 @@ class StartNewLog(QtGui.QWidget):
         PURPOSE: Called when submit is clicked. Informs user that new log
         will overrite old log, and asks for confimation.
         """
+        self.info_log.info('startnewlog.py class StartNewLog func begin_log: Confirming overwriting of old log')
         reply = QtGui.QMessageBox.question(self, 'Warning',
         'Starting a new log will delete current log.', QtGui.QMessageBox.Ok, \
         QtGui.QMessageBox.Cancel)
         
         if reply == QtGui.QMessageBox.Ok:
+            self.info_log.info('startnewlog.py class StartNewLog func begin_log: Confirmed, old log will be erased when daysimeter ejected')
             self.start_log()
         else:
+            self.info_log.info('startnewlog.py class StartNewLog func begin_log: Confirmation failed, no new log will be started')
             pass
 
     def start_log(self):
         """"PURPOSE: Creates new log thread."""
+        self.info_log.info('startnewlog.py class StartNewLog func start_log: Creating new low thread')
         self.battery_hours()
         self.logthread = NewLogThread([str(self.day.currentText()), \
                                      str(self.month.currentText()), \
@@ -138,6 +149,7 @@ class StartNewLog(QtGui.QWidget):
         #I'm aware that the first time this is run, the same value will be
         #recorded twice. This is fine, don't worry about it. If it keeps you
         #up at night, come find me and I will tell you why, but in person only.
+        self.info_log.info('startnewlog.py class StartNewLog func close_self: Adding new log to start log')        
         if not os.path.exists('start_log.txt'):
             data = []
         else:
@@ -165,7 +177,7 @@ class StartNewLog(QtGui.QWidget):
         """PURPOSE: Sets status bar message to display battery hours logged."""
         path = find_daysimeter()
         log_filename = constants.LOG_FILENAME
-        
+        self.info_log.info('startnewlog.py class StartNewLog func battery_hours: Finding Daysimeter battery information')
         if not path:
             self.disp_error()
         else:

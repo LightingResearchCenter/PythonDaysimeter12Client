@@ -2,6 +2,7 @@
 subjectinfo
 Author: Jed Kundl
 Creation Date: 25.06.2013
+OUTDATED - Please see SubjectInfo Class within downloadmake.py
 """
 
 import sys

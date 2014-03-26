@@ -35,6 +35,7 @@ def get_calib_info(daysimeter_id):
     #Check and see if we can find the calibration information
     #on the LRC server
     #Open calibration file and get data
+    daysimlog.info('getcalibinfo.py func get_calib_info: Opening calibration file')
     try:
         calibration_fp = open(calibration_filename,"r")
     #Catch IO exception, add to log and continue
@@ -48,6 +49,7 @@ def get_calib_info(daysimeter_id):
         #Create a list of the calibration info
         calib_info = \
         [float(x) for x in calib_info[daysimeter_id].split('\t') if x.strip()]
+        daysimlog.info('getcalibinfo.py func get_calib_info: Calibration info read from server')
     
     #If nowhere else, calibration data should be local
     if calib_data == 0:
@@ -73,6 +75,7 @@ def get_calib_info(daysimeter_id):
                 #into a list called calib_info.
                 calib_info = calibration_fp.readlines()
                 calib_data = 2
+                daysimlog.info('getcalibinfo.py func get_calib_info: Calibration info read from manual entry')
             #Close the calibration file
                 
             #Create a list of the calibration info
@@ -86,6 +89,7 @@ def get_calib_info(daysimeter_id):
             #Create a list of the calibration info
             calib_info = \
             [float(x) for x in calib_info[daysimeter_id].split('\t') if x.strip()]
+            daysimlog.info('getcalibinfo.py func get_calib_info: Calibration info read from local file')
 
             
     
@@ -96,6 +100,7 @@ def get_calib_info(daysimeter_id):
     #constants, it is assumed that there is no calibration info in such a case.
     if calib_info[1] == 1.0 and calib_info[2] == 2.0 and calib_info[3] == 3.0:
         errlog.warning('There is no calibration info for device')
+        daysimlog.info('getcalibinfo.py func get_calib_info: No calibration information found')
 #        sys.exit(1)
     calibration_fp.close()
 
