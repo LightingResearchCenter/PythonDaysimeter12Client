@@ -18,6 +18,7 @@ from functools import partial
 from spacepy import pycdf
 from re import sub
 from src.downloadmake import DownloadMake
+from src.offsetwidget import OffsetWidget
 from src.logfunc import stop_log
 from src.logfunc import resume_log
 from src.finddaysimeter import find_daysimeter
@@ -115,7 +116,7 @@ class LayoutExample(QtGui.QMainWindow):
     def make_shortcuts(self):
         """ Creates the keyboard shortcuts for the Daysimeter Client """
         download_shortcut = QtGui.QShortcut(QtGui.QKeySequence('CTRL+D'), \
-        self, self.download_data, self.download_data, QtCore.Qt.WidgetShortcut)
+        self, self.download_data_UTC, self.download_data_UTC, QtCore.Qt.WidgetShortcut)
         
         open_shortcut = QtGui.QShortcut(QtGui.QKeySequence('CTRL+L'), \
         self, self.open_file, self.open_file, QtCore.Qt.WidgetShortcut)
@@ -179,7 +180,7 @@ class LayoutExample(QtGui.QMainWindow):
                                   self,
                                   statusTip="Download daysimeter data " +  \
                                   "and write to file",
-                                  triggered=self.download_data)
+                                  triggered=self.download_data_UTC)
                                   
         self.data_process = QtGui.QAction("&Process Data", 
                                   self,
@@ -219,7 +220,7 @@ class LayoutExample(QtGui.QMainWindow):
         self.addToolBar(self.top_toolbar)
         
         
-    def load_config(self, update=None):
+    def load_config(self, update=None, args=None):
         """Loads the info from the ini file if it exists, otherwise creates it
         
         update - a string that lets the function know if it's the initial run
@@ -242,9 +243,18 @@ class LayoutExample(QtGui.QMainWindow):
         # Update the Application settings
         if update == 'savepath':
             self.set_save_path()
+        if update == 'utc':
+            self.update_utc(args)
         self.init.write(init_file)
         init_file.close()
-
+    
+    def update_utc(self, index):
+        if self.init.has_section('UTC Settings'):
+            pass
+        else:
+            self.init.add_section('UTC Settings')
+        self.init.set('UTC Settings', 'default', index)
+        
     def set_save_path(self):
         """Create a dialog to set the savepath and set it in the ini file"""
         if self.init.has_section("Application Settings"):
@@ -303,7 +313,7 @@ class LayoutExample(QtGui.QMainWindow):
                                   self,
                                   statusTip="Download daysimeter data " +  \
                                   "and write to file",
-                                  triggered=self.download_data)
+                                  triggered=self.download_data_UTC)
                                   
         stop_logging = QtGui.QAction('&Stop Current Log', self, statusTip='Stop ' + \
                                   'current log', triggered=self.stop_log)
@@ -461,11 +471,28 @@ class LayoutExample(QtGui.QMainWindow):
                     QtGui.QMessageBox.question(self, 'Error',
                                            'No Daysimeter Found!', \
                                            QtGui.QMessageBox.Ok)
-
-    def download_data(self):
+                                           
+    def download_data_UTC(self):
+        if self.init.has_section('UTC Settings'):
+            offset = self.init.get('UTC Settings', 'default')
+            self.offsetter = OffsetWidget(self, default=offset)
+        else:
+            self.offsetter = OffsetWidget(self)
+        self.offsetter.send.connect(self.send_offset)
+        self.offsetter.show()
+    
+    def send_offset(self, index, update):
+        if update:
+            self.load_config(update='utc', args=index)
+        self.download_data(index)
+        
+    def download_data(self, index=None):
         """Creates a widget to download data from the Daysimeter"""
         self.daysim_log.info('Creating download wdiget')
-        self.download = DownloadMake()
+        if index:
+            self.download = DownloadMake(offset=index)
+        else:
+            self.download = DownloadMake()
         self.connect(self.download, QtCore.SIGNAL('savename'), self.read_data)
         
     def get_start_log(self):

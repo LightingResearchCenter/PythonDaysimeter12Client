@@ -36,7 +36,7 @@ class DownloadMake(QtGui.QWidget):
     PURPOSE: Widget that manages downloading daysimeter data and making CDF 
     or CSV files. 
     """
-    def __init__(self, parent=None, args=None):
+    def __init__(self, offset, parent=None, args=None):
         super(DownloadMake, self).__init__(parent)
         dl_skip_shortcut = QtGui.QShortcut(QtGui.QKeySequence('SHIFT+CTRL+G'),\
         self, self.skip_prog, self.skip_prog, QtCore.Qt.WidgetShortcut)
@@ -53,6 +53,8 @@ class DownloadMake(QtGui.QWidget):
             self.log_filename = args[0]
             self.data_filename = args[1]
             self.download_make = False
+        self.time_offset_index = offset
+    
         
         
         
@@ -145,7 +147,8 @@ class DownloadMake(QtGui.QWidget):
                                                      self.filename, \
                                                      self.log_filename, \
                                                      self.data_filename, \
-                                                     self.download_make])
+                                                     self.download_make, \
+                                                     self.time_offset_index])
                 self.downloader.error.connect(self.error)
                 self.connect(self.downloader, QtCore.SIGNAL('update'), \
                 self.update_progress)
@@ -749,6 +752,7 @@ class DownloadDaysimeter(QtCore.QThread):
         self.log_filename = args[2]
         self.data_filename = args[3]
         self.move = args[4]
+        self.time_offset = constants_.UTC_OFFSETS[args[5]]
         
         self.daysim_log = logging.getLogger('daysim_log')
         
@@ -844,7 +848,8 @@ class DownloadDaysimeter(QtCore.QThread):
             struct_time = time.strptime(info[7], "%m-%d-%y %H:%M")
         else:
             struct_time = time.strptime(info[2], "%m-%d-%y %H:%M")
-        epoch_time = datetime.fromtimestamp(time.mktime(struct_time))
+            
+        epoch_time = datetime.fromtimestamp(time.mktime(struct_time)) + self.time_offset
         #log_interval is interval that the Daysimeter took measurements at.
         #Since python uses seconds since epoch, cast as int
         log_interval = int(info[3])
