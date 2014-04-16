@@ -6,7 +6,7 @@ Created on Wed Apr 09 09:50:59 2014
 """
 
 from PyQt4 import QtGui, QtCore
-import sys
+import sys, logging
 
 class OffsetWidget(QtGui.QWidget):
     """
@@ -22,9 +22,14 @@ class OffsetWidget(QtGui.QWidget):
             self.default = default
         else:
             self.default = 15
+        self.daysim_log = logging.getLogger('daysim_log')
+        self.err_log = logging.getLogger('err_log')
         self.initUI()
         
     def initUI(self):
+        self.daysim_log.info('offsetwidget.py class Offsetwidget func initUI: Initializing GUI')
+        self.setWindowTitle('UTC Offset')
+        self.setFixedSize(200, 100)        
         self.submit = QtGui.QPushButton('Submit')
         self.cancel = QtGui.QPushButton('Cancel')
         self.offset = QtGui.QComboBox()
@@ -39,6 +44,7 @@ class OffsetWidget(QtGui.QWidget):
                  'UTC+09:30', 'UTC+10:00', 'UTC+10:30', 'UTC+11:00', \
                  'UTC+11:30', 'UTC+12:00', 'UTC+12:45', 'UTC+13:00', \
                  'UTC+14:00']
+        self.daysim_log.info('offsetwidget.py class Offsetwidget func initUI: Offsets Loaded')
         self.offset.addItems(items)
         self.offset.setCurrentIndex(self.default)
         self.make_default = QtGui.QCheckBox('Remember my offset')
@@ -51,13 +57,15 @@ class OffsetWidget(QtGui.QWidget):
         layout.addWidget(self.offset)
         layout.addWidget(self.make_default)
         layout.addLayout(button_layout)
+        self.daysim_log.info('offsetwidget.py class Offsetwidget func initUI: Setting layout')
         self.setLayout(layout)
+        self.daysim_log.info('offsetwidget.py class Offsetwidget func initUI: Connecting signals to sockets')
         self.submit.pressed.connect(self.close_self)
         self.cancel.pressed.connect(self.close)
-        self.show()
-       
+        self.daysim_log.info('offsetwidget.py class Offsetwidget func initUI: Widget visable')
+        
     def close_self(self):
-        print 'here'
+        self.daysim_log.info('offsetwidget.py class Offsetwidget func close_self: Emitting signal')
         self.send.emit(self.offset.currentIndex(), self.make_default.isChecked())
         self.close()
         

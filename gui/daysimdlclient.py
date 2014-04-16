@@ -473,9 +473,10 @@ class LayoutExample(QtGui.QMainWindow):
                                            QtGui.QMessageBox.Ok)
                                            
     def download_data_UTC(self):
+        
         if self.init.has_section('UTC Settings'):
-            offset = self.init.get('UTC Settings', 'default')
-            self.offsetter = OffsetWidget(self, default=offset)
+            offset = int(self.init.get('UTC Settings', 'default'))
+            self.offsetter = OffsetWidget(default=offset)
         else:
             self.offsetter = OffsetWidget(self)
         self.offsetter.send.connect(self.send_offset)
