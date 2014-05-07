@@ -251,6 +251,10 @@ class NewLogThread(QtCore.QThread):
                 info[5] = '1\n'
                 daysimeter_id = info[8].strip('\n')
                 daysimeter_start = info[7].strip('\n')
+                if info[1] == '1.1\n':
+                    info[1] = '1.3\n'
+                elif info[1] == '1.2\n':
+                    info[1] = '1.4\n'
             with open(path + log_filename, 'w') as log_fp:
                 for x in info:
                     log_fp.write(x)

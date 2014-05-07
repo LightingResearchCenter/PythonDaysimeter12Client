@@ -51,7 +51,7 @@ FIRM12 = {54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69}
 BATTERY_STRING = 'Battery voltage (mV)\n'
 #ADJ_ACTIVE_FIRM is the set of firmware versions as floats which use
 #the LSB of activity as a rollover flag.
-ADJ_ACTIVE_FIRM = {1.2}
+ADJ_ACTIVE_FIRM = {1.2, 1.4}
 #CDF_FILENAME is the name of the CDF file created by makecdf.py
 DEVICE_MODEL = 'daysimeter12'
 #DEVICE_VERSION is related to DEVICE_MODEL and is basically just

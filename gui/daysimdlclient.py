@@ -474,13 +474,32 @@ class LayoutExample(QtGui.QMainWindow):
                                            
     def download_data_UTC(self):
         
-        if self.init.has_section('UTC Settings'):
-            offset = int(self.init.get('UTC Settings', 'default'))
-            self.offsetter = OffsetWidget(default=offset)
+        path = find_daysimeter()
+        log_filename = constants_.LOG_FILENAME
+        
+        with open(path + log_filename, 'r') as fp:
+            info = fp.readlines()
+        
+        if len(info) == 17:
+            if info[1] == '1.1\n' or '1.2\n':
+                self.send_offset(15, False)
+            else:
+                if self.init.has_section('UTC Settings'):
+                    offset = int(self.init.get('UTC Settings', 'default'))
+                    self.offsetter = OffsetWidget(default=offset)
+                else:
+                    self.offsetter = OffsetWidget(self)
+                self.offsetter.send.connect(self.send_offset)
+                self.offsetter.show()
+                
         else:
-            self.offsetter = OffsetWidget(self)
-        self.offsetter.send.connect(self.send_offset)
-        self.offsetter.show()
+            if self.init.has_section('UTC Settings'):
+                offset = int(self.init.get('UTC Settings', 'default'))
+                self.offsetter = OffsetWidget(default=offset)
+            else:
+                self.offsetter = OffsetWidget(self)
+            self.offsetter.send.connect(self.send_offset)
+            self.offsetter.show()
     
     def send_offset(self, index, update):
         if update:

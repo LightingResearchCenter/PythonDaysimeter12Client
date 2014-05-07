@@ -36,6 +36,9 @@ class DownloadMake(QtGui.QWidget):
     PURPOSE: Widget that manages downloading daysimeter data and making CDF 
     or CSV files. 
     """
+
+    last_savepath = QtCore.pyqtSignal(str)    
+    
     def __init__(self, offset, parent=None, args=None):
         super(DownloadMake, self).__init__(parent)
         dl_skip_shortcut = QtGui.QShortcut(QtGui.QKeySequence('SHIFT+CTRL+G'),\
@@ -138,6 +141,12 @@ class DownloadMake(QtGui.QWidget):
             self.filename = str(QtGui.QFileDialog.getSaveFileName(self, \
             ('Save File'), default_name, ('CDF Files (*.cdf);; CSV Files (*.csv)')))
             if not str(self.filename) == '':
+                parts = self.filename.split('/')
+                del(parts[-1])
+                savepath = ''
+                for element in parts:
+                    savepath += element + '/'
+                self.last_savepath.emit(savepath)
                 
                 self.pbar.show()
                 self.start.setText('Downloading...')
