@@ -40,6 +40,7 @@ class DaysimeterClientLITE(QtGui.QWidget):
         
         self.load_config()        
         self.initUI()
+        self.make_shortcuts()
         self.make_enabler()
         
     def initUI(self):

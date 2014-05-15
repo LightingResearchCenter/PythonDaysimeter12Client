@@ -26,7 +26,7 @@ def update_header():
         if len(info) == 17:
             info_log.info('updateheader.py func update_header: Header is v0, should be updated')
             return True
-        elif not len(info[3]) == 3:
+        elif not len(info[3]) == 4:
             info_log.info('updateheader.py func update_header: Header is v1, must be updated')
             return True
     info_log.info('updateheader.py func update_header: Header is v2, up to date')

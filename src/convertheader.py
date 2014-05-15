@@ -26,14 +26,14 @@ def convert_header(version):
         if version == 'h0':
             return
         elif version == 'h1':
-            convert_header_h1()
+            convert_header_h1() 
             return
         elif version == 'h2':
             convert_header_h2()
             return
             
     else:
-        if info[1] in {'1.1', '1.2'}:
+        if info[1] in {'1.1', '1.2', '1.3', '1.4'}:
             if not len(info[3]) == 3:
                 current_version = 'h1'
             else:

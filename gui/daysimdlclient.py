@@ -480,7 +480,7 @@ class LayoutExample(QtGui.QMainWindow):
         with open(path + log_filename, 'r') as fp:
             info = fp.readlines()
         
-        if len(info) == 17:
+        if not len(info) == 17:
             if info[1] == '1.1\n' or '1.2\n':
                 self.send_offset(15, False)
             else:
