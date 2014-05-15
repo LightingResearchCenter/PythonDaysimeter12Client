@@ -254,21 +254,7 @@ class DownloadMake(QtGui.QWidget):
         #it kind fakes it until it makes it
         self.step += 1
         self.pbar.setValue(self.step)
-        if self.step == 100 and self.download_make:
-            if update_header():
-                reply = QtGui.QMessageBox.question(self, 'Message',
-            'Your daysimeter\'s header is out of date.\n' + \
-            'Would you like to update it now?', QtGui.QMessageBox.Yes, \
-            QtGui.QMessageBox.No)
-
-                if reply == QtGui.QMessageBox.Yes:
-                    convert_header('h2')
-                    self.download_done()
-                else:
-                    self.download_done()
-            else:
-                self.download_done()
-        elif self.step == 100:
+        if self.step == 100:
             self.download_done()
         
     def download_done(self):

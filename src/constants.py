@@ -60,6 +60,8 @@ DEVICE_VERSION = '12'
 #LATEST_URL is the url which redirects to the latest version of the slient on
 #GitHub. It is used to determine latest client version.
 LATEST_URL = 'https://github.com/LightingResearchCenter/PythonDaysimeter12Client/releases/latest'
+#LATEST_HEADER is id for the most recent header version
+LATEST_HEADER = 'h2'
 #UTC_OFFSETS is a dictionary of UTC Offsets stored as datetime.timedelta objects
 UTC_OFFSETS = {0: datetime.timedelta(-1, 43200), 1 : datetime.timedelta(-1, 46800), \
                2 : datetime.timedelta(-1, 50400), 3 : datetime.timedelta(-1, 52200), \

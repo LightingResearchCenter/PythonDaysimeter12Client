@@ -493,13 +493,7 @@ class LayoutExample(QtGui.QMainWindow):
                 self.offsetter.show()
                 
         else:
-            if self.init.has_section('UTC Settings'):
-                offset = int(self.init.get('UTC Settings', 'default'))
-                self.offsetter = OffsetWidget(default=offset)
-            else:
-                self.offsetter = OffsetWidget(self)
-            self.offsetter.send.connect(self.send_offset)
-            self.offsetter.show()
+            self.send_offset(15, False)
     
     def send_offset(self, index, update):
         if update:

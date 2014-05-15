@@ -100,9 +100,9 @@ def convert_header_h2():
         #firm_12 is a set of daysimeter IDs below 83 (the official change
         #over) that use the LSB of activity as a rollover flag for RGB. 
         if int(info[1]) in firm_12 or int(info[1]) >= 83:
-            logfile_fp.write('1.2\ndaysimeter12\n')
+            logfile_fp.write('1.4\ndaysimeter12\n')
         else:
-            logfile_fp.write('1.1\ndaysimeter12\n')
+            logfile_fp.write('1.3\ndaysimeter12\n')
         #Shifts information down because firmware version is now on line 1
         logfile_fp.write(info[3])
         logfile_fp.write(info[4])
@@ -193,9 +193,9 @@ def convert_header_h1():
         #firm_12 is a set of daysimeter IDs below 83 (the official change
         #over) that use the LSB of activity as a rollover flag for RGB. 
         if int(info[1]) in firm_12 or int(info[1]) >= 83:
-            logfile_fp.write('1.2\ndaysimeter12\n')
+            logfile_fp.write('1.4\ndaysimeter12\n')
         else:
-            logfile_fp.write('1.1\ndaysimeter12\n')
+            logfile_fp.write('1.3\ndaysimeter12\n')
         #Shifts information down because firmware version is now on line 1
         logfile_fp.write(info[1])
         logfile_fp.write(info[4])

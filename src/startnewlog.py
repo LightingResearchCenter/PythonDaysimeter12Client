@@ -8,6 +8,8 @@ import sys, os
 from PyQt4 import QtGui, QtCore
 from datetime import datetime
 from finddaysimeter import find_daysimeter
+from updateheader import update_header
+from convertheader import convert_header
 import constants, logging
 
 class StartNewLog(QtGui.QWidget):
@@ -125,6 +127,8 @@ class StartNewLog(QtGui.QWidget):
         QtGui.QMessageBox.Cancel)
         
         if reply == QtGui.QMessageBox.Ok:
+            if update_header():
+                convert_header(constants.LATEST_HEADER)
             self.info_log.info('startnewlog.py class StartNewLog func begin_log: Confirmed, old log will be erased when daysimeter ejected')
             self.start_log()
         else:
