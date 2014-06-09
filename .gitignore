@@ -33,3 +33,7 @@ nosetests.xml
 .mr.developer.cfg
 .project
 .pydevproject
+gui/change-drive.txt
+*.spyderproject
+*.spyderworkspace
+*.spyderworkspace
