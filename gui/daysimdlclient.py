@@ -484,11 +484,11 @@ class LayoutExample(QtGui.QMainWindow):
         while True:
             # Find daysim path and read the data
             path = find_daysimeter()
-            print path
             with open(path + log_filename, 'r') as fp:
                 info = fp.readlines()
+
             # Stop loop if the data equals the previous data
-            if prev_info == info:
+            if info and prev_info == info:
                 break
             self.remount(path)
             prev_info = info
@@ -515,7 +515,7 @@ class LayoutExample(QtGui.QMainWindow):
           diskpart = "".join(["select volume=", drive, "\nremove\n", "assign\n", "exit\n"])
           f.write(diskpart)
       subprocess.call (['diskpart',  '/s', diskpart_data])
-    
+
     def send_offset(self, index, update):
         if update:
             self.load_config(update='utc', args=index)
@@ -572,7 +572,7 @@ class LayoutExample(QtGui.QMainWindow):
         
         """
         # Gets the file extension of the file
-        _, ext = os.path.splitext(filename).lower()
+        ext = os.path.splitext(filename)[1].lower()
         # Reads the data based on the file type
         if ext == '.txt':
             self.update_header(filename)

@@ -134,12 +134,12 @@ class DownloadMake(QtGui.QWidget):
                     daysim_id = 'NULL'
                 now = str(datetime.now())
                 default_filename = daysim_id + '-' + now[:10] \
-                + '-' + now[11:13] + '-' + now[14:16] + '-' + now[17:19]
+                    + '-' + now[11:13] + '-' + now[14:16] + '-' + now[17:19]
             self.daysim_log.info('downloadmake.py class DownloadMake func start_download: Generating default filename')
             default_name = os.path.join(self.savedir, default_filename)
             self.status_bar.showMessage('')
             self.filename = str(QtGui.QFileDialog.getSaveFileName(self, \
-            ('Save File'), default_name, ('CDF Files (*.cdf);; CSV Files (*.csv)')))
+                ('Save File'), default_name, ('CDF Files (*.cdf);; CSV Files (*.csv)')))
             if not str(self.filename) == '':
                 parts = self.filename.split('/')
                 del(parts[-1])
@@ -160,11 +160,11 @@ class DownloadMake(QtGui.QWidget):
                                                      self.time_offset_index])
                 self.downloader.error.connect(self.error)
                 self.connect(self.downloader, QtCore.SIGNAL('update'), \
-                self.update_progress)
+                             self.update_progress)
                 self.connect(self.downloader, QtCore.SIGNAL('fprogress'), \
-                self.fake_progress)
+                             self.fake_progress)
                 self.connect(self.downloader, QtCore.SIGNAL('make'), \
-                self.make)
+                             self.make)
                 self.daysim_log.info('Starting download')
                 self.downloader.start()
             else:
@@ -183,16 +183,16 @@ class DownloadMake(QtGui.QWidget):
                                             data[1][0][len(data[1][0]) - 1], \
                                             data[0][3]])
             self.connect(self.subjectinfo, QtCore.SIGNAL('sendinfo'), \
-            self.make_cdf)
+                         self.make_cdf)
             self.connect(self.subjectinfo, QtCore.SIGNAL('cancelled'), \
-            self.cancelled)
+                         self.cancelled)
             self.data = data
         else:
             self.daysim_log.info('downloadmake.py class DownloadMake func make: Preparing CSV file')
             self.status_bar.showMessage('Writing CSV File...')
             self.maker = MakeCSV(self, data, self.filename)
             self.connect(self.maker, QtCore.SIGNAL('update'), \
-            self.update_progress)
+                         self.update_progress)
             self.maker.start()
             
     def make_cdf(self, info):
@@ -241,7 +241,7 @@ class DownloadMake(QtGui.QWidget):
     def fake_progress(self):
         self.progresssim = ProgressSim()
         self.connect(self.progresssim, QtCore.SIGNAL('update'), \
-        self.update_progress)
+                     self.update_progress)
         self.progresssim.start()
         
     def skip_prog(self):
@@ -262,7 +262,7 @@ class DownloadMake(QtGui.QWidget):
         self.daysim_log.info('downloadmake.py class DownloadMake func download_done: Download completed successfully')
         self.daysim_log.info('Download complete')
         self.status_bar.showMessage('Download Complete. It is now safe ' + \
-        'to eject your daysimeter.')
+                                    'to eject your daysimeter.')
         self.start.hide()
         self.done.setEnabled(True)
         self.done.show()
@@ -635,6 +635,8 @@ class SubjectInfo(QtGui.QWidget):
             end_time = end_time + '0' + str(self.second_end.currentText())
         else:
             end_time = end_time + str(self.second_end.currentText())
+
+        print start_time
 
         self.success = True
         self.emit(QtCore.SIGNAL('sendinfo'), [sub_id, sub_sex, sub_dob, \
