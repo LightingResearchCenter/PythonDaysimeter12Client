@@ -206,9 +206,13 @@ class DownloadMake(QtGui.QWidget):
         if info[3] == '000.000':
             info[3] = 0
         self.status_bar.showMessage('Writing CDF File...')
+        self.maker_thread = QtCore.QThread()
         self.maker = MakeCDF(self, self.data, self.filename, info)
-        self.connect(self.maker, QtCore.SIGNAL('update'), self.update_progress)
-        self.maker.start()
+        self.maker.moveToThread(self.maker_thread)
+        self.maker.update.connect(self.update_progress)
+        self.maker.finished.connect(self.maker_thread.quit)
+        self.maker_thread.started.connect(self.maker.run)
+        self.maker_thread.start()
         
     def cancelled(self):
         """
@@ -291,7 +295,7 @@ class ProgressSim(QtCore.QThread):
         
 class SubjectInfo(QtGui.QWidget):
     """ PURPOSE: Creates a widget for a user to enter subject information """
-    send_info_sig = QtCore.pyqtSignal(list)
+    sendinfo = QtCore.pyqtSignal(list)
     def __init__(self, args, parent=None):
         super(SubjectInfo, self).__init__(parent)
         QtGui.QMainWindow.__init__(self)
@@ -639,6 +643,9 @@ class SubjectInfo(QtGui.QWidget):
         print start_time
 
         self.success = True
+
+        self.sendinfo.emit([sub_id, sub_sex, sub_dob, \
+                            sub_mass, start_time, end_time])
         self.emit(QtCore.SIGNAL('sendinfo'), [sub_id, sub_sex, sub_dob, \
         sub_mass, start_time, end_time])
         
@@ -1046,8 +1053,8 @@ class DownloadDaysimeter(QtCore.QThread):
             if scone_macula[x] > v_lamda_macula[x] * constants[5][2]:
                 #Some super fancy math. I wish I knew what was going on here...
                 cla[x] = melanopsin[x] + constants[5][0] * (scone_macula[x] - \
-                v_lamda_macula[x] * constants[5][2]) - \
-                constants[5][1]*683*(1 - 2.71**(-(v_prime[x]/(683*6.5))))
+                    v_lamda_macula[x] * constants[5][2]) - \
+                    constants[5][1]*683*(1 - 2.71**(-(v_prime[x]/(683*6.5))))
             else:
                 cla[x] = melanopsin[x]
             
@@ -1055,18 +1062,19 @@ class DownloadDaysimeter(QtCore.QThread):
             
         return [lux, cla]
         
-class MakeCDF(QtCore.QThread):
+class MakeCDF(QtCore.QObject):
     
+    update = QtCore.pyqtSignal()
+    finished = QtCore.pyqtSignal()
+
     def __init__(self, parent, data, filename, info):
-        QtCore.QThread.__init__(self, parent)
+        super(MakeCDF, self).__init__()
         self.data = data
         self.filename = filename
         self.info = info
         self.logical_array(info[4], info[5])
         
-        
         self.daysim_log = logging.getLogger('daysim_log')
-
         self.err_log = logging.getLogger('err_log')
         
     def logical_array(self, start, end):
@@ -1286,20 +1294,19 @@ class MakeCDF(QtCore.QThread):
         else:
             set_download_flag()
         
+        self.update.emit()
         self.emit(QtCore.SIGNAL('update'))
 
 class MakeCSV(QtCore.QObject):
 
-    finished = QtCore.pyqtSignal()
     update = QtCore.pyqtSignal()
+    finished = QtCore.pyqtSignal()
     
     def __init__(self, parent, data, filename):
         super(MakeCSV, self).__init__()
         self.data = data
         self.filename = filename
-
         self.daysim_log = logging.getLogger('daysim_log')
-
         self.err_log = logging.getLogger('err_log')
         
     def run(self):
