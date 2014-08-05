@@ -37,6 +37,8 @@ class DownloadMake(QtGui.QWidget):
     or CSV files. 
     """
 
+    sendinfo = QtCore.pyqtSignal()
+    cancelled = QtCore.pyqtSignal()
     last_savepath = QtCore.pyqtSignal(str)    
     
     def __init__(self, offset, parent=None, args=None):
@@ -149,24 +151,23 @@ class DownloadMake(QtGui.QWidget):
                 self.start.setText('Downloading...')
                 self.status_bar.showMessage('Processing Data...')
                 self.start.setEnabled(False)
-                self.downloader = DownloadDaysimeter(self, [self.savedir, \
-                                                     self.filename, \
-                                                     self.log_filename, \
-                                                     self.data_filename, \
-                                                     self.download_make, \
+                self.downloader = DownloadDaysimeter(self, [self.savedir, 
+                                                     self.filename, 
+                                                     self.log_filename,
+                                                     self.data_filename,
+                                                     self.download_make,
                                                      self.time_offset_index])
                 self.downloader.error.connect(self.error)
-                self.connect(self.downloader, QtCore.SIGNAL('update'), \
+                self.connect(self.downloader, QtCore.SIGNAL('update'),
                              self.update_progress)
-                self.connect(self.downloader, QtCore.SIGNAL('fprogress'), \
+                self.connect(self.downloader, QtCore.SIGNAL('fprogress'),
                              self.fake_progress)
-                self.connect(self.downloader, QtCore.SIGNAL('make'), \
+                self.connect(self.downloader, QtCore.SIGNAL('make'),
                              self.make)
                 self.daysim_log.info('Starting download')
                 self.downloader.start()
             else:
-                self.cancelled()
-                
+                self.cancel()
                 
         
     def make(self, data):
@@ -179,10 +180,8 @@ class DownloadMake(QtGui.QWidget):
             self.subjectinfo = SubjectInfo([data[1][0][0], \
                                             data[1][0][len(data[1][0]) - 1], \
                                             data[0][3]])
-            self.connect(self.subjectinfo, QtCore.SIGNAL('sendinfo'), \
-                         self.make_cdf)
-            self.connect(self.subjectinfo, QtCore.SIGNAL('cancelled'), \
-                         self.cancelled)
+            self.sendinfo.connect(self.make_cdf)
+            self.cancelled.connect(self.make_cdf)
             self.data = data
         else:
             self.daysim_log.info('downloadmake.py class DownloadMake func make: Preparing CSV file')
@@ -214,7 +213,7 @@ class DownloadMake(QtGui.QWidget):
         self.maker_thread.started.connect(self.maker.run)
         self.maker_thread.start()
         
-    def cancelled(self):
+    def cancel(self):
         """
         PURPOSE: Sets status when the download has been cancelled, this
         usually occurs when no subject info was given.
@@ -459,7 +458,7 @@ class SubjectInfo(QtGui.QWidget):
         if self.success:
             event.accept()
         else:
-            self.emit(QtCore.SIGNAL('cancelled'))
+            self.cancelled.emit()
             event.accept()
             
     def closeself(self):
