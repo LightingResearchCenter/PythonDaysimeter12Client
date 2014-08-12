@@ -134,7 +134,7 @@ class DaysimeterData:
                          label=name))
             # Finds the min of the data, then sets that as the the lower y
             # bound of the plot to better align the graphs vertically    
-            minimum = min(self.data[name])
+            minimum = self.data[name].min()
             self.ax_dict[name].set_ybound(lower=minimum)
             self.ax_dict[name].tick_params(axis='y', colors=color)
         self.fig.legend(self.plots, self.ordered_names, loc='lower left', ncol=3, prop = self.fontP)

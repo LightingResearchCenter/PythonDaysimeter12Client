@@ -10,7 +10,7 @@ sys.path.insert(0, os.pardir)
 import time
 import math
 from PyQt4 import QtGui, QtCore
-from numpy import genfromtxt, core, asscalar
+from numpy import genfromtxt, core
 from datetime import datetime 
 import graphingwidget as gw
 from ConfigParser import ConfigParser, SafeConfigParser
@@ -18,7 +18,6 @@ from functools import partial
 from spacepy import pycdf
 from re import sub
 from src.downloadmake import DownloadMake
-from src.offsetwidget import OffsetWidget
 from src.logfunc import stop_log
 from src.logfunc import resume_log
 from src.finddaysimeter import find_daysimeter
@@ -28,7 +27,6 @@ import src.constants as constants_
 from statuslight import StatusLight
 from statuswidget import StatusWidget
 from startloginfo import StartLogInfo
-import subprocess
 from src.getlogs import get_err_log, get_daysim_log, setup_logger
 import logging
 
@@ -117,7 +115,7 @@ class LayoutExample(QtGui.QMainWindow):
     def make_shortcuts(self):
         """ Creates the keyboard shortcuts for the Daysimeter Client """
         download_shortcut = QtGui.QShortcut(QtGui.QKeySequence('CTRL+D'), \
-        self, self.download_data_UTC, self.download_data_UTC, QtCore.Qt.WidgetShortcut)
+        self, self.download_data, self.download_data, QtCore.Qt.WidgetShortcut)
         
         open_shortcut = QtGui.QShortcut(QtGui.QKeySequence('CTRL+L'), \
         self, self.open_file, self.open_file, QtCore.Qt.WidgetShortcut)
@@ -181,7 +179,7 @@ class LayoutExample(QtGui.QMainWindow):
                                   self,
                                   statusTip="Download daysimeter data " +  \
                                   "and write to file",
-                                  triggered=self.download_data_UTC)
+                                  triggered=self.download_data)
                                   
         self.data_process = QtGui.QAction("&Process Data", 
                                   self,
@@ -221,7 +219,7 @@ class LayoutExample(QtGui.QMainWindow):
         self.addToolBar(self.top_toolbar)
         
         
-    def load_config(self, update=None, args=None):
+    def load_config(self, update=None):
         """Loads the info from the ini file if it exists, otherwise creates it
         
         update - a string that lets the function know if it's the initial run
@@ -244,18 +242,9 @@ class LayoutExample(QtGui.QMainWindow):
         # Update the Application settings
         if update == 'savepath':
             self.set_save_path()
-        if update == 'utc':
-            self.update_utc(args)
         self.init.write(init_file)
         init_file.close()
-    
-    def update_utc(self, index):
-        if self.init.has_section('UTC Settings'):
-            pass
-        else:
-            self.init.add_section('UTC Settings')
-        self.init.set('UTC Settings', 'default', index)
-        
+
     def set_save_path(self):
         """Create a dialog to set the savepath and set it in the ini file"""
         if self.init.has_section("Application Settings"):
@@ -314,7 +303,7 @@ class LayoutExample(QtGui.QMainWindow):
                                   self,
                                   statusTip="Download daysimeter data " +  \
                                   "and write to file",
-                                  triggered=self.download_data_UTC)
+                                  triggered=self.download_data)
                                   
         stop_logging = QtGui.QAction('&Stop Current Log', self, statusTip='Stop ' + \
                                   'current log', triggered=self.stop_log)
@@ -379,73 +368,70 @@ class LayoutExample(QtGui.QMainWindow):
         duration = duration.total_seconds()
         total_time = ''
         
-        duration_days = duration/(24*60*60)
-        if math.floor(duration_days) > 0:
-            if math.floor(duration_days) > 1:
-                total_time = total_time + str(int(math.floor(duration_days))) + \
+        if math.floor(duration/(24*60*60)) > 0:
+            if math.floor(duration/(24*60*60)) > 1:
+                total_time = total_time + str(int(math.floor(duration/(24*60*60)))) + \
                 ' days'
             else:
-                total_time = total_time + str(int(math.floor(duration_days))) + \
+                total_time = total_time + str(int(math.floor(duration/(24*60*60)))) + \
                 ' day'
             duration = duration % (24 * 60 * 60)
             
-            duration_hours = math.floor(duration/(60*60))
-            duration_mins = math.floor((duration%(60*60))/60)
-            if duration_hours > 0:
-                if duration_hours > 1:
-                    if duration_mins == 0:
+            if math.floor(duration/(60*60)) > 0:
+                if math.floor(duration/(60*60)) > 1:
+                    if math.floor((duration%(60*60))/60) == 0:
                         total_time = total_time + ' and ' + \
-                        str(int(duration_hours)) + ' hours'
+                        str(int(math.floor(duration/(60*60)))) + ' hours'
                     else: 
                         total_time = total_time + ', ' + \
-                        str(int(duration_hours)) + ' hours and ' + \
-                        str(int(duration_mins)) + ' minutes'
+                        str(int(math.floor(duration/(60*60)))) + ' hours and ' + \
+                        str(int(math.floor((duration%(60*60))/60))) + ' minutes'
                 else:
-                    if duration_mins == 0:
+                    if math.floor((duration%(60*60))/60) == 0:
                         total_time = total_time + ' and ' + \
-                        str(int(duration_hours)) + ' hour'
-                    elif duration_mins == 1: 
+                        str(int(math.floor(duration/(60*60)))) + ' hour'
+                    elif math.floor((duration%(60*60))/60) == 1: 
                         total_time = total_time + ', ' + \
-                        str(int(duration_hours)) + ' hour and ' + \
-                        str(int(duration_mins)) + ' minute'
+                        str(int(math.floor(duration/(60*60)))) + ' hour and ' + \
+                        str(int(math.floor((duration%(60*60))/60))) + ' minute'
                     else:
                         total_time = total_time + ', ' + \
-                        str(int(duration_hours)) + ' hour and ' + \
-                        str(int(duration_mins)) + ' minutes'
-            elif duration_mins > 0:
-                if duration_mins > 1:
+                        str(int(math.floor(duration/(60*60)))) + ' hour and ' + \
+                        str(int(math.floor((duration%(60*60))/60))) + ' minutes'
+            elif math.floor((duration%(60*60))/60) > 0:
+                if math.floor((duration%(60*60))/60) > 1:
                     total_time = total_time + ' and' + \
-                    str(int(duration_mins)) + ' minutes'
+                    str(int(math.floor((duration%(60*60))/60))) + ' minutes'
                 else:
                     total_time = total_time + ' and' + \
-                    str(int(duration_mins)) + ' minute'
-        elif duration_hours:
-            if duration_mins == 0:
-                if duration_mins == 1:
+                    str(int(math.floor((duration%(60*60))/60))) + ' minute'
+        elif math.floor(duration/(60*60)):
+            if math.floor((duration%(60*60))/60) == 0:
+                if math.floor((duration%(60*60))/60) == 1:
                     total_time = total_time + \
-                    str(int(duration_hours)) + ' hour'
+                    str(int(math.floor(duration/(60*60)))) + ' hour'
                 else:
                     total_time = total_time + \
-                    str(int(duration_hours)) + ' hours'
-            elif duration_hours == 1 and \
-                 duration_mins == 1: 
+                    str(int(math.floor(duration/(60*60)))) + ' hours'
+            elif math.floor(duration/(60*60)) == 1 and \
+                 math.floor((duration%(60*60))/60) == 1: 
                 total_time = total_time + \
-                str(int(duration_hours)) + ' hour and ' + \
-                str(int(duration_mins)) + ' minute'
-            elif duration_hours == 1 and \
-                 duration_mins > 1: 
+                str(int(math.floor(duration/(60*60)))) + ' hour and ' + \
+                str(int(math.floor((duration%(60*60))/60))) + ' minute'
+            elif math.floor(duration/(60*60)) == 1 and \
+                 math.floor((duration%(60*60))/60) > 1: 
                 total_time = total_time + \
-                str(int(duration_hours)) + ' hour and ' + \
-                str(int(duration_mins)) + ' minutes'
-            elif duration_hours > 1 and \
-                 duration_mins == 1: 
+                str(int(math.floor(duration/(60*60)))) + ' hour and ' + \
+                str(int(math.floor((duration%(60*60))/60))) + ' minutes'
+            elif math.floor(duration/(60*60)) > 1 and \
+                 math.floor((duration%(60*60))/60) == 1: 
                 total_time = total_time + \
-                str(int(duration_hours)) + ' hours and ' + \
-                str(int(duration_mins)) + ' minute'   
+                str(int(math.floor(duration/(60*60)))) + ' hours and ' + \
+                str(int(math.floor((duration%(60*60))/60))) + ' minute'   
             else: 
                 total_time = total_time + \
-                str(int(duration_hours)) + ' hours and ' + \
-                str(int(duration_mins)) + ' minutes'
+                str(int(math.floor(duration/(60*60)))) + ' hours and ' + \
+                str(int(math.floor((duration%(60*60))/60))) + ' minutes'
         elif math.floor(duration/60) > 0:
             if math.floor(duration/60) > 1:
                 total_time = total_time + \
@@ -475,59 +461,11 @@ class LayoutExample(QtGui.QMainWindow):
                     QtGui.QMessageBox.question(self, 'Error',
                                            'No Daysimeter Found!', \
                                            QtGui.QMessageBox.Ok)
-                                           
-    def download_data_UTC(self):
-        log_filename = constants_.LOG_FILENAME
-        
-        prev_info = []
-        # Remount the daysimeter until the data equals the previous data
-        while True:
-            # Find daysim path and read the data
-            path = find_daysimeter()
-            with open(path + log_filename, 'r') as fp:
-                info = fp.readlines()
 
-            # Stop loop if the data equals the previous data
-            if info and prev_info == info:
-                break
-            self.remount(path)
-            prev_info = info
-
-        
-        if len(info) != 17:
-            if info[1] == '1.1\n' or '1.2\n':
-                self.send_offset(15, False)
-            else:
-                if self.init.has_section('UTC Settings'):
-                    offset = int(self.init.get('UTC Settings', 'default'))
-                    self.offsetter = OffsetWidget(default=offset)
-                else:
-                    self.offsetter = OffsetWidget(self)
-                self.offsetter.send.connect(self.send_offset)
-                self.offsetter.show()
-                
-        else:
-            self.send_offset(15, False)
-
-    def remount(self, drive):
-      diskpart_data = "change-drive.txt"
-      with open(diskpart_data, 'w') as f:
-          diskpart = "".join(["select volume=", drive, "\nremove\n", "assign\n", "exit\n"])
-          f.write(diskpart)
-      subprocess.call (['diskpart',  '/s', diskpart_data])
-
-    def send_offset(self, index, update):
-        if update:
-            self.load_config(update='utc', args=index)
-        self.download_data(index)
-        
-    def download_data(self, index=None):
+    def download_data(self):
         """Creates a widget to download data from the Daysimeter"""
         self.daysim_log.info('Creating download wdiget')
-        if index:
-            self.download = DownloadMake(offset=index)
-        else:
-            self.download = DownloadMake()
+        self.download = DownloadMake()
         self.connect(self.download, QtCore.SIGNAL('savename'), self.read_data)
         
     def get_start_log(self):
@@ -565,20 +503,20 @@ class LayoutExample(QtGui.QMainWindow):
                 self.download = DownloadMake(args=[log_filename, data_filename])
                 self.connect(self.download, QtCore.SIGNAL('savename'), self.read_data)
         
-    def read_data(self, filename):
+    def read_data(self, file_name):
         """Reads the data from a txt or cdf and graphs it
         
-        filename - a string of the file name
+        file_name - a string of the file name
         
         """
         # Gets the file extension of the file
-        ext = os.path.splitext(filename)[1].lower()
+        ext = os.path.splitext(file_name)[-1].lower()
         # Reads the data based on the file type
         if ext == '.txt':
-            self.update_header(filename)
-            timestamps, daysim_data, filetype = self.read_txt_data(filename)
+            self.update_header(file_name)
+            timestamps, daysim_data, filetype = self.read_txt_data(file_name)
         elif ext == '.cdf':
-            timestamps, daysim_data, filetype = self.read_cdf_data(filename)
+            timestamps, daysim_data, filetype = self.read_cdf_data(file_name)
         else:
             return
         # Sets the data in the graphing widget
@@ -590,27 +528,27 @@ class LayoutExample(QtGui.QMainWindow):
             def_dir = self.init.get('Application Settings', 'savepath')
         else:
             def_dir = './'
-        filename = str(QtGui.QFileDialog.getOpenFileName(self,
+        file_name = str(QtGui.QFileDialog.getOpenFileName(self,
                                                        directory=def_dir,
                                                        filter="Data File (*.cdf *.txt)"))
-        if not filename:
+        if not file_name:
             return
             
-        self.read_data(filename)
+        self.read_data(file_name)
     
-    def read_txt_data(self, filename):
+    def read_txt_data(self, file_name):
         """Reads the data from a daysimeter txt file
         
-        filename - the string filename of the file
+        file_name - the string filename of the file
         
         returns an array of timestamps, a recarray of daysim_data, and txt (
         the filetype)
         
         """
         # Parses the data from the file into an recarray
-        daysim_data = genfromtxt(filename, 
-                                 dtype=['S11', 'S8', 'f8', 'f8', 'f8', 'f8'],
-                                 names=True)
+        daysim_data = genfromtxt(file_name, 
+                                     dtype=['S11', 'S8', 'f8', 'f8', 'f8', 'f8'],
+                                     names=True)
         # Concatenates the dates and times
         daysim_data['Date'] = core.defchararray.add(daysim_data['Date'],
                                                          ' ')
@@ -624,48 +562,22 @@ class LayoutExample(QtGui.QMainWindow):
         daysim_data = self.remove_datetime_fields(daysim_data)
         return timestamps, daysim_data, 'txt'
         
-    def read_cdf_data(self, filename):
+    def read_cdf_data(self, file_name):
         """Reads the data from a daysimeter cdf file
         
-        filename - the string filename of the file
+        file_name - the string filename of the file
         
         returns an array of timestamps, a dict of daysim_data, and txt (
         the filetype)
         
         """
         # Opens and parses the cdf file 
-        with pycdf.CDF(filename) as daysim_data:
+        with pycdf.CDF(file_name) as daysim_data:
             daysim_data = daysim_data.copy()
-            timestamps = [daysim_data['time'][x] for x in \
-                          range(len(daysim_data['time'])) if \
-                          daysim_data['logicalArray'][x] == True]
+            timestamps = daysim_data['time']
             # Removes any data in the cdf related to time
             daysim_data = self.slicedict(daysim_data, 'time')
-            daysim_data = self.trim_data(daysim_data)
         return timestamps, daysim_data, 'cdf'
-        
-    def trim_data(self, cdf_dict):
-        """ Trims data using the logical array """
-        omit = {'time', 'timeOffset', 'matTime', 'attrs'}
-        list_dict = {}        
-        
-        for key in cdf_dict.keys():
-            if key in omit:
-                pass
-            else:
-                list_dict[key] = [asscalar(x) for x in cdf_dict[key]]
-            
-        for key in list_dict.keys():
-            if key == 'logicalArray':
-                pass
-            else:
-                list_dict[key] = [list_dict[key][x] for x in \
-                                  range(len(list_dict[key])) if \
-                                  list_dict['logicalArray'][x] == True]
-
-        list_dict['attrs'] = cdf_dict['attrs']
-            
-        return list_dict
         
     def slicedict(self, cdf_dict, substr):
         """Removes the keys containing substr from cdf_dict
@@ -736,21 +648,21 @@ class LayoutExample(QtGui.QMainWindow):
             self.init.write(init_file)
             init_file.close()
         
-    def update_header(self, filename):
+    def update_header(self, file_name):
         """Updates the header of the older daysimeter txt data files
         
-        filename - the string filename of the file
+        file_name - the string filename of the file
         
         """
         # Opens the file and parses it
-        with open(filename, 'r') as txt_file:
+        with open(file_name, 'r') as txt_file:
             lines = txt_file.readlines()
             # If Date is at the beginning of the first line, it is replaced 
             # with date and time so it can be read by read_txt
             lines[0] = sub('^Date', '#Date Time', lines[0])
             # If the line was changed,then write the file
             if lines[0]:
-                open(filename, 'w').write(''.join(lines))
+                open(file_name, 'w').write(''.join(lines))
         
     def remove_datetime_fields(self, data_array):
         """Removes the dates/times from the daysimeter data
@@ -842,6 +754,6 @@ class EnableButtons(QtCore.QThread):
             time.sleep(1)
 
 if __name__ == '__main__':    
-    print "Running client"
+    
     APP = LayoutExample()
     APP.run()

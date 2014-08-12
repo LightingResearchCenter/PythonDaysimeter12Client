@@ -4,8 +4,6 @@ Author: Jed Kundl
 Creation Date: 13.06.2013
 INPUT: log_file, data_file
 OUTPUT: Data to be pased to a CDF processing script
-
-OUTDATED - Refer to readraw in downloadmake.py
 """
 
 import sys

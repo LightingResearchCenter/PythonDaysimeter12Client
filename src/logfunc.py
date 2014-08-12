@@ -5,16 +5,13 @@ Creation Date: 08.07.2013
 """
 
 from finddaysimeter import find_daysimeter
-import constants, logging
+import constants
 
 def stop_log():
-    info_log = logging.getLogger('daysim_log')    
-    
     path = find_daysimeter()
     log_filename = constants.LOG_FILENAME
     
     if not path:
-        info_log.info('logfunc.py func stop_log: Daysimeter not found')
         return False
         
     with open(path + log_filename, 'r') as log_fp:
@@ -23,17 +20,13 @@ def stop_log():
     with open(path + log_filename, 'w') as log_fp:
         for x in log:
             log_fp.write(x)
-    info_log.info('logfunc.py func stop_log: Log stopped')
     return True
             
 def resume_log():
-    info_log = logging.getLogger('daysim_log')    
-    
     path = find_daysimeter()
     log_filename = constants.LOG_FILENAME
     
     if not path:
-        info_log.info('logfunc.py func resume_log: Daysimeter not found')
         return False
         
     with open(path + log_filename, 'r') as log_fp:
@@ -42,5 +35,4 @@ def resume_log():
     with open(path + log_filename, 'w') as log_fp:
         for x in log:
             log_fp.write(x)
-    info_log.info('logfunc.py func resume_log: Log resumed')
     return True

@@ -36,10 +36,7 @@ class DownloadMake(QtGui.QWidget):
     PURPOSE: Widget that manages downloading daysimeter data and making CDF 
     or CSV files. 
     """
-
-    last_savepath = QtCore.pyqtSignal(str)    
-    
-    def __init__(self, offset, parent=None, args=None):
+    def __init__(self, parent=None, args=None):
         super(DownloadMake, self).__init__(parent)
         dl_skip_shortcut = QtGui.QShortcut(QtGui.QKeySequence('SHIFT+CTRL+G'),\
         self, self.skip_prog, self.skip_prog, QtCore.Qt.WidgetShortcut)
@@ -56,8 +53,6 @@ class DownloadMake(QtGui.QWidget):
             self.log_filename = args[0]
             self.data_filename = args[1]
             self.download_make = False
-        self.time_offset_index = offset
-    
         
         
         
@@ -110,8 +105,6 @@ class DownloadMake(QtGui.QWidget):
         self.start_download()   
         self.show()
         
-        self.daysim_log.info('downloadmake.py class DownloadMake func initUI: GUI initialized')
-        
     def start_download(self):
         """ PURPOSE: Starts and manages download of data """
         self.daysim_log.info('Initializing download')
@@ -119,7 +112,6 @@ class DownloadMake(QtGui.QWidget):
             self.status_bar.showMessage('No Daysimeter plugged into this' + \
             ' computer.')
         else:
-            self.daysim_log.info('downloadmake.py class DownloadMake func start_download: Daysimeter found')
             with open(self.log_filename,'r') as log_fp:
                 info = log_fp.readlines()
                 if len(info) == 17:
@@ -134,19 +126,13 @@ class DownloadMake(QtGui.QWidget):
                     daysim_id = 'NULL'
                 now = str(datetime.now())
                 default_filename = daysim_id + '-' + now[:10] \
-                    + '-' + now[11:13] + '-' + now[14:16] + '-' + now[17:19]
-            self.daysim_log.info('downloadmake.py class DownloadMake func start_download: Generating default filename')
+                + '-' + now[11:13] + '-' + now[14:16] + '-' + now[17:19]
+            
             default_name = os.path.join(self.savedir, default_filename)
             self.status_bar.showMessage('')
             self.filename = str(QtGui.QFileDialog.getSaveFileName(self, \
-                ('Save File'), default_name, ('CDF Files (*.cdf);; CSV Files (*.csv)')))
+            ('Save File'), default_name, ('CDF Files (*.cdf);; CSV Files (*.csv)')))
             if not str(self.filename) == '':
-                parts = self.filename.split('/')
-                del(parts[-1])
-                savepath = ''
-                for element in parts:
-                    savepath += element + '/'
-                self.last_savepath.emit(savepath)
                 
                 self.pbar.show()
                 self.start.setText('Downloading...')
@@ -156,15 +142,14 @@ class DownloadMake(QtGui.QWidget):
                                                      self.filename, \
                                                      self.log_filename, \
                                                      self.data_filename, \
-                                                     self.download_make, \
-                                                     self.time_offset_index])
+                                                     self.download_make])
                 self.downloader.error.connect(self.error)
                 self.connect(self.downloader, QtCore.SIGNAL('update'), \
-                             self.update_progress)
+                self.update_progress)
                 self.connect(self.downloader, QtCore.SIGNAL('fprogress'), \
-                             self.fake_progress)
+                self.fake_progress)
                 self.connect(self.downloader, QtCore.SIGNAL('make'), \
-                             self.make)
+                self.make)
                 self.daysim_log.info('Starting download')
                 self.downloader.start()
             else:
@@ -178,26 +163,23 @@ class DownloadMake(QtGui.QWidget):
         that actually writes data to file.
         """
         if self.filename[len(self.filename)-4:] == '.cdf':
-            self.daysim_log.info('downloadmake.py class DownloadMake func make: Preparing CDF file')
             self.subjectinfo = SubjectInfo([data[1][0][0], \
                                             data[1][0][len(data[1][0]) - 1], \
                                             data[0][3]])
             self.connect(self.subjectinfo, QtCore.SIGNAL('sendinfo'), \
-                         self.make_cdf)
+            self.make_cdf)
             self.connect(self.subjectinfo, QtCore.SIGNAL('cancelled'), \
-                         self.cancelled)
+            self.cancelled)
             self.data = data
         else:
-            self.daysim_log.info('downloadmake.py class DownloadMake func make: Preparing CSV file')
             self.status_bar.showMessage('Writing CSV File...')
             self.maker = MakeCSV(self, data, self.filename)
             self.connect(self.maker, QtCore.SIGNAL('update'), \
-                         self.update_progress)
+            self.update_progress)
             self.maker.start()
             
     def make_cdf(self, info):
         """ PURPOSE: Makes a CDF file. """
-        self.daysim_log.info('downloadmake.py class DownloadMake func make_cdf: Getting CDF subject attributes')
         self.daysim_log.info('Initializing CDF file')
         if info[1] == '-':
             info[1] = 'None'
@@ -215,7 +197,6 @@ class DownloadMake(QtGui.QWidget):
         PURPOSE: Sets status when the download has been cancelled, this
         usually occurs when no subject info was given.
         """
-        self.daysim_log.info('downloadmake.py class DownloadMake func cancelled: Event cancelled')
         #As a side note, the ceiling started leaking again...
         self.pbar.hide()
         self.done.setText('Download Cancelled')
@@ -229,7 +210,6 @@ class DownloadMake(QtGui.QWidget):
         """
         PURPOSE: Sets status when an error has occured.
         """
-        self.daysim_log.info('downloadmake.py class DownloadMake func error: An error was caught, check error log for further information')
         #As a side note, the ceiling started leaking again...
         self.pbar.hide()
         self.done.setText('Close')
@@ -241,7 +221,7 @@ class DownloadMake(QtGui.QWidget):
     def fake_progress(self):
         self.progresssim = ProgressSim()
         self.connect(self.progresssim, QtCore.SIGNAL('update'), \
-                     self.update_progress)
+        self.update_progress)
         self.progresssim.start()
         
     def skip_prog(self):
@@ -254,15 +234,28 @@ class DownloadMake(QtGui.QWidget):
         #it kind fakes it until it makes it
         self.step += 1
         self.pbar.setValue(self.step)
-        if self.step == 100:
+        if self.step == 100 and self.download_make:
+            if update_header():
+                reply = QtGui.QMessageBox.question(self, 'Message',
+            'Your daysimeter\'s header is out of date.\n' + \
+            'Would you like to update it now?', QtGui.QMessageBox.Yes, \
+            QtGui.QMessageBox.No)
+
+                if reply == QtGui.QMessageBox.Yes:
+                    convert_header('h2')
+                    self.download_done()
+                else:
+                    self.download_done()
+            else:
+                self.download_done()
+        elif self.step == 100:
             self.download_done()
         
     def download_done(self):
         """ PURPOSE: Displays done message when download is complete """
-        self.daysim_log.info('downloadmake.py class DownloadMake func download_done: Download completed successfully')
         self.daysim_log.info('Download complete')
         self.status_bar.showMessage('Download Complete. It is now safe ' + \
-                                    'to eject your daysimeter.')
+        'to eject your daysimeter.')
         self.start.hide()
         self.done.setEnabled(True)
         self.done.show()
@@ -296,8 +289,6 @@ class SubjectInfo(QtGui.QWidget):
         super(SubjectInfo, self).__init__(parent)
         QtGui.QMainWindow.__init__(self)
         self.setWindowTitle('Enter Subject Information')
-        
-        self.daysim_log = logging.getLogger('daysim_log')
         
         self.start_time = str(args[0])
         self.end_time = str(args[1])
@@ -445,7 +436,6 @@ class SubjectInfo(QtGui.QWidget):
 
         self.err_log = logging.getLogger('err_log')
         
-        self.daysim_log.info('downloadmake.py class SubjectInfo func __init__: GUI initialized')
         self.show()
     
     def closeEvent(self, event):
@@ -464,7 +454,6 @@ class SubjectInfo(QtGui.QWidget):
         self.close()
         
     def validate_date(self):
-        self.daysim_log.info('downloadmake.py class SubjectInfo func validate_date: Validating date information')
         start_time = ''
         if len(self.year_start.currentText()) == 1:
             start_time = start_time + '0' + str(self.year_start.currentText())\
@@ -534,16 +523,12 @@ class SubjectInfo(QtGui.QWidget):
 
         if not start_diff % self.log_interval == 0:
             start_diff = (self.log_interval - (start_diff % self.log_interval))
-        else:
-            start_diff = 0
             
         if not end_diff % self.log_interval == 0:
             end_diff = (self.log_interval - (end_diff % self.log_interval))
-        else:
-            end_diff = 0
             
         bound_start = start_dt + timedelta(seconds = start_diff)
-        bound_end = end_dt + timedelta(seconds = end_diff)
+        bound_end = end_dt - timedelta(seconds = end_diff)
         
         self.day_start.setCurrentIndex(bound_start.day - 1)
         self.month_start.setCurrentIndex(bound_start.month - 1)
@@ -558,6 +543,7 @@ class SubjectInfo(QtGui.QWidget):
         self.hour_end.setCurrentIndex(bound_end.hour)
         self.minute_end.setCurrentIndex(bound_end.minute)
         self.second_end.setCurrentIndex(0 if bound_end.second == 0 else 1)
+
         
     def submit_info(self):
         """
@@ -572,8 +558,6 @@ class SubjectInfo(QtGui.QWidget):
         sub_mass = str(self.subject_mass.text())
         
         self.validate_date()
-        
-        self.daysim_log.info('downloadmake.py class SubjectInfo func submit_info: Processing data for submission')
         
         start_time = ''
         if len(self.year_start.currentText()) == 1:
@@ -636,13 +620,9 @@ class SubjectInfo(QtGui.QWidget):
         else:
             end_time = end_time + str(self.second_end.currentText())
 
-        print start_time
-
         self.success = True
         self.emit(QtCore.SIGNAL('sendinfo'), [sub_id, sub_sex, sub_dob, \
         sub_mass, start_time, end_time])
-        
-        self.daysim_log.info('downloadmake.py class SubjectInfo func submit_info: Data formatted and sent to file maker')
         self.close()
     
    
@@ -657,7 +637,6 @@ class SubjectInfo(QtGui.QWidget):
             self.submit.setEnabled(False)
             
     def in_range(self):
-        self.daysim_log.info('downloadmake.py class SubjectInfo func in_range: Checking that timestamps are within range')
         
         start_time = ''
         if len(self.year_start.currentText()) == 1:
@@ -727,8 +706,7 @@ class SubjectInfo(QtGui.QWidget):
         
         if (start_dt - start_dt_data) >= timedelta(minutes = 0) and \
            (end_dt_data - end_dt) >= timedelta(minutes = 0):
-               self.daysim_log.info('downloadmake.py class SubjectInfo func in_range: Time within range')
-               return True
+            return True
         else:
             return False
             
@@ -749,7 +727,6 @@ class DownloadDaysimeter(QtCore.QThread):
         self.log_filename = args[2]
         self.data_filename = args[3]
         self.move = args[4]
-        self.time_offset = constants_.UTC_OFFSETS[args[5]]
         
         self.daysim_log = logging.getLogger('daysim_log')
         
@@ -845,8 +822,7 @@ class DownloadDaysimeter(QtCore.QThread):
             struct_time = time.strptime(info[7], "%m-%d-%y %H:%M")
         else:
             struct_time = time.strptime(info[2], "%m-%d-%y %H:%M")
-            
-        epoch_time = datetime.fromtimestamp(time.mktime(struct_time)) + self.time_offset
+        epoch_time = datetime.fromtimestamp(time.mktime(struct_time))
         #log_interval is interval that the Daysimeter took measurements at.
         #Since python uses seconds since epoch, cast as int
         log_interval = int(info[3])
@@ -1050,7 +1026,7 @@ class DownloadDaysimeter(QtCore.QThread):
                 constants[5][1]*683*(1 - 2.71**(-(v_prime[x]/(683*6.5))))
             else:
                 cla[x] = melanopsin[x]
-            
+            cla[x] = cla[x] * constants[5][3]
         cla = [0 if x < 0 else x for x in cla]
             
         return [lux, cla]
@@ -1075,10 +1051,10 @@ class MakeCDF(QtCore.QThread):
         start_index = self.data[1][0].index(start_dt)
         end_index = self.data[1][0].index(end_dt)
         
-        self.logical_arr = [False] * len(self.data[1][0])
+        self.logical_arr = [0] * len(self.data[1][0])
         
         for x in range(start_index, end_index):
-            self.logical_arr[x] = True
+            self.logical_arr[x] = 1
         
     def run(self):
         """ PURPOSE: Makes a CDF file from data. """

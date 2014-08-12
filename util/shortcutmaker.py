@@ -25,8 +25,8 @@ def main():
     if os.path.exists(os.path.join(os.getcwd(), 'daysimdlclient.exe')):
         os.remove(os.path.join(os.getcwd(), 'daysimdlclient.exe'))
         
-    if os.path.exists(os.path.join(os.getcwd(), 'cdf34_1_0-setup-32.exe')):
-        os.remove(os.path.join(os.getcwd(), 'cdf34_1_0-setup-32.exe'))
+    if os.path.exists(os.path.join(os.getcwd(), 'cdf35_1_0-setup-32.exe')):
+        os.remove(os.path.join(os.getcwd(), 'cdf35_1_0-setup-32.exe'))
         
 if __name__ == '__main__':
     main()

@@ -6,7 +6,7 @@ Created on Tue Jun 25 16:27:54 2013
 """
 import PyQt4.QtGui as qt
 from PyQt4 import QtGui
-import daysimdata as dd
+import daysimData as dd
 from PyQt4.QtCore import Signal
 import string
 

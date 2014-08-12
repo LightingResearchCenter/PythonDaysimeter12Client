@@ -8,9 +8,7 @@ import sys, os
 from PyQt4 import QtGui, QtCore
 from datetime import datetime
 from finddaysimeter import find_daysimeter
-from updateheader import update_header
-from convertheader import convert_header
-import constants, logging
+import constants
 
 class StartNewLog(QtGui.QWidget):
     """PURPOSE: Starts a new Daysimeter log."""
@@ -18,16 +16,14 @@ class StartNewLog(QtGui.QWidget):
         """Initializes Widget."""
         super(StartNewLog, self).__init__(parent)
         self.setWindowTitle('Start New Log')
-        self.setFixedSize(360,120)
+        self.setFixedSize(360,180)
         
-        self.info_log = logging.getLogger('daysim_log')
+        self.day = QtGui.QComboBox()
+        self.month = QtGui.QComboBox()
+        self.year = QtGui.QComboBox()
         
-#        self.day = QtGui.QComboBox()
-#        self.month = QtGui.QComboBox()
-#        self.year = QtGui.QComboBox()
-        
-#        self.hour = QtGui.QComboBox()
-#        self.minute = QtGui.QComboBox()
+        self.hour = QtGui.QComboBox()
+        self.minute = QtGui.QComboBox()
         
         self.start = QtGui.QPushButton('Start')
         self.cancel = QtGui.QPushButton('Cancel')
@@ -39,46 +35,46 @@ class StartNewLog(QtGui.QWidget):
         self.info = QtGui.QStatusBar()
         self.info.setSizeGripEnabled(False)
         
-#        self.day.addItems([str(x) for x in range(1,32)])
-#        self.month.addItems([str(x) for x in range(1,13)])
-#        self.year.addItems([str(x) for x in range(2000, 2021)])
+        self.day.addItems([str(x) for x in range(1,32)])
+        self.month.addItems([str(x) for x in range(1,13)])
+        self.year.addItems([str(x) for x in range(2000, 2021)])
         
-#        self.hour.addItems([str(x) for x in range(24)])
-#        self.minute.addItems([str(x) for x in range(60)])
+        self.hour.addItems([str(x) for x in range(24)])
+        self.minute.addItems([str(x) for x in range(60)])
         
         self.log_interval.addItems(['030', '060', '090', '120', '180'])
         
-#        current_time = datetime.now()
+        current_time = datetime.now()
         
         #Sets the comboboxes to now. User may changed date and time.
-#        self.day.setCurrentIndex(current_time.day - 1)
-#        self.month.setCurrentIndex(current_time.month - 1)
-#        self.year.setCurrentIndex(current_time.year - 2000)
+        self.day.setCurrentIndex(current_time.day - 1)
+        self.month.setCurrentIndex(current_time.month - 1)
+        self.year.setCurrentIndex(current_time.year - 2000)
         
-#        self.hour.setCurrentIndex(current_time.hour)
-#        self.minute.setCurrentIndex(current_time.minute)
+        self.hour.setCurrentIndex(current_time.hour)
+        self.minute.setCurrentIndex(current_time.minute)
         
         self.log_interval.setCurrentIndex(1)
         self.log_interval.currentIndexChanged.connect(self.log_duration)
         
         self.battery_hours()
         
-#        dmy_layout = QtGui.QHBoxLayout()
-#        dmy_layout.addWidget(self.day)
-#        dmy_layout.addWidget(self.month)
-#        dmy_layout.addWidget(self.year)
+        dmy_layout = QtGui.QHBoxLayout()
+        dmy_layout.addWidget(self.day)
+        dmy_layout.addWidget(self.month)
+        dmy_layout.addWidget(self.year)
         
-#        hm_layout = QtGui.QHBoxLayout()
-#        hm_layout.addWidget(self.hour)
-#        hm_layout.addWidget(self.minute)
+        hm_layout = QtGui.QHBoxLayout()
+        hm_layout.addWidget(self.hour)
+        hm_layout.addWidget(self.minute)
         
         button_layout = QtGui.QHBoxLayout()
         button_layout.addWidget(self.start)
         button_layout.addWidget(self.cancel)
         
         layout = QtGui.QFormLayout()
-#        layout.addRow('Date (DD-MM-YYYY)', dmy_layout)
-#        layout.addRow('Time', hm_layout)
+        layout.addRow('Date (DD-MM-YYYY)', dmy_layout)
+        layout.addRow('Time', hm_layout)
         layout.addRow('Logging Interval', self.log_interval)
         layout.addRow('Max Log Duration', self.info)
         layout.addRow(button_layout)
@@ -91,19 +87,14 @@ class StartNewLog(QtGui.QWidget):
         
         self.log_duration()
         self.show_self()
-        
-        self.info_log.info('startnewlog.py class StartNewLog func __init__: GUI initialized')
 
     def show_self(self):
-        if not find_daysimeter():    
-            self.info_log.info('startnewlog.py class StartNewLog func show_self: Daysimeter not found, closing widget')
+        if not find_daysimeter():        
             self.close()
         else:
-            self.info_log.info('startnewlog.py class StartNewLog func show_self: Daysimeter found, showing widget')
             self.show()
     
     def log_duration(self):
-        self.info_log.info('startnewlog.py class StartNewLog func log_interval: Updated log interval message')
         interval = int(self.log_interval.currentText())
         if interval == 30:
             self.info.showMessage('5.5 days with currently selected interval')
@@ -121,30 +112,23 @@ class StartNewLog(QtGui.QWidget):
         PURPOSE: Called when submit is clicked. Informs user that new log
         will overrite old log, and asks for confimation.
         """
-        self.info_log.info('startnewlog.py class StartNewLog func begin_log: Confirming overwriting of old log')
         reply = QtGui.QMessageBox.question(self, 'Warning',
         'Starting a new log will delete current log.', QtGui.QMessageBox.Ok, \
         QtGui.QMessageBox.Cancel)
         
         if reply == QtGui.QMessageBox.Ok:
-            if update_header():
-                convert_header(constants.LATEST_HEADER)
-            self.info_log.info('startnewlog.py class StartNewLog func begin_log: Confirmed, old log will be erased when daysimeter ejected')
             self.start_log()
         else:
-            self.info_log.info('startnewlog.py class StartNewLog func begin_log: Confirmation failed, no new log will be started')
             pass
 
     def start_log(self):
         """"PURPOSE: Creates new log thread."""
-        self.info_log.info('startnewlog.py class StartNewLog func start_log: Creating new low thread')
         self.battery_hours()
-        UTC_now = datetime.utcnow()
-        self.logthread = NewLogThread([str(UTC_now.day), \
-                                     str(UTC_now.month), \
-                                     str(UTC_now.year), \
-                                     str(UTC_now.day), \
-                                     str(UTC_now.minute), \
+        self.logthread = NewLogThread([str(self.day.currentText()), \
+                                     str(self.month.currentText()), \
+                                     str(self.year.currentText()), \
+                                     str(self.hour.currentText()), \
+                                     str(self.minute.currentText()), \
                                      str(self.log_interval.currentText())])
         self.logthread.done_sig.connect(self.close_self)
         self.logthread.no_daysim_sig.connect(self.disp_error)
@@ -154,7 +138,6 @@ class StartNewLog(QtGui.QWidget):
         #I'm aware that the first time this is run, the same value will be
         #recorded twice. This is fine, don't worry about it. If it keeps you
         #up at night, come find me and I will tell you why, but in person only.
-        self.info_log.info('startnewlog.py class StartNewLog func close_self: Adding new log to start log')        
         if not os.path.exists('start_log.txt'):
             data = []
         else:
@@ -182,7 +165,7 @@ class StartNewLog(QtGui.QWidget):
         """PURPOSE: Sets status bar message to display battery hours logged."""
         path = find_daysimeter()
         log_filename = constants.LOG_FILENAME
-        self.info_log.info('startnewlog.py class StartNewLog func battery_hours: Finding Daysimeter battery information')
+        
         if not path:
             self.disp_error()
         else:
@@ -210,6 +193,7 @@ class NewLogThread(QtCore.QThread):
     def __init__(self, args, parent=None):
         """Initializes Thread."""
         QtCore.QThread.__init__(self, parent)
+        
         self.day = args[0]
         self.month = args[1]
         self.year = args[2][2:]
@@ -255,10 +239,6 @@ class NewLogThread(QtCore.QThread):
                 info[5] = '1\n'
                 daysimeter_id = info[8].strip('\n')
                 daysimeter_start = info[7].strip('\n')
-                if info[1] == '1.1\n':
-                    info[1] = '1.3\n'
-                elif info[1] == '1.2\n':
-                    info[1] = '1.4\n'
             with open(path + log_filename, 'w') as log_fp:
                 for x in info:
                     log_fp.write(x)
