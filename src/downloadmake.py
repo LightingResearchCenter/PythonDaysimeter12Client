@@ -236,10 +236,11 @@ class DownloadMake(QtGui.QWidget):
         self.pbar.setValue(self.step)
         if self.step == 100 and self.download_make:
             if update_header():
-                reply = QtGui.QMessageBox.question(self, 'Message',
-            'Your daysimeter\'s header is out of date.\n' + \
-            'Would you like to update it now?', QtGui.QMessageBox.Yes, \
-            QtGui.QMessageBox.No)
+                reply = QtGui.QMessageBox.No
+#                QtGui.QMessageBox.question(self, 'Message',
+#            'Your daysimeter\'s header is out of date.\n' + \
+#            'Would you like to update it now?', QtGui.QMessageBox.Yes, \
+#            QtGui.QMessageBox.No)
 
                 if reply == QtGui.QMessageBox.Yes:
                     convert_header('h2')
