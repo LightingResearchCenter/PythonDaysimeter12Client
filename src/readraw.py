@@ -74,6 +74,15 @@ def read_raw():
         device_model = info[2]
         device_sn = info[2].lstrip('abcdefghijklmnopqrstuvwxyz') + info[8]
     
+    #New as of 9/28/2016 
+    #This will determin if the old Constants or New Constants should be used
+    if daysimeter_id < 366:
+        old_const_flag = True
+    elif (daysimeter_id>366) & (daysimeter_id<=415):
+        old_const_flag = False
+    else:
+        errlog.error('Daysimeters 416 and above are not supported in this version')
+        
     #Get calibration info
     if not old_flag:
         calib_const = [float(x) for x in info[9].strip('\n').split('\t')]
@@ -211,11 +220,11 @@ def read_raw():
     if not old_flag:
         constants = process_constants(info[14], info[13], info[12], \
         info[11], info[10], info[15])
-        temp = calc_lux_cla(red, green, blue, constants)
+        temp = calc_lux_cla(red, green, blue, daysimeter_id, constants)
     #Else, search for a constants file, process constants, and calculate
     #lux and cla
     else:
-        temp = calc_lux_cla(red, green, blue)
+        temp = calc_lux_cla(red, green, blue, daysimeter_id)
     #Unpack lux and cla
     lux = temp[0]
     cla = temp[1]

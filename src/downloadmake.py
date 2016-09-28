@@ -938,11 +938,11 @@ class DownloadDaysimeter(QtCore.QThread):
         if not old_flag:
             constants = process_constants(info[14], info[13], info[12], \
             info[11], info[10], info[15])
-            temp = self.calc_lux_cla(red, green, blue, constants)
+            temp = self.calc_lux_cla(red, green, blue, daysimeter_id, constants)
         #Else, search for a constants file, process constants, and calculate
         #lux and cla
         else:
-            temp = self.calc_lux_cla(red, green, blue)
+            temp = self.calc_lux_cla(red, green, blue, daysimeter_id)
         #Unpack lux and cla
         lux = temp[0]
         cla = temp[1]
@@ -976,17 +976,19 @@ class DownloadDaysimeter(QtCore.QThread):
     def calc_lux_cla(self, *args):
         """ PURPOSE: Calculates CS and CLA. """
         
-        if len(args) == 3:
+        if len(args) == 4:
             red = args[0]
             green = args[1]
             blue = args[2]
+            device_id = args[3]
             #Constants is a list of lists, with hardware specific constants
-            constants = get_constants()
-        elif len(args) == 4:
+            constants = get_constants(device_id)
+        elif len(args) == 5:
             red = args[0]
             green = args[1]
             blue = args[2]
-            constants = args[3]
+            device_id = args[3]
+            constants = args[4]
         else:
             self.err_log.warning('Invalid usage of calc_lux_cla')
             sys.exit(1)

@@ -23,6 +23,14 @@ CALIBRATION_FILENAME = '//root/projects/DaysimeterAndDimesimeterReference' \
 #LOCAL_CALIB_FILENAME is the name of the calibration file to be found
 #locally.
 LOCAL_CALIB_FILENAME = 'C:/Daysimeter Client/Day12 RGB Values.txt'
+#NEW_CALIBRATION_FILENAME is the full path to the calibration file stored
+#on the LRC's server. Will be obsolete when calibration is located
+#in the header files. This is the file for daysimeters 366-415
+NEW_CALIBRATION_FILENAME = '//root/projects/DaysimeterAndDimesimeterReference' \
+    + 'Files/data/New Day12 RGB Values.txt'
+#LOCAL_CALIB_FILENAME is the name of the calibration file to be found
+#locally.This is the file for daysimeters 366-415
+NEW_LOCAL_CALIB_FILENAME = 'C:/Daysimeter Client/New Day12 RGB Values.txt'
 #CONSTANTS_FILENAME is the name of the constants stored
 #on the LRC's server. Will be obsolete when calibration is located
 #in the header files.

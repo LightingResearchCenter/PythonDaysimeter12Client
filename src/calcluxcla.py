@@ -27,17 +27,19 @@ def calc_lux_cla(*args):
     setup_logger('daysimlog', daysimlog_filename)
     daysimlog = logging.getLogger('daysimlog')
     
-    if len(args) == 3:
+    if len(args) == 4:
         red = args[0]
         green = args[1]
         blue = args[2]
+        device_id = args[3]
         #Constants is a list of lists, with hardware specific constants
-        constants = get_constants()
-    elif len(args) == 4:
+        constants = get_constants(device_id)
+    elif len(args) == 5:
         red = args[0]
         green = args[1]
         blue = args[2]
-        constants = args[3]
+        device_id = args[3]
+        constants = args[4]
     else:
         errlog.warning('Invalid usage of calc_lux_cla')
         sys.exit(1)
