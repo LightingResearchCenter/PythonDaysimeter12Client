@@ -8,6 +8,7 @@ OUTPUT: A list of calibration info called calib_info
 
 import logging
 import sys
+import math
 from Tkinter import Tk
 from tkFileDialog import askopenfilename
 from getlogs import get_err_log, get_daysim_log, setup_logger
@@ -90,13 +91,13 @@ def get_calib_info(daysimeter_id):
             
     
 
-        
+    is_valid = True    
     #The default values for calibration are 1, 2, and 3. Although it
     #is possible that a device actually might have those calibration
     #constants, it is assumed that there is no calibration info in such a case.
-    if calib_info[1] == 1.0 and calib_info[2] == 2.0 and calib_info[3] == 3.0:
+    if math.isnan(calib_info[1]) and math.isnan(calib_info[2]) and math.isnan(calib_info[3]):
         errlog.warning('There is no calibration info for device')
-#        sys.exit(1)
+        #is_valid = False
     calibration_fp.close()
 
-    return calib_info
+    return [calib_info,is_valid]

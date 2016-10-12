@@ -126,7 +126,9 @@ class UpdateHeaderF1(QtCore.QThread):
             #Read each line of the header and put it into a list
             #called info.
             info = logfile_fp.readlines()
-            calib_info = get_calib_info(int(info[1]))
+            temp = get_calib_info(int(info[1]))
+            calib_info = temp[0]
+            is_valid = temp[1]
             del(calib_info[0])
             a_constants = get_constants()
             #Remove binary garbage and whitesapce, if applicable, and format

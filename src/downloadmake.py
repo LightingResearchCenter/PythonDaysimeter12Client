@@ -216,7 +216,8 @@ class DownloadMake(QtGui.QWidget):
         self.start.hide()
         self.done.show()
         self.done.setEnabled(True)
-        self.status_bar.showMessage('An error occurred.')
+        self.status_bar.showMessage('An error occurred check the Error Log' + \
+        ' for information.')
         
     def fake_progress(self):
         self.progresssim = ProgressSim()
@@ -787,12 +788,19 @@ class DownloadDaysimeter(QtCore.QThread):
             calib_info = \
             [daysimeter_id, calib_const[0], calib_const[1], calib_const[2]]
         else:
-            calib_info = get_calib_info(daysimeter_id)
-        
+            temp = get_calib_info(daysimeter_id)
+            calib_info = temp[0]
+            is_valid = temp[1]
+            
+        if not is_valid:
+            self.err_log.error('Calibration was not defined')
+            #self.error.emit()
+            #sys.exit(1)
+            
         if not calib_info:
             self.err_log.error('Calibration infromation was not found')
-            self.error.emit()
-            sys.exit(1)
+            #self.error.emit()
+            #sys.exit(1)
             
         self.daysim_log.info('Trying to read data file')
         #Open binary data file for reading

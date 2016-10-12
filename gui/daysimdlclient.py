@@ -623,9 +623,10 @@ class LayoutExample(QtGui.QMainWindow):
             if not self.init.get('Version Settings', 'show') == 'false':
                 version = self.init.get('Version Settings', 'version')
                 if not get_current_version(version) == version:
+                    current_version= get_current_version(version)
                     QtGui.QMessageBox.question(self, 'Message',
-                                              'There is a newer version of the' + \
-                                              ' daysimeter client available.', \
+                                              'Most recent version is ' + current_version + \
+                                              ', this version is ' + version + '.', \
                                               QtGui.QMessageBox.Ok)
                                                
     def toggle_show(self):

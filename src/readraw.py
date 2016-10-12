@@ -89,8 +89,10 @@ def read_raw():
         calib_info = \
         [daysimeter_id, calib_const[0], calib_const[1], calib_const[2]]
     else:
-        calib_info = get_calib_info(daysimeter_id)
-        
+        temp = get_calib_info(daysimeter_id)
+        calib_info = temp[0]
+        is_valid = temp[1]
+        del(temp)
     #Open binary data file for reading
     try:
         datafile_fp = open(path + data_filename,"rb")
