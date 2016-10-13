@@ -35,8 +35,9 @@ def get_constants(*args):
             constants_filename = constants.NEW_CONSTANTS_FILENAME
             local_const_filename = constants.NEW_LOCAL_CONST_FILENAME
         else:
-            errlog.error('This device\'s serial number is larger than 415')
-            
+            errlog.error('This device\'s serial number has not been registered.')
+            constants_filename = constants.CONSTANTS_FILENAME
+            local_const_filename = constants.LOCAL_CONST_FILENAME
     found = False
     
     #Open constants file and get data
