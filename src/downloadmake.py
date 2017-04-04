@@ -96,6 +96,11 @@ class DownloadMake(QtGui.QWidget):
             if self.parser.has_section('Application Settings'):
                 self.savedir = self.parser.get('Application Settings', \
                                                'savepath')
+                if os.path.isdir(self.savedir) == False:
+                    self.savedir = os.getcwd()
+                    self.parser.set('Application Settings', \
+                                               'savepath',self.savedir);
+                    self.err_log.error('Save Path did not exist, replaced with instalation path.')
             else:
                 self.savedir = os.getcwd()
         else:

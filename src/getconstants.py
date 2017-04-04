@@ -31,7 +31,7 @@ def get_constants(*args):
         if device_id <366:
             constants_filename = constants.CONSTANTS_FILENAME
             local_const_filename = constants.LOCAL_CONST_FILENAME
-        elif (device_id >=366) and (device_id <=415):
+        elif (device_id >=366):
             constants_filename = constants.NEW_CONSTANTS_FILENAME
             local_const_filename = constants.NEW_LOCAL_CONST_FILENAME
         else:
